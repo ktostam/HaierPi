@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Haier</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="../static/favicon.ico" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="../static/styles.css" rel="stylesheet" />
+	    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.js"></script>
+	<script>
+        function getdata() {
+            $.get('/getdata', function(data) {
+                $("#ttemp").text(data.tank)
+                $("#hcurve").text(data.hcurve)
+                $("#humid").text(data.humid)
+                $("#setpoint").text(data.setpoint)
+                $("#intemp").text(data.intemp)
+                $("#outtemp").text(data.outtemp)
+                switch(data.pcool) {
+                    case "on":
+                        if ($("#coolpower")[0].classList.contains("iconon") == false ) {
+                                        $("#coolpower")[0].classList.add("iconon")
+                                        $("#coolpowerc")[0].setAttribute('onclick','modechange\(\'pcool\',\'off\'\)')
+                        }
+                        break;
+                    case "off":
+                        if ($("#coolpower")[0].classList.contains("iconon") == true ) {
+                                        $("#coolpower")[0].classList.remove("iconon")
+                                        $("#coolpowerc")[0].setAttribute('onclick','modechange\(\'pcool\',\'on\'\)')
+                                        }
+                        break;
+                    default:
+                }
+                switch(data.pch) {
+                    case "on":
+                        if ($("#heatpower")[0].classList.contains("iconon") == false ) {
+                                        $("#heatpower")[0].classList.add("iconon")
+                                        $("#heatpowerc")[0].setAttribute('onclick','modechange\(\'pch\',\'off\'\)')
+                        }
+                        break;
+                    case "off":
+                        if ($("#heatpower")[0].classList.contains("iconon") == true ) {
+                                        $("#heatpower")[0].classList.remove("iconon")
+                                        $("#heatpowerc")[0].setAttribute('onclick','modechange\(\'pch\',\'on\'\)')
+                                        }
+                        break;
+                    default:
+                }
+                switch(data.pdhw) {
+                    case "on":
+                        if ($("#dhwpower")[0].classList.contains("iconon") == false ) {
+                                        $("#dhwpower")[0].classList.add("iconon")
+                                        $("#dhwpowerc")[0].setAttribute('onclick','modechange\(\'pdhw\',\'off\'\)')
+                        }
+                        break;
+                    case "off":
+                        if ($("#heatpower")[0].classList.contains("iconon") == true ) {
+                                        $("#dhwpower")[0].classList.remove("iconon")
+                                        $("#dhwpowerc")[0].setAttribute('onclick','modechange\(\'pdhw\',\'on\'\)')
+                                        }
+                        break;
+                    default:
+                }
+            });
+        }
+        function modechange(mode, value) {
+            $.post('/modechange', {mode: mode, value: value}, function(data) {
+                var text=data.msg;
+                var state=data.state
+                Swal.fire({
+                    html: text,
+                    icon: state,
+                    showCloseButton: false,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                })
+            });
+        }
+
+        setInterval(getdata, 1000);
+	</script>
+    </head>
+    <body>
+        <div class="d-flex" id="wrapper">
+            <!-- Sidebar-->
+            <div class="border-end bg-white" id="sidebar-wrapper">
+		    <div class="sidebar-heading border-bottom bg-light">Haier Pi <sup>1.0</sup></div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/">Dashboard</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/settings">Settings</a>
+                </div>
+            </div>
+            <!-- Page content wrapper-->
+            <div id="page-content-wrapper">
+                <!-- Top navigation-->
+                <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                    <div class="container-fluid">
+			            <button class="navbar-toggler" type="button" id="sidebarToggle"><span class="navbar-toggler-icon"></span></button>
+                    </div>
+                </nav>
+                <!-- Page content-->
+		        <div class="container-fluid px-lg-5 py-lg-3">
+		            <div class="row gx-4 gx-lg-5">
+                <div class="col-md-4 mb-1">
+                    <div class="card h-100">
+                        <div class="card-body">
+				            <h2 class="card-title"><i class="icoheat"></i> Heating - setpoint: <b id="setpoint">N.A.</b> &#8451;</h2>
+				            <p class="card-text">Inside temp: <b id="intemp">N.A.</b>&#8451;</p>
+			                <p class="card-text" >Outside temp: <b id="outtemp">N.A.</b>&#8451;</p>
+                            <p class="card-text" >Heating-curve: <b id="hcurve">N.A.</b>&#8451;</p>
+                        </div>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" href="#!">Change</a>
+				            <a class="float-sm-end" id="heatpowerc" onclick="modechange('pch','on')" href="#"><i id="heatpower" class="iconpower"></i></a>
+                        </div>
+		            </div>
+                </div>
+                <div class="col-md-4 mb-1">
+                    <div class="card h-100">
+                        <div class="card-body">
+			                <h2 class="card-title"><i class="icondhw"></i> DHW</h2>
+                            <p class="card-text" >Tank temp: <b id="ttemp">N.A.</b>&#8451;</p>
+                        </div>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" href="#!">Change</a>
+                                <a class="float-sm-end" id="dhwpowerc" onclick="modechange('pdhw','on')" href="#"><i id="dhwpower" class="iconpower"></i></a>
+			            </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-1">
+                    <div class="card h-100">
+                        <div class="card-body">
+			                <h2 class="card-title"><i class="iconcool"></i>Cooling</h2>
+                            <p class="card-text">Inside humidity: <b id="humid">N.A.</b>%</p>
+                        </div>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" onclick="coolchange('Temp change', 'error')" href="#!">Change</a>
+                            <a class="float-sm-end" id="coolpowerc" onclick="modechange('pcool','on')" href="#"><i id="coolpower" class="iconpower"></i></a>
+		                </div>
+                    </div>
+                </div>
+            </div>
+	    </div>
+	    <!--<header class="py-1">
+                    <div class="container-fluid px-lg-5 py-lg-1">
+                        <div class="p-4 p-lg-5 bg-light rounded-3 text-center">
+                            <div class="m-4 m-lg-5">
+                                <p class="fs-4">
+                                    <svg
+                                    width="80%"
+                                    viewBox="0 0 126.26263 84.175075"
+                                    version="1.1"
+                                    id="svg5"
+                                    xml:space="preserve"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    xmlns:svg="http://www.w3.org/2000/svg"
+                                    xmlns:bx="https://boxy-svg.com"><defs
+                                        id="defs2" /><g
+                                        id="layer1"
+                                        transform="translate(-21.856579,-22.646619)"><g
+                                        id="g12185"
+                                        transform="matrix(0.05362442,0,0,0.05362442,65.505866,84.547656)"><path
+                                            style="fill:none;stroke:#ff5700;stroke-width:4.40184px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                                            d="m -419.51202,-1076.5366 c 0,0 307.53123,2.2044 441.028896,2.2044 68.118017,0 69.035719,69.0358 69.035719,69.0358 v 626.67137 H 743.6485"
+                                            id="path12606" /><rect
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:3.71107;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="rect18508"
+                                            width="391.73404"
+                                            height="866.01648"
+                                            x="-812.12598"
+                                            y="-1152.4886"
+                                            rx="37.052498" /><path
+                                            style="fill:none;stroke:#00a0ff;stroke-width:4.40184px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                                            d="m -420.47101,-387.34492 c 0,0 111.7433,-0.19877 245.24096,-0.19877 68.11801,0 69.03571,69.03574 69.03571,69.03574 0.002,93.19869 0.003,156.89677 0.005,209.77995 H 743.6485 M -420.06784,341.44692 c 0,0 111.35602,-2.20439 244.85366,-2.20439 68.11808,0 69.03574,-69.03574 69.03574,-69.03574 V -108.728 H 743.6485"
+                                            id="path12606-3" /><rect
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:3.71109;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="rect19989"
+                                            width="796.758"
+                                            height="543.8689"
+                                            x="741.82074"
+                                            y="-485.9238"
+                                            rx="37.052498" />
+                                        <rect
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:3.06313;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="rect18508-2"
+                                            width="392.38199"
+                                            height="589.03491"
+                                            x="-812.44995"
+                                            y="-175.69043"
+                                            rx="37.052498" /><path
+                                            style="fill:none;stroke:#ff5700;stroke-width:4.40184px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                                            d="M 741.82074,-378.62503 92.041095,-378.86746 89.609378,133.5065 c 0,0 -0.917657,69.03574 -69.035737,69.03574 -133.497641,0 -441.028871,2.2044 -441.028871,2.2044"
+                                            id="path12606-9" />
+                                            <rect
+                                            style="fill:none;stroke:#808080;stroke-width:3.71109;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="rect36749"
+                                            width="194.8372"
+                                            height="455.06824"
+                                            x="1293.5983"
+                                            y="-441.52341"
+                                            rx="37.052498" /><path
+                                            d="m 90.552595,-378.62503 -44.6071,-89.21421 h 89.214195 z"
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:2.67643;stroke-opacity:1"
+                                            bx:shape="triangle 200 300 100 100 0.5 0 1@b188e09d"
+                                            id="path12164" /><path
+                                            d="m 90.552595,-377.91667 44.607095,89.21421 H 45.945495 Z"
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:2.67643;stroke-opacity:1"
+                                            bx:shape="triangle -300 -299.206 100 100 0.5 0 1@1b5c0cd7"
+                                            id="path12166" /><path
+                                            d="m 92.041095,-378.86746 89.214205,-44.60711 v 89.21421 z"
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#808080;stroke-width:2.67643;stroke-opacity:1"
+                                            bx:shape="triangle 200 300 100 100 0.5 0 1@b188e09d"
+                                            id="path12168" />
+                                        <path
+                                            id="path15710"
+                                            style="fill:none;stroke:#9e9e9e;stroke-width:3.70453;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            d="M 1011.5914,-5.5571768 C 985.81922,-34.101216 942.02805,-93.409807 993.9638,-160.67803 c 0,0 10.7394,-34.681 11.2261,-64.31912 0.3559,-21.66452 -4.7664,-40.63457 -23.56555,-41.39529 -44.51722,-1.80141 -112.69311,-14.76774 -129.25949,-13.93763 -10.40377,0.5213 -19.04526,3.81738 -27.94776,7.22414 -20.39966,6.34655 -22.37629,19.04716 -22.37629,19.04716 -2.7598,13.95615 -4.20627,28.38027 -4.20627,43.14009 0,117.810708 92.15511,214.2355298 208.74856,221.992203 0,0 23.4028,2.470553 5.0083,-16.6306998 z M 1207.4569,-307.60601 c -11.9934,36.44812 -41.7923,103.78335 -126.3924,92.72838 0,0 -35.5982,8.09962 -61.6748,22.49981 -19.0611,10.52609 -33.03457,24.41868 -24.29805,40.9751 20.68845,39.20638 43.47475,104.352737 52.48145,118.192541 5.6563,8.691462 12.8499,14.479145 20.2706,20.436099 15.7316,14.3799895 27.79,9.7305158 27.79,9.7305158 13.5443,-4.6033576 26.8399,-10.5707748 39.7048,-17.9506808 102.6859,-58.905356 140.654,-186.414335 89.1182,-290.617665 0,0 -9.5481,-21.37265 -16.9998,4.0059 z m -361.20403,-17.51172 c 37.76558,-7.90409 111.3556,-15.93073 144.01994,62.39246 0,0 24.85889,26.58139 50.44869,41.81931 18.7052,11.13843 37.801,16.2159 47.8636,0.4202 23.8288,-37.40497 69.2184,-89.585 76.7781,-104.25491 4.7475,-9.21276 6.1953,-18.29653 7.6772,-27.66024 4.668,-20.72654 -5.4137,-28.77767 -5.4137,-28.77767 -10.7846,-9.3528 -22.6337,-17.80951 -35.4986,-25.18941 -102.686,-58.90536 -232.80913,-27.8212 -297.86672,68.62546 0,0 -13.85477,18.90209 11.99149,12.6248 z" >
+                                            <animateTransform
+                                        attributeName="transform"
+                                        attributeType="XML"
+                                        type="rotate"
+                                        from="360 1022 -212"
+                                        to="0 1022 -212"
+                                        dur="2s"
+                                        repeatCount="indefinite" />
+                                        </path>
+                                        <circle
+                                            style="fill:none;fill-opacity:1;stroke:#9e9e9e;stroke-width:3.70452843;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="path15775"
+                                            cx="1022.5856"
+                                            cy="-212.51491"
+                                            r="242.4301" /><ellipse
+                                            style="fill:#ffffff;fill-opacity:1;stroke:#9e9e9e;stroke-width:3.70452843;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                                            id="path3887-3"
+                                            cx="1022.5856"
+                                            cy="-212.51491"
+                                            rx="69.507935"
+                                        ry="69.061928" />
+                                    <circle id="circle1" r="20" fill="red">
+                                        <animateMotion
+                                        dur="5s"
+                                        repeatCount="indefinite"
+                                        path="M 741.82074,-378.62503 92.041095,-378.86746 89.609378,133.5065 c 0,0 -0.917657,69.03574 -69.035737,69.03574 -133.497641,0 -441.028871,2.2044 -441.028871,2.2044" />
+                                    </circle>
+                                    <circle id="circle2" r="20" fill="blue">
+                                        <animateMotion
+                                        dur="5s"
+                                        repeatCount="indefinite"
+                                        path="M -420.06784,341.44692 c 0,0 111.35602,-2.20439 244.85366,-2.20439 68.11808,0 69.03574,-69.03574 69.03574,-69.03574 V -108.728 H 743.6485" />
+                                    </circle>
+
+                                    </g></g>
+                                    </svg>
+
+			                    </p>
+                            </div>
+                        </div>
+                    </div>
+        </header>-->
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="../static/scripts.js"></script>
+    </body>
+</html>
