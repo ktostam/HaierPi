@@ -20,19 +20,20 @@
                 $("#hcurve").text(data.hcurve)
                 $("#humid").text(data.humid)
                 $("#setpoint").text(data.setpoint)
+                temp = data.setpoint
                 $("#intemp").text(data.intemp)
                 $("#outtemp").text(data.outtemp)
                 switch(data.pcool) {
                     case "on":
                         if ($("#coolpower")[0].classList.contains("iconon") == false ) {
                                         $("#coolpower")[0].classList.add("iconon")
-                                        $("#coolpowerc")[0].setAttribute('onclick','modechange\(\'pcool\',\'off\'\)')
+                                        $("#pcool")[0].setAttribute('onclick','statechange\(\'pcool\',\'off\'\)')
                         }
                         break;
                     case "off":
                         if ($("#coolpower")[0].classList.contains("iconon") == true ) {
                                         $("#coolpower")[0].classList.remove("iconon")
-                                        $("#coolpowerc")[0].setAttribute('onclick','modechange\(\'pcool\',\'on\'\)')
+                                        $("#pcool")[0].setAttribute('onclick','statechange\(\'pcool\',\'on\'\)')
                                         }
                         break;
                     default:
@@ -41,13 +42,13 @@
                     case "on":
                         if ($("#heatpower")[0].classList.contains("iconon") == false ) {
                                         $("#heatpower")[0].classList.add("iconon")
-                                        $("#heatpowerc")[0].setAttribute('onclick','modechange\(\'pch\',\'off\'\)')
+                                        $("#pch")[0].setAttribute('onclick','statechange\(\'pch\',\'off\'\)')
                         }
                         break;
                     case "off":
                         if ($("#heatpower")[0].classList.contains("iconon") == true ) {
                                         $("#heatpower")[0].classList.remove("iconon")
-                                        $("#heatpowerc")[0].setAttribute('onclick','modechange\(\'pch\',\'on\'\)')
+                                        $("#pch")[0].setAttribute('onclick','statechange\(\'pch\',\'on\'\)')
                                         }
                         break;
                     default:
@@ -56,21 +57,23 @@
                     case "on":
                         if ($("#dhwpower")[0].classList.contains("iconon") == false ) {
                                         $("#dhwpower")[0].classList.add("iconon")
-                                        $("#dhwpowerc")[0].setAttribute('onclick','modechange\(\'pdhw\',\'off\'\)')
+                                        $("#pdhw")[0].setAttribute('onclick','statechange\(\'pdhw\',\'off\'\)')
                         }
                         break;
                     case "off":
                         if ($("#heatpower")[0].classList.contains("iconon") == true ) {
                                         $("#dhwpower")[0].classList.remove("iconon")
-                                        $("#dhwpowerc")[0].setAttribute('onclick','modechange\(\'pdhw\',\'on\'\)')
+                                        $("#pdhw")[0].setAttribute('onclick','statechange\(\'pdhw\',\'on\'\)')
                                         }
                         break;
                     default:
                 }
             });
         }
-        function modechange(mode, value) {
-            $.post('/modechange', {mode: mode, value: value}, function(data) {
+        function statechange(mode, value) {
+            $("#"+mode)[0].classList.add("spinn")
+            $("#"+mode)[0].classList.add("iconspinner")
+            $.post('/statechange', {mode: mode, value: value}, function(data) {
                 var text=data.msg;
                 var state=data.state
                 Swal.fire({
@@ -90,10 +93,58 @@
                         clearInterval(timerInterval)
                     }
                 })
+                $("#"+mode)[0].classList.remove("spinn")
+                $("#"+mode)[0].classList.remove("iconspinner")
             });
         }
 
-        setInterval(getdata, 1000);
+        function tempchange(which) {
+            (async () => {
+                const { value: inputValue } = await Swal.fire({
+                    title: 'Change temperature',
+                    input: 'range',
+                    inputAttributes: {
+                        min: 12,
+                        max: 30,
+                        step: 0.5
+                    },
+                    inputValue: temp
+                })
+                if (confirm) {
+                    $("#"+which)[0].classList.add("spinn")
+                    $("#"+which)[0].classList.add("iconspinner")
+                    var data = inputValue
+                    $.post('/tempchange', {which: which, value: data}, function(data) {
+                        var text=data.msg;
+                        var state=data.state
+                        Swal.fire({
+                            html: text,
+                            icon: state,
+                            showCloseButton: false,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            didOpen: () => {
+                                const b = Swal.getHtmlContainer().querySelector('b')
+                                timerInterval = setInterval(() => {
+                                    b.textContent = Swal.getTimerLeft()
+                                }, 100)
+                            },
+                            willClose: () => {
+                                clearInterval(timerInterval)
+                            }
+                        })
+                    $("#"+which)[0].classList.remove("spinn")
+                    $("#"+which)[0].classList.remove("iconspinner")
+                    });
+                }
+
+
+            })()
+        }
+
+
+        setInterval(getdata, 2000);
 	</script>
     </head>
     <body>
@@ -125,8 +176,8 @@
 			                <p class="card-text" >Outside temp: <b id="outtemp">N.A.</b>&#8451;</p>
                             <p class="card-text" >Heating-curve: <b id="hcurve">N.A.</b>&#8451;</p>
                         </div>
-                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" href="#!">Change</a>
-				            <a class="float-sm-end" id="heatpowerc" onclick="modechange('pch','on')" href="#"><i id="heatpower" class="iconpower"></i></a>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="heat" onclick="tempchange('heat')" href="#!">Change</a>
+				            <a class="float-sm-end" id="pch" onclick="statechange('pch','on')" href="#"><i id="heatpower" class="iconpower"></i></a>
                         </div>
 		            </div>
                 </div>
@@ -136,8 +187,8 @@
 			                <h2 class="card-title"><i class="icondhw"></i> DHW</h2>
                             <p class="card-text" >Tank temp: <b id="ttemp">N.A.</b>&#8451;</p>
                         </div>
-                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" href="#!">Change</a>
-                                <a class="float-sm-end" id="dhwpowerc" onclick="modechange('pdhw','on')" href="#"><i id="dhwpower" class="iconpower"></i></a>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw')" href="#!">Change</a>
+                                <a class="float-sm-end" id="pdhw" onclick="statechange('pdhw','on')" href="#"><i id="dhwpower" class="iconpower"></i></a>
 			            </div>
                     </div>
                 </div>
@@ -147,8 +198,8 @@
 			                <h2 class="card-title"><i class="iconcool"></i>Cooling</h2>
                             <p class="card-text">Inside humidity: <b id="humid">N.A.</b>%</p>
                         </div>
-                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" onclick="coolchange('Temp change', 'error')" href="#!">Change</a>
-                            <a class="float-sm-end" id="coolpowerc" onclick="modechange('pcool','on')" href="#"><i id="coolpower" class="iconpower"></i></a>
+                        <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="cool" onclick="tempchange('cool')" href="#!">Change</a>
+                            <a class="float-sm-end" id="pcool" onclick="statechange('pcool','on')" href="#"><i id="coolpower" class="iconpower"></i></a>
 		                </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from schedule import every, run_pending, cancel_job, clear
+from pymodbus.client.sync import ModbusSerialClient
 import threading
 import time
 import configparser
@@ -29,8 +30,10 @@ mqtt_broker_port=config['MQTT']['port']
 mqtt_topic=config['MQTT']['main_topic']
 mqtt_username=config['MQTT']['username']
 mqtt_password=config['MQTT']['password']
-
-ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
+newframe=""
+writed=""
+modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='N', baudrate=9600)
+ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
@@ -51,10 +54,33 @@ def handler(signum, frame):
     clear()
     exit(1)
 
-def ReadPump(data):
+def ReadWritePump(data):
+    print("test")
+    global newframe
+    global writed
+    global R101
+    global R141
+    if newframe:
+        print(newframe)
+        newframelen=len(newframe)
+        if newframelen == 6:
+            print("101")
+            modbus.connect()
+            modbusresult=modbus.write_registers(101, newframe, unit=17)
+            modbus.close()
+            if hasattr(modbusresult, 'fcode'):
+                if modbusresult.fcode < 0x80:
+                    print(modbusresult.fcode)
+                    writed="1"
+                else:
+                    writed="2"
+        elif newframelen == 16:
+            print("141")
+        newframe=""
+
     if(ser.isOpen() == False):
         print(colored("Closed seial connection.", 'red', attrs=["bold"]))
-        exit(1)
+        exit()
     else:
         for x in range(6):
             rs=ser.read(1).hex()
@@ -62,7 +88,6 @@ def ReadPump(data):
                 rs=ser.read(2).hex()
                 if data == "101":
                     if rs == "030c":
-                        global R101
                         R101=[]
                         for ind in range(6):
                             rs=ser.read(2).hex()
@@ -70,7 +95,6 @@ def ReadPump(data):
                         return R101
                 elif data == "141":
                     if rs == "0320":
-                        global R141
                         R141=[]
                         for ind in range(16):
                             rs=ser.read(2).hex()
@@ -119,7 +143,40 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         print("New temperature")
         client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
 
-def modechange(mode,value):
+def tempchange(which, value):
+    global newframe
+    global writed
+    if which == "heat":
+        print("Central heating: "+value)
+        print(R101)
+        newframe = PyHaier.SetCHTemp(R101, float(value))
+        msgt="Central heating: "
+    elif which == "dhw":
+        print(R101)
+        print("Domestic Hot Water: "+value)
+        newframe = PyHaier.SetDHWTemp(R101, int(value))
+        msgt="Domestic Hot Water "
+
+    for i in range(50):
+        print(writed)
+        if writed=="1":
+            msg=msgt+" temperature changed!"
+            state="success"
+            writed="0"
+            break
+        elif writed=="2":
+            msg="Modbus communication error."
+            state="error"
+            writed="0"
+        else:
+            msg="Modbus connection timeout."
+            state="error"
+            writed="0"
+        time.sleep(0.2)
+
+    return jsonify(msg=msg, state=state)
+
+def statechange(mode,value):
     pcool=status[statusmap.index("pcool")]
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
@@ -141,16 +198,41 @@ def modechange(mode,value):
             newstate=newstate+"T"
     if not newstate:
         newstate="off"
+    global newframe
+    global writed
+    print(writed)
+    print(R101)
+    print(newstate)
     newframe=PyHaier.SetState(R101,newstate)
-
-    msg = "Setting changed!"
-    state = "success"
-    status[statusmap.index(mode)]=value
+    for i in range(50):
+        print(writed)
+        if writed=="1":
+            msg="State changed!"
+            state="success"
+            writed="0"
+            break
+        elif writed=="2":
+            msg="Modbus communication error."
+            state="error"
+            writed="0"
+        else:
+            msg="Modbus connection timeout."
+            state="error"
+            writed="0"
+        time.sleep(0.2)
     return jsonify(msg=msg, state=state)
 
 def curvecalc():
-    curve="123"
-    return curve
+    insidetemp=float(status[statusmap.index("intemp")])
+    outsidetemp=float(status[statusmap.index("outtemp")])
+    settemp=float(status[statusmap.index("settemp")])
+    t1=(outsidetemp/(320-(outsidetemp*4)))
+    t2=pow(settemp,t1)
+    slope=0.65
+    ps=3
+    amp=3
+    heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+    status[statusmap.index("hcurve")]=heatcurve
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -231,10 +313,10 @@ def GetParameters():
         print(colored("Closed seial connection.", 'red', attrs=["bold"]))
         exit(1)
     else:
-        R101=ReadPump("101")
-        R141=ReadPump("141")
-        #R201=ReadPump("201")
-        #R241=ReadPump("241")
+        R101=ReadWritePump("101")
+        R141=ReadWritePump("141")
+        #R201=ReadWritePump("201")
+        #R241=ReadWritePump("241")
         if not R101:
             R101=[0,0,0,0,0,0]
         if not R141:
@@ -264,6 +346,7 @@ def GetParameters():
         status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
         status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
         status[statusmap.index("humid")] = GetHumidity(humidity)
+        curvecalc()
         if use_mqtt == '1':
             client.publish(mqtt_topic,str(status))
 
@@ -279,12 +362,20 @@ def home():
 def settings():
     return render_template('settings.html')
 
-@app.route('/modechange', methods=['POST'])
-def change_mode_route():
+@app.route('/statechange', methods=['POST'])
+def change_state_route():
     mode = request.form['mode']
     value = request.form['value']
-    information = modechange(mode, value)
+    information = statechange(mode, value)
     return information
+
+@app.route('/tempchange', methods=['POST'])
+def change_temp_route():
+    which = request.form['which']
+    value = request.form['value']
+    response = tempchange(which, value)
+    return response
+
 
 @app.route('/getdata', methods=['GET'])
 def getdata_route():
@@ -327,5 +418,5 @@ if __name__ == '__main__':
         client = mqtt.Client()  # Create instance of client with client ID “digi_mqtt_test”
         mqtt_bg = threading.Thread(target=connect_mqtt)
         mqtt_bg.start()
-    serve(app, host=bindaddr, port=bindport)
-    #app.run(debug=False, host=bindaddr, port=bindport)
+    #serve(app, host=bindaddr, port=bindport)
+    app.run(debug=False, host=bindaddr, port=bindport)
