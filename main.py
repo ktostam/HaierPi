@@ -11,6 +11,7 @@ import json
 import paho.mqtt.client as mqtt
 import signal
 from termcolor import colored
+from flask_htpasswd import HtPasswdAuth
 from waitress import serve
 
 welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
@@ -35,7 +36,9 @@ writed=""
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='N', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
-
+app.config['FLASK_HTPASSWD_PATH'] = '/home/jacekb/.htpasswd'
+app.config['FLASK_SECRET'] = 'Hey Hey Kids, secure me!'
+htpasswd = HtPasswdAuth(app)
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
@@ -54,8 +57,35 @@ def handler(signum, frame):
     clear()
     exit(1)
 
+def gpiocontrol(control, value):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(6, GPIO.OUT) #modbus
+    GPIO.setup(13, GPIO.OUT) #freq limit
+    GPIO.setup(19, GPIO.OUT) #heat
+    GPIO.setup(26, GPIO.OUT)
+    if control == "modbus":
+        if value == "1":
+            GPIO.output(6, GPIO.HIGH)
+        elif value == "0":
+            GPIO.output(6, GPIO.LOW)
+    if control == "heatdemand":
+        if value == "1":
+            GPIO.output(19, GPIO.HIGH)
+        if value == "0":
+            GPIO.output(19, GPIO.LOW)
+    if control == "cooldemand":
+        if value == "1":
+            GPIO.output(26, GPIO.HIGH)
+        if value == "0":
+            GPIO.output(26, GPIO.LOW)
+    if control == "freqlimit":
+        if value == "1":
+            GPIO.output(13, GPIO.HIGH)
+        if value == "0":
+            GPIO.output(13, GPIO.LOW)
+
+
 def ReadWritePump(data):
-    print("test")
     global newframe
     global writed
     global R101
@@ -66,8 +96,10 @@ def ReadWritePump(data):
         if newframelen == 6:
             print("101")
             modbus.connect()
+            gpiocontrol("modbus","1")
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
+            gpiocontrol("modbus","0")
             if hasattr(modbusresult, 'fcode'):
                 if modbusresult.fcode < 0x80:
                     print(modbusresult.fcode)
@@ -355,7 +387,8 @@ def background_function():
 
 # Flask route
 @app.route('/')
-def home():
+@htpasswd.required
+def home(user):
     return render_template('index.html')
 
 @app.route('/settings')
@@ -378,9 +411,15 @@ def change_temp_route():
 
 
 @app.route('/getdata', methods=['GET'])
-def getdata_route():
+@htpasswd.required
+def getdata_route(user):
     output = getdata()
     return output
+
+@app.route('/gettoken')
+@htpasswd.required
+def index(user):
+    return jsonify({'token': htpasswd.generate_token(user)})
 
 # Function to run the background function using a scheduler
 def run_background_function():
@@ -418,5 +457,5 @@ if __name__ == '__main__':
         client = mqtt.Client()  # Create instance of client with client ID “digi_mqtt_test”
         mqtt_bg = threading.Thread(target=connect_mqtt)
         mqtt_bg.start()
-    #serve(app, host=bindaddr, port=bindport)
-    app.run(debug=False, host=bindaddr, port=bindport)
+    serve(app, host=bindaddr, port=bindport)
+    #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
