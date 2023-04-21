@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from schedule import every, run_pending, cancel_job, clear
+from schedule import every, run_pending, get_jobs, clear, cancel_job
 from pymodbus.client.sync import ModbusSerialClient
 import threading
 import time
@@ -11,7 +11,7 @@ import json
 import paho.mqtt.client as mqtt
 import signal
 from termcolor import colored
-from flask_htpasswd import HtPasswdAuth
+# from flask_htpasswd import HtPasswdAuth
 from waitress import serve
 
 welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
@@ -36,9 +36,9 @@ writed=""
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='N', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
-app.config['FLASK_HTPASSWD_PATH'] = '/home/jacekb/.htpasswd'
-app.config['FLASK_SECRET'] = 'Hey Hey Kids, secure me!'
-htpasswd = HtPasswdAuth(app)
+# app.config['FLASK_HTPASSWD_PATH'] = '/home/jacekb/.htpasswd'
+# app.config['FLASK_SECRET'] = 'Hey Hey Kids, secure me!'
+# htpasswd = HtPasswdAuth(app)
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
@@ -51,6 +51,7 @@ def handler(signum, frame):
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
+#    GPIO.clenaup()
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
@@ -85,67 +86,78 @@ def gpiocontrol(control, value):
             GPIO.output(13, GPIO.LOW)
 
 
-def ReadWritePump(data):
+def WritePump():
     global newframe
     global writed
-    global R101
-    global R141
     if newframe:
         print(newframe)
         newframelen=len(newframe)
         if newframelen == 6:
             print("101")
+#            gpiocontrol("modbus","1")
             modbus.connect()
-            gpiocontrol("modbus","1")
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
-            gpiocontrol("modbus","0")
-            if hasattr(modbusresult, 'fcode'):
-                if modbusresult.fcode < 0x80:
-                    print(modbusresult.fcode)
-                    writed="1"
-                else:
-                    writed="2"
+#            gpiocontrol("modbus","0")
+            print(modbusresult)
+            writed="1"
+            # if hasattr(modbusresult, 'fcode'):
+            #     if modbusresult.fcode < 0x80:
+            #         print(modbusresult.fcode)
+            #         writed="1"
+            #     else:
+            #         writed="2"
         elif newframelen == 16:
             print("141")
         newframe=""
 
-    if(ser.isOpen() == False):
-        print(colored("Closed seial connection.", 'red', attrs=["bold"]))
-        exit()
-    else:
-        for x in range(6):
-            rs=ser.read(1).hex()
-            if rs == "11":
-                rs=ser.read(2).hex()
-                if data == "101":
-                    if rs == "030c":
-                        R101=[]
-                        for ind in range(6):
-                            rs=ser.read(2).hex()
-                            R101.append(int(rs, 16))
-                        return R101
-                elif data == "141":
-                    if rs == "0320":
-                        R141=[]
-                        for ind in range(16):
-                            rs=ser.read(2).hex()
-                            R141.append(int(rs, 16))
-                        return R141
-                elif data == "201":
-                    if rs == "0302":
-                        R201=[]
-                        for ind in range(1):
-                            rs=ser.read(2).hex()
-                            R201.append(int(rs, 16))
-                        return R201
-                elif data == "241":
-                    if rs == "032c":
-                        R241=[]
-                        for ind in range(22):
-                            rs=ser.read(2).hex()
-                            R241.append(int(rs, 16))
-                        return R241
+def ReadPump():
+    global R101
+    global R141
+    global R201
+    global R241
+    global newframe
+    time.sleep(0.2)
+    while (1):
+        if (ser.isOpen() == False):
+            print(colored("Closed seial connection.", 'red', attrs=["bold"]))
+            break
+        if newframe:
+            WritePump()
+        rs = ser.read(1).hex()
+        if rs == "11":
+            rs = ser.read(2).hex()
+            # # zapisy
+            # if rs == "1000":
+            #     rs = ser.read(8).hex()
+            #     bits = str(rs)[-2:]
+            #     rsa = ser.read(int(bits, 16)).hex()
+            #     head = "111000"
+            #     toprinttmp = head + rs + rsa
+            #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
+            #     print(toprint)
+            #     # zapisy end
+            if rs == "030c":
+                R101 = []
+                for ind in range(6):
+                    rs = ser.read(2).hex()
+                    R101.append(int(rs, 16))
+                # print(R101)
+            if rs == "0320":
+                R141 = []
+                for ind in range(16):
+                    rs = ser.read(2).hex()
+                    R141.append(int(rs, 16))
+            if rs == "0302":
+                R201 = []
+                for ind in range(1):
+                    rs = ser.read(2).hex()
+                    R201.append(int(rs, 16))
+            if rs == "032c":
+                R241 = []
+                for ind in range(22):
+                    rs = ser.read(2).hex()
+                    R241.append(int(rs, 16))
 
 def on_connect(client, userdata, flags, rc):
     print(colored("MQTT - Conected", "green", attrs=['bold']))
@@ -341,54 +353,41 @@ def GetHumidity(param):
 
 #Reading parameters
 def GetParameters():
-    if(ser.isOpen() == False):
-        print(colored("Closed seial connection.", 'red', attrs=["bold"]))
-        exit(1)
+    tank=PyHaier.GetDHWCurTemp(R141)
+    dhw=PyHaier.GetDHWTemp(R101)
+    powerstate=PyHaier.GetState(R101)
+
+    if 'Heat' in powerstate:
+        status[statusmap.index("pch")] = "on"
     else:
-        R101=ReadWritePump("101")
-        R141=ReadWritePump("141")
-        #R201=ReadWritePump("201")
-        #R241=ReadWritePump("241")
-        if not R101:
-            R101=[0,0,0,0,0,0]
-        if not R141:
-            R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        status[statusmap.index("pch")] = "off"
 
-        tank=PyHaier.GetDHWCurTemp(R141)
-        dhw=PyHaier.GetDHWTemp(R101)
-        powerstate=PyHaier.GetState(R101)
+    if 'Cool' in powerstate:
+        status[statusmap.index("pcool")] = "on"
+    else:
+        status[statusmap.index("pcool")] = "off"
 
-        if 'Heat' in powerstate:
-            status[statusmap.index("pch")] = "on"
-        else:
-            status[statusmap.index("pch")] = "off"
+    if 'Tank' in powerstate:
+        status[statusmap.index("pdhw")] = "on"
+    else:
+        status[statusmap.index("pdhw")] = "off"
 
-        if 'Cool' in powerstate:
-            status[statusmap.index("pcool")] = "on"
-        else:
-            status[statusmap.index("pcool")] = "off"
-
-        if 'Tank' in powerstate:
-            status[statusmap.index("pdhw")] = "on"
-        else:
-            status[statusmap.index("pdhw")] = "off"
-
-        status[statusmap.index("tank")]=tank
-        status[statusmap.index("dhw")]=dhw
-        status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
-        status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
-        status[statusmap.index("humid")] = GetHumidity(humidity)
-        curvecalc()
-        if use_mqtt == '1':
-            client.publish(mqtt_topic,str(status))
+    status[statusmap.index("tank")]=tank
+    status[statusmap.index("dhw")]=dhw
+    status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
+    status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
+    status[statusmap.index("humid")] = GetHumidity(humidity)
+    curvecalc()
+    if use_mqtt == '1':
+        client.publish(mqtt_topic,str(status))
 
 def background_function():
     print("Background function running!")
 
 # Flask route
 @app.route('/')
-@htpasswd.required
-def home(user):
+#@htpasswd.required
+def home():
     return render_template('index.html')
 
 @app.route('/settings')
@@ -411,26 +410,22 @@ def change_temp_route():
 
 
 @app.route('/getdata', methods=['GET'])
-@htpasswd.required
-def getdata_route(user):
+#@htpasswd.required
+def getdata_route():
     output = getdata()
     return output
 
-@app.route('/gettoken')
-@htpasswd.required
-def index(user):
-    return jsonify({'token': htpasswd.generate_token(user)})
+#@app.route('/gettoken')
+#@htpasswd.required
+#def index(user):
+#    return jsonify({'token': htpasswd.generate_token(user)})
 
 # Function to run the background function using a scheduler
 def run_background_function():
     job=every(int(timeout)).seconds.do(GetParameters)
     while True:
-        if(ser.isOpen() == False):
-            print(colored("Closed seial connection.", 'red', attrs=["bold"]))
-            exit(1)
-        else: 
-            run_pending()
-            time.sleep(1)
+        run_pending()
+        time.sleep(1)
 
 def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
@@ -457,5 +452,7 @@ if __name__ == '__main__':
         client = mqtt.Client()  # Create instance of client with client ID “digi_mqtt_test”
         mqtt_bg = threading.Thread(target=connect_mqtt)
         mqtt_bg.start()
+    serial_thread = threading.Thread(target=ReadPump)
+    serial_thread.start()
     serve(app, host=bindaddr, port=bindport)
     #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
