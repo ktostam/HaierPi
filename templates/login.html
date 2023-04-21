@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block page_body %}
+<main class="w-100 m-auto" style="max-width:350px; padding: 15px">
+<form action="{{ url_for('simplelogin.login', next=request.args.get('next', '/')) }}" method="post">
+    <h1 class="h3 mb-3 fw-normal">Please log in</h1>
+{{ form.csrf_token }}
+    <div class="form-floating">
+      <input autocapitalize="none" type="text" class="form-control" id="username" name="username" placeholder="Name">
+      <label for="username">{{form.username.label}}</label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" id="password" name="password" required placeholder="Password">
+      <label for="password">{{form.password.label}}</label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Log in</button>
+  </form>
+</main>
+{% endblock %}

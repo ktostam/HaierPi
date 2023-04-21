@@ -11,8 +11,10 @@ import json
 import paho.mqtt.client as mqtt
 import signal
 from termcolor import colored
-# from flask_htpasswd import HtPasswdAuth
 from waitress import serve
+from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
+from werkzeug.security import check_password_hash, generate_password_hash
+
 
 welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -36,9 +38,8 @@ writed=""
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='N', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
-# app.config['FLASK_HTPASSWD_PATH'] = '/home/jacekb/.htpasswd'
-# app.config['FLASK_SECRET'] = 'Hey Hey Kids, secure me!'
-# htpasswd = HtPasswdAuth(app)
+app.config['SECRET_KEY'] = 'something-secret'
+
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
@@ -57,6 +58,16 @@ def handler(signum, frame):
         client.disconnect()
     clear()
     exit(1)
+
+def check_my_users(user):
+    my_users = json.load(open("users.json"))
+    if not my_users.get(user["username"]):
+        return False
+    stored_password = my_users[user["username"]]["password"]
+    if check_password_hash(stored_password, user["password"]):
+        return True
+    return False
+simple_login = SimpleLogin(app, login_checker=check_my_users)
 
 def gpiocontrol(control, value):
     GPIO.setmode(GPIO.BCM)
@@ -84,7 +95,6 @@ def gpiocontrol(control, value):
             GPIO.output(13, GPIO.HIGH)
         if value == "0":
             GPIO.output(13, GPIO.LOW)
-
 
 def WritePump():
     global newframe
@@ -372,8 +382,8 @@ def GetParameters():
     else:
         status[statusmap.index("pdhw")] = "off"
 
-    status[statusmap.index("tank")]=tank
-    status[statusmap.index("dhw")]=dhw
+    status[statusmap.index("tank")] = tank
+    status[statusmap.index("dhw")] = dhw
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
@@ -381,20 +391,42 @@ def GetParameters():
     if use_mqtt == '1':
         client.publish(mqtt_topic,str(status))
 
+def create_user(**data):
+    """Creates user with encrypted password"""
+    if "username" not in data or "password" not in data:
+        raise ValueError("username and password are required.")
+
+    # Hash the user password
+    data["password"] = generate_password_hash(
+        data.pop("password"), method="pbkdf2:sha256"
+    )
+
+    # Here you insert the `data` in your users database
+    # for this simple example we are recording in a json file
+    db_users = json.load(open("users.json"))
+    # add the new created user to json
+    db_users[data["username"]] = data
+    # commit changes to database
+    json.dump(db_users, open("users.json", "w"))
+    #return data
+    return jsonify(msg="Password changed")
+
 def background_function():
     print("Background function running!")
 
 # Flask route
 @app.route('/')
-#@htpasswd.required
+@login_required
 def home():
     return render_template('index.html')
 
 @app.route('/settings')
+@login_required
 def settings():
     return render_template('settings.html')
 
 @app.route('/statechange', methods=['POST'])
+@login_required
 def change_state_route():
     mode = request.form['mode']
     value = request.form['value']
@@ -402,23 +434,26 @@ def change_state_route():
     return information
 
 @app.route('/tempchange', methods=['POST'])
+@login_required
 def change_temp_route():
     which = request.form['which']
     value = request.form['value']
     response = tempchange(which, value)
     return response
 
+@app.route('/changepass', methods=['POST'])
+@login_required
+def change_pass_route():
+    user = request.form['user']
+    password = request.form['password']
+    response = create_user(username=user, password=password)
+    return response
 
 @app.route('/getdata', methods=['GET'])
-#@htpasswd.required
+@login_required
 def getdata_route():
     output = getdata()
     return output
-
-#@app.route('/gettoken')
-#@htpasswd.required
-#def index(user):
-#    return jsonify({'token': htpasswd.generate_token(user)})
 
 # Function to run the background function using a scheduler
 def run_background_function():

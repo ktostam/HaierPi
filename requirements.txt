@@ -8,4 +8,5 @@ schedule==1.2.0
 termcolor==2.2.0
 waitress==2.1.2
 pyopenssl
-flask_htpasswd
+flask_simplelogin
+werkzeug
