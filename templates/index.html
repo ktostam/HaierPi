@@ -64,6 +64,8 @@
         function getdata() {
             $.get('/getdata', function(data) {
                 $("#ttemp").text(data.tank)
+                $("#dhwsetpoint").text(data.dhw)
+                dhwsetpoint = data.dhw
                 $("#hcurve").text(data.hcurve)
                 $("#humid").text(data.humid)
                 $("#setpoint").text(data.setpoint)
@@ -156,7 +158,7 @@
             minimum=30
             maximum=55
             stepp=1
-            inputval=43
+            inputval=dhwsetpoint
         }
             (async () => {
                 const { value: inputValue } = await Swal.fire({
@@ -211,7 +213,7 @@
                         <div class="col-md-4 mb-1">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h2 class="card-title"><i class="icoheat"></i> Heating - setpoint: <b id="setpoint">N.A.</b> &#8451;</h2>
+                                    <h2 class="card-title"><i class="icoheat"></i> Heating - setpoint: <b id="setpoint">N.A.</b>&#8451;</h2>
                                     <p class="card-text">Inside temp: <b id="intemp">N.A.</b>&#8451;</p>
                                     <p class="card-text" >Outside temp: <b id="outtemp">N.A.</b>&#8451;</p>
                                     <p class="card-text" >Heating-curve: <b id="hcurve">N.A.</b>&#8451;</p>
@@ -224,7 +226,7 @@
                         <div class="col-md-4 mb-1">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h2 class="card-title"><i class="icondhw"></i> DHW</h2>
+                                    <h2 class="card-title"><i class="icondhw"></i> DHW - setpoint: <b id="dhwsetpoint">N.A.</b>&#8451;</h2>
                                     <p class="card-text" >Tank temp: <b id="ttemp">N.A.</b>&#8451;</p>
                                 </div>
                                 <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw')" href="#!">Change</a>

@@ -35,10 +35,16 @@ mqtt_username=config['MQTT']['username']
 mqtt_password=config['MQTT']['password']
 newframe=""
 writed=""
-modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='N', baudrate=9600)
-ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
+modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
+ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'something-secret'
+app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(6, GPIO.OUT) #modbus
+GPIO.setup(13, GPIO.OUT) #freq limit
+GPIO.setup(19, GPIO.OUT)
+GPIO.setup(26, GPIO.OUT)
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
@@ -52,7 +58,7 @@ def handler(signum, frame):
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
-#    GPIO.clenaup()
+    GPIO.clenaup()
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
@@ -70,11 +76,6 @@ def check_my_users(user):
 simple_login = SimpleLogin(app, login_checker=check_my_users)
 
 def gpiocontrol(control, value):
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(6, GPIO.OUT) #modbus
-    GPIO.setup(13, GPIO.OUT) #freq limit
-    GPIO.setup(19, GPIO.OUT) #heat
-    GPIO.setup(26, GPIO.OUT)
     if control == "modbus":
         if value == "1":
             GPIO.output(6, GPIO.HIGH)
@@ -104,11 +105,12 @@ def WritePump():
         newframelen=len(newframe)
         if newframelen == 6:
             print("101")
-#            gpiocontrol("modbus","1")
+            gpiocontrol("modbus","1")
+            time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
-#            gpiocontrol("modbus","0")
+            gpiocontrol("modbus","0")
             print(modbusresult)
             writed="1"
             # if hasattr(modbusresult, 'fcode'):
@@ -363,27 +365,26 @@ def GetHumidity(param):
 
 #Reading parameters
 def GetParameters():
-    tank=PyHaier.GetDHWCurTemp(R141)
-    dhw=PyHaier.GetDHWTemp(R101)
-    powerstate=PyHaier.GetState(R101)
+    if len(R141) == 16:
+        tank=PyHaier.GetDHWCurTemp(R141)
+        status[statusmap.index("tank")] = tank
+    if len(R101) == 6:
+        dhw=PyHaier.GetDHWTemp(R101)
+        powerstate=PyHaier.GetState(R101)
+        status[statusmap.index("dhw")] = dhw
+        if 'Heat' in powerstate:
+            status[statusmap.index("pch")] = "on"
+        else:
+            status[statusmap.index("pch")] = "off"
+        if 'Cool' in powerstate:
+            status[statusmap.index("pcool")] = "on"
+        else:
+            status[statusmap.index("pcool")] = "off"
 
-    if 'Heat' in powerstate:
-        status[statusmap.index("pch")] = "on"
-    else:
-        status[statusmap.index("pch")] = "off"
-
-    if 'Cool' in powerstate:
-        status[statusmap.index("pcool")] = "on"
-    else:
-        status[statusmap.index("pcool")] = "off"
-
-    if 'Tank' in powerstate:
-        status[statusmap.index("pdhw")] = "on"
-    else:
-        status[statusmap.index("pdhw")] = "off"
-
-    status[statusmap.index("tank")] = tank
-    status[statusmap.index("dhw")] = dhw
+        if 'Tank' in powerstate:
+            status[statusmap.index("pdhw")] = "on"
+        else:
+            status[statusmap.index("pdhw")] = "off"
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
