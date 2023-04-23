@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='bundle.css') }}">
 	    <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
         <link rel="stylesheet" href="{{ url_for('static', filename='{{ theme }}.css') }}" id="theme-style">
-        <script src="{{ url_for('static', 'sweetalert2.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='sweetalert2.min.js') }}"></script>
         {% block custom_scripts %}
         {% endblock %}
     </head>
