@@ -485,7 +485,7 @@ def updatecheck_route():
 
 @app.route('/installupdate', methods=['GET'])
 @login_required
-def getdata_route():
+def installupdate_route():
     output = installupdate()
     return output
 
