@@ -309,7 +309,7 @@ def updatecheck():
     return jsonify(update=msg)
 
 def installupdate():
-    subprocess.run(['nohup', './update.sh'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    subprocess.run(['nohup', './update.sh', '&'], stdout=subprocess.PIPE).stdout.decode('utf-8')
     return jsonify(updated="OK")
 
 
