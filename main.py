@@ -309,7 +309,7 @@ def updatecheck():
     return jsonify(update=msg)
 
 def installupdate():
-    subprocess.Popen("nohup bash ./update.sh &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen("nohup bash ./update.sh & disown", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return jsonify(updated="OK")
 
 
