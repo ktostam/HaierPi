@@ -306,8 +306,12 @@ def updatecheck():
 	    msg="Availible"
     else:
 	    msg="Not Availible"
-
     return jsonify(update=msg)
+
+def installupdate():
+    subprocess.run(['screen', '-DmS', 'UPDATE', './update.sh'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    return jsonify(updated="OK")
+
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -478,6 +482,12 @@ def change_temp_route():
 def updatecheck_route():
     response = updatecheck()
     return response
+
+@app.route('/installupdate', methods=['GET'])
+@login_required
+def getdata_route():
+    output = installupdate()
+    return output
 
 @app.route('/changepass', methods=['POST'])
 @login_required
