@@ -120,7 +120,7 @@
             });
         }
             function updatecheck() {
-            $.get('/statechange', function(data) {
+            $.get('/updatecheck', function(data) {
                 var text=data.update;
                 var state="info";
                 Swal.fire({
