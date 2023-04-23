@@ -199,14 +199,17 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         print("New temperature")
         client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
 
-def tempchange(which, value):
+def tempchange(which, value, curve):
     global newframe
     global writed
     if which == "heat":
-        print("Central heating: "+value)
-        print(R101)
-        newframe = PyHaier.SetCHTemp(R101, float(value))
-        msgt="Central heating: "
+        if curve == "1":
+            print("Central heating: "+value)
+            print(R101)
+            newframe = PyHaier.SetCHTemp(R101, float(value))
+            msgt="Central heating: "
+        elif curve == "0":
+            status[statusmap.index("settemp")]=float(value)
     elif which == "dhw":
         print(R101)
         print("Domestic Hot Water: "+value)
@@ -289,6 +292,11 @@ def curvecalc():
     amp=3
     heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
     status[statusmap.index("hcurve")]=heatcurve
+    if 25.0 < heatcurve < 55.0:
+        gpiocontrol("heatdemand", "1")
+        tempchange(heat, heatcurve, "1")
+    else:
+        gpiocontrol("heatdemand", "0")
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -453,7 +461,7 @@ def change_state_route():
 def change_temp_route():
     which = request.form['which']
     value = request.form['value']
-    response = tempchange(which, value)
+    response = tempchange(which, value, "0")
     return response
 
 @app.route('/changepass', methods=['POST'])
