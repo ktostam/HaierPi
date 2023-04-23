@@ -119,6 +119,29 @@
                 }
             });
         }
+            function updatecheck() {
+            $.get('/statechange', function(data) {
+                var text=data.update;
+                var state="info";
+                Swal.fire({
+                    html: text,
+                    icon: state,
+                    showCloseButton: false,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                })
+            });
+        }
         function statechange(mode, value) {
             $("#"+mode)[0].classList.add("spinn")
             $("#"+mode)[0].classList.add("iconspinner")
