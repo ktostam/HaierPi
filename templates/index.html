@@ -124,20 +124,20 @@
                 var text=data.update;
                 var state="info";
                 if(text == "Availible") {
-                Swal.fire({
-                  title: 'Do you want to save the changes?',
-                  showDenyButton: true,
-                  showCancelButton: true,
-                  confirmButtonText: 'Save',
-                  denyButtonText: `Don't save`,
-                }).then((result) => {
-                  /* Read more about isConfirmed, isDenied below */
-                  if (result.isConfirmed) {
-                    Swal.fire('Saved!', '', 'success')
-                  } else if (result.isDenied) {
-                    Swal.fire('Changes are not saved', '', 'info')
-                  }
-                })
+                    Swal.fire({
+                      title: 'Do you want to save the changes?',
+                      showDenyButton: true,
+                      showCancelButton: true,
+                      confirmButtonText: 'Save',
+                      denyButtonText: `Don't save`,
+                    }).then((result) => {
+                      /* Read more about isConfirmed, isDenied below */
+                      if (result.isConfirmed) {
+                        Swal.fire('Saved!', '', 'success')
+                      } else if (result.isDenied) {
+                        Swal.fire('Changes are not saved', '', 'info')
+                      }
+                    })
                 } else {
                 Swal.fire({
                     html: text,
@@ -156,8 +156,8 @@
                         clearInterval(timerInterval)
                     }
                 })
+                }
             });
-            }
         }
         function statechange(mode, value) {
             $("#"+mode)[0].classList.add("spinn")
