@@ -14,7 +14,7 @@ from termcolor import colored
 from waitress import serve
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
-
+import RPi.GPIO as GPIO
 
 welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -46,8 +46,8 @@ GPIO.setup(13, GPIO.OUT) #freq limit
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(26, GPIO.OUT)
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -363,6 +363,11 @@ def GetHumidity(param):
     else:
         return -1
 
+def settheme(theme):
+    print(theme)
+    status[statusmap.index("theme")]=theme
+    return theme
+
 #Reading parameters
 def GetParameters():
     if len(R141) == 16:
@@ -419,12 +424,21 @@ def background_function():
 @app.route('/')
 @login_required
 def home():
-    return render_template('index.html')
+    theme=status[statusmap.index("theme")]
+    return render_template('index.html', theme=theme)
+
+@app.route('/theme', methods=['POST'])
+def theme_route():
+    theme = request.form['theme']
+    settheme(theme)
+    return theme
+
 
 @app.route('/settings')
 @login_required
 def settings():
-    return render_template('settings.html')
+    theme = status[statusmap.index("theme")]
+    return render_template('settings.html', theme=theme)
 
 @app.route('/statechange', methods=['POST'])
 @login_required
