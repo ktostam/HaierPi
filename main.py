@@ -8,6 +8,7 @@ from termcolor import colored
 from waitress import serve
 import RPi.GPIO as GPIO
 import configparser
+import subprocess
 import threading
 import requests
 import PyHaier
