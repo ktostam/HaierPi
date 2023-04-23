@@ -309,7 +309,7 @@ def updatecheck():
     return jsonify(update=msg)
 
 def installupdate():
-    subprocess.Popen("systemctl start haierupdate.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen("systemctl restart haierupdate.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return jsonify(updated="OK")
 
 
