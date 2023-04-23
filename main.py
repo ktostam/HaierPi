@@ -234,7 +234,7 @@ def tempchange(which, value, curve):
     elif curve == "0":
         if which == "heat":
             status[statusmap.index("settemp")] = float(value)
-            config['SETTINGS']['settemp'] = float(value)    # update
+            config['SETTINGS']['settemp'] = str(value)    # update
             with open('config.ini', 'w') as configfile:    # save
                 config.write(configfile)
 
