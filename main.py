@@ -48,7 +48,7 @@ GPIO.setup(19, GPIO.OUT) # heat demand
 GPIO.setup(26, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'dark']
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -237,11 +237,8 @@ def tempchange(which, value, curve):
             config['SETTINGS']['settemp'] = str(value)    # update
             with open('config.ini', 'w') as configfile:    # save
                 config.write(configfile)
-
             msg = "Central Heating temperature changed!"
             state = "success"
-        elif which == "dhw":
-            tempchange(which, value, "1")
 
     return jsonify(msg=msg, state=state)
 
@@ -485,7 +482,8 @@ def change_state_route():
 def change_temp_route():
     which = request.form['which']
     value = request.form['value']
-    response = tempchange(which, value, "0")
+    directly = request.form['directly']
+    response = tempchange(which, value, directly)
     return response
 @app.route('/updatecheck')
 def updatecheck_route():
