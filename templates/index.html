@@ -125,18 +125,31 @@
                 var state="info";
                 if(text == "Availible") {
                     Swal.fire({
-                      title: 'Do you want to save the changes?',
-                      showDenyButton: true,
+                      title: 'New update availible, Do you want install?',
                       showCancelButton: true,
-                      confirmButtonText: 'Save',
-                      denyButtonText: `Don't save`,
+                      confirmButtonText: 'Install',
                     }).then((result) => {
                       /* Read more about isConfirmed, isDenied below */
                       if (result.isConfirmed) {
-                        Swal.fire('Saved!', '', 'success')
-                      } else if (result.isDenied) {
-                        Swal.fire('Changes are not saved', '', 'info')
-                      }
+                      $.get('/installupdate', function(data) {
+                      Swal.fire({
+                    html: "Installing update, please wait...",
+                    icon: info,
+                    showCloseButton: false,
+                    showConfirmButton: false,
+                    timer: 60000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                })
+                        });
                     })
                 } else {
                 Swal.fire({
