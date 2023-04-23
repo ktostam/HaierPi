@@ -64,7 +64,7 @@ By default sript listen on all interfaces on port 4000, you can change it in **c
 
 default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
-![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot1.png?raw=true)
+![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
 ## Version
 
 ### 1.0
