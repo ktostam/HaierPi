@@ -232,9 +232,16 @@ def tempchange(which, value, curve):
                 writed="0"
             time.sleep(0.2)
     elif curve == "0":
-        status[statusmap.index("settemp")] = float(value)
-        msg = "Central Heating temperature changed!"
-        state = "success"
+        if which == "heat":
+            status[statusmap.index("settemp")] = float(value)
+            config['SETTINGS']['settemp'] = float(value)    # update
+            with open('config.ini', 'w') as configfile:    # save
+                config.write(configfile)
+
+            msg = "Central Heating temperature changed!"
+            state = "success"
+        elif which == "dhw":
+            tempchange(which, value, "1")
 
     return jsonify(msg=msg, state=state)
 
