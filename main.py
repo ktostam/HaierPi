@@ -45,8 +45,8 @@ app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25f
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(6, GPIO.OUT) #modbus
 GPIO.setup(13, GPIO.OUT) #freq limit
-GPIO.setup(19, GPIO.OUT)
-GPIO.setup(26, GPIO.OUT)
+GPIO.setup(19, GPIO.OUT) # heat demand
+GPIO.setup(26, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
