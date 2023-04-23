@@ -1,20 +1,22 @@
-from flask import Flask, render_template, request, jsonify
-from schedule import every, run_pending, get_jobs, clear, cancel_job
-from pymodbus.client.sync import ModbusSerialClient
-import threading
-import time
-import configparser
-import serial
-import PyHaier
-import requests
-import json
-import paho.mqtt.client as mqtt
-import signal
-from termcolor import colored
-from waitress import serve
+
+
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
+from schedule import every, run_pending, get_jobs, clear, cancel_job
+from flask import Flask, render_template, request, jsonify
+from pymodbus.client.sync import ModbusSerialClient
+import paho.mqtt.client as mqtt
+from termcolor import colored
+from waitress import serve
 import RPi.GPIO as GPIO
+import configparser
+import threading
+import requests
+import PyHaier
+import serial
+import signal
+import json
+import time
 
 welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
