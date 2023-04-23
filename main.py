@@ -48,7 +48,7 @@ GPIO.setup(19, GPIO.OUT) # heat demand
 GPIO.setup(26, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'dark']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
