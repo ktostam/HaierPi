@@ -131,25 +131,25 @@
                     }).then((result) => {
                         /* Read more about isConfirmed, isDenied below */
                         if (result.isConfirmed) {
-                            $.get('/installupdate', function(data) {
-                                Swal.fire({
-                                    html: "Installing update, please wait...",
-                                    icon: info,
-                                    showCloseButton: false,
-                                    showConfirmButton: false,
-                                    timer: 60000,
-                                    timerProgressBar: true,
-                                    didOpen: () => {
-                                        const b = Swal.getHtmlContainer().querySelector('b')
-                                        timerInterval = setInterval(() => {
-                                            b.textContent = Swal.getTimerLeft()
-                                        }, 100)
-                                    },
-                                    willClose: () => {
-                                        clearInterval(timerInterval)
-                                    }
-                                })
-                            });
+                            $.get('/installupdate' {});
+                            Swal.fire({
+                                html: "Installing update, please wait...",
+                                icon: info,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 60000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    const b = Swal.getHtmlContainer().querySelector('b')
+                                    timerInterval = setInterval(() => {
+                                        b.textContent = Swal.getTimerLeft()
+                                    }, 100)
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval)
+                                }
+                            })
+
                         }
                     })
                 } else {
