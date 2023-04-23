@@ -298,6 +298,16 @@ def curvecalc():
     else:
         gpiocontrol("heatdemand", "0")
 
+def updatecheck():
+    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    localver=subprocess.run(['cat', '.git/refs/remotes/origin/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    if localver != gitver:
+	    msg="Availible"
+    else:
+	    msg="Not Availible"
+
+    return jsonify(update=msg)
+
 def getdata():
     intemp=status[statusmap.index("intemp")]
     outtemp=status[statusmap.index("outtemp")]
@@ -462,6 +472,10 @@ def change_temp_route():
     which = request.form['which']
     value = request.form['value']
     response = tempchange(which, value, "0")
+    return response
+@app.route('/updatecheck')
+def updatecheck_route():
+    response = updatecheck()
     return response
 
 @app.route('/changepass', methods=['POST'])
