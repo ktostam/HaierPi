@@ -9,13 +9,10 @@
         <!-- Favicon-->
         <link rel="icon" type="image/x-icon" href="../static/favicon.ico" />
         <!-- Core theme CSS (includes Bootstrap)-->
-        <link href="../static/styles.css" rel="stylesheet" />
-        <link href="../static/style2.css" rel="stylesheet" />
-        <link href="../static/bootstrap.min.css" rel="stylesheet" />
-	    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.css"> -->
-        <link rel="stylesheet" href="../static/{{ theme }}.css" id="theme-style">
-        <script src="../static/sweetalert2.min.js"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='bundle.css') }}">
+	    <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='{{ theme }}.css') }}" id="theme-style">
+        <script src="{{ url_for('static', 'sweetalert2.min.js') }}"></script>
         {% block custom_scripts %}
         {% endblock %}
     </head>
