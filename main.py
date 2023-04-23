@@ -203,36 +203,38 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
 def tempchange(which, value, curve):
     global newframe
     global writed
-    if which == "heat":
-        if curve == "1":
+    if curve == "1":
+        if which == "heat":
             print("Central heating: "+value)
             print(R101)
             newframe = PyHaier.SetCHTemp(R101, float(value))
             msgt="Central heating: "
-        elif curve == "0":
-            status[statusmap.index("settemp")]=float(value)
-    elif which == "dhw":
-        print(R101)
-        print("Domestic Hot Water: "+value)
-        newframe = PyHaier.SetDHWTemp(R101, int(value))
-        msgt="Domestic Hot Water "
+        elif which == "dhw":
+            print(R101)
+            print("Domestic Hot Water: "+value)
+            newframe = PyHaier.SetDHWTemp(R101, int(value))
+            msgt="Domestic Hot Water "
 
-    for i in range(50):
-        print(writed)
-        if writed=="1":
-            msg=msgt+" temperature changed!"
-            state="success"
-            writed="0"
-            break
-        elif writed=="2":
-            msg="Modbus communication error."
-            state="error"
-            writed="0"
-        else:
-            msg="Modbus connection timeout."
-            state="error"
-            writed="0"
-        time.sleep(0.2)
+        for i in range(50):
+            print(writed)
+            if writed=="1":
+                msg=msgt+" temperature changed!"
+                state="success"
+                writed="0"
+                break
+            elif writed=="2":
+                msg="Modbus communication error."
+                state="error"
+                writed="0"
+            else:
+                msg="Modbus connection timeout."
+                state="error"
+                writed="0"
+            time.sleep(0.2)
+    elif curve == "0":
+        status[statusmap.index("settemp")] = float(value)
+        msg = "Central Heating temperature changed!"
+        state = "success"
 
     return jsonify(msg=msg, state=state)
 
