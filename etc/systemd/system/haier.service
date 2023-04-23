@@ -1,0 +1,17 @@
+[Unit]
+Description=Start HAIER service
+StartLimitIntervalSec=5
+
+[Service]
+Restart=always
+RestartSec=10s
+ExecStart=/opt/haier/env/bin/python /opt/haier/main.py
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=HaierPi
+User=root
+Group=root
+WorkingDirectory=/opt/haier/
+
+[Install]
+WantedBy=basic.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=Update Haier Service
+After=local-fs.target
+After=network.target
+
+[Service]
+ExecStart=/opt/haier/update.sh
+RemainAfterExit=true
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
