@@ -25,6 +25,36 @@ PCB layout is designed for both RaspberryPi zeroW and NanoPi neo 1.4.
 ![Front](https://github.com/ktostam/HaierPi/blob/master/images/haierpi-front.png?raw=true)
 
 ![Front](https://github.com/ktostam/HaierPi/blob/master/images/haierpi-back.png?raw=true)
+
+### Component List
+
+| Symbol        | Value            | Footprint        |
+|---------------|------------------|------------------|
+| J1            | ADC-002          | ADC-002          |
+| H3-H4         | JST XH 3         | JST-XH-TH-3-2.5  |
+| POMPA,YR-E27  | JST XH 4         | JST-XH-TH-4-2.5  |
+| CON1-CON3     | DG308-2.54/2     |                  |
+| R1-R4         | 1K               | SMD 0805         |
+| R5-R8,R10-R12 | 4.7K             | SMD 0805         |
+| R9            | 120              | SMD 0805         |
+| R13-R15       | 0                | SMD 0805         |
+| R16-R17       | 330              | SMD 0805         |
+| C1            | 104              | SMD 0805         |
+| LED1          | RED              | SMD 0805         |
+| LED2          | GREEN            | SMD 0805         |
+| D1-D4         | 1N4007W          | SOD-123          |
+| D5-D7         | SMAJ12CA         | DO214AC          |
+| REL1          | N4078-2C-5V-0.2W | N4078-2C-5V-0.2W |
+| REL2-REL4     | HFD23-005-1ZS    | HFD23-005-1ZS    |
+| U1            | MAX3485          | SOP-8            |
+
+### Disclaimer
+- R9 is RS485 EOL resistor. For this application don't solder it.
+- Resistor R14-R15 is for choosing what type to board you want to connect (Raspberrypi/NanoPi Neo). For NanoPi, 
+solder 0 Ohm resistor for powering NanoPi via GPIO. **If you connect Raspberry Pi don't solder it**, because powering RPi 
+from GPIO bypasses builtin protections. I will be work but its not safe. If you connecting Raspberry Pi zero W, connect
+**J2**(GND) to **PP6** pad, and **J3**(+5V) to **PP1** pad. 
+
 ## INSTALL
 
 #### Download
@@ -45,7 +75,7 @@ run install script with root privileges
 
 installation script by default installs in **/opt/haier**
 ```shell
-$ sudo install.sh
+$ sudo bash install.sh
 ```
 installation script creates systemd services and asks if you want the service to start at system startup.
 
