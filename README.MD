@@ -2,12 +2,20 @@
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 
-This project allows basic control of HAIER heat pumps.
+This project allows you to control HAIER heat pumps.
 ## Tested with
 1. AU082FYCRA(HW)
 2. AU162FYCRA(HW)
 
+All tests were performed on a pump with an additional ATW-a01 unit
+
 However, it should work with all pumps that feature the YR-e27 remote control
+
+If you have any question you can find me on discord:
+
+[<img src="https://discordapp.com/api/guilds/1096167750612828210/widget.png?style=banner2" alt="Discord Banner 2"/>
+](https://discord.gg/vpDq6MYj)
+
 ## Donation
 If you like My work and want to support me, you can:
 
@@ -51,9 +59,28 @@ PCB layout is designed for both RaspberryPi zeroW and NanoPi neo 1.4.
 ### Disclaimer
 - R9 is RS485 EOL resistor. For this application don't solder it.
 - Resistor R14-R15 is for choosing what type to board you want to connect (Raspberrypi/NanoPi Neo). For NanoPi, 
-solder 0 Ohm resistor for powering NanoPi via GPIO. **If you connect Raspberry Pi don't solder it**, because powering RPi 
+solder 0 Ohm resistor for powering NanoPi via GPIO. `If you connect Raspberry Pi don't solder it`, because powering RPi 
 from GPIO bypasses builtin protections. I will be work but its not safe. If you connecting Raspberry Pi zero W, connect
-**J2**(GND) to **PP6** pad, and **J3**(+5V) to **PP1** pad. 
+`J2`(GND) to `PP6` pad, and `J3`(+5V) to `PP1` pad. 
+
+### Raspberry Pi
+if you want to use the script on the raspberry pi, you need to add the following settings to `config.txt`:
+
+```shell
+dtoverlay=w1-gpio,gpiopin=4
+dtoverlay=pi3-disable-bt
+enable_uart=1
+```
+Be aware that this settings will disable bluetooth. but we need use UART0
+
+### Nano Pi neo 1.4
+Script is also tested on NanoPi neo 1.4. For now no change is required, but in future, when support for hardware
+temperature sensor will be added, we need to remap some GPIO pins. Further information will be added later.
+
+### Other platform
+script needs a relay to control the data flow in order to function properly, so best choice is some sort of SBC.
+At the moment there are no plans to add support for other SBCs, but maybe in future I will add support for relays controlled by Home Assistant, 
+so script may running on any platform, and only need a RS485 connection.
 
 ## INSTALL
 
@@ -73,7 +100,7 @@ $ vim config.ini
 #### use install script
 run install script with root privileges
 
-installation script by default installs in **/opt/haier**
+installation script by default installs in `/opt/haier`
 ```shell
 $ sudo bash install.sh
 ```
