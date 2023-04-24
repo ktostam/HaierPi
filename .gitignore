@@ -11,8 +11,8 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
-#config.ini
-
+config.ini
+users.json
 # AWS User-specific
 .idea/**/aws.xml
 

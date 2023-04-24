@@ -41,6 +41,7 @@ else
 		exit 1
 	fi
 fi
+workdir=$(pwd)
 installation_dir="/opt/haier"
 mkdir $installation_dir
 echo -n -e "Copying files              [ \033[5;33mIN PROGRESS\033[0m ]\r"
@@ -56,8 +57,8 @@ pip -q install --upgrade pip
 pip -q install -r requirements.txt
 echo -e "\rPython requirements        [ \033[0;32mOK\033[0m ]            "
 echo -e -n "Generating systemd service...\r"
-cp ./etc/systemd/system/haier.service /etc/systemd/system/
-cp ./etc/systemd/system/haierupdate.service /etc/systemd/system/
+cp $workdir/etc/systemd/system/haier.service /etc/systemd/system/
+cp $workdir/etc/systemd/system/haierupdate.service /etc/systemd/system/
 systemctl daemon-reload
 echo -e "\rGenerating systemd service [ \033[0;32mOK\033[0m ]"
 echo -e "Do you want to activate systemd service to automatic start? Y/N"

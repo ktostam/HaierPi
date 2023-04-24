@@ -4,10 +4,10 @@
 	    function changepass() {
             (async () => {
                 const { value: formValues } = await Swal.fire({
-                    title: 'Multiple inputs',
+                    title: 'Enter new password',
                     html:
-                    '<input id="swal-input1" type="password" class="swal2-input">' +
-                    '<input id="swal-input2" type="password" class="swal2-input">',
+                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input1" name="swal-input1" placeholder="New Password"><label for="swal-input1">New password</label></div>' +
+                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input2" name="swal-input2" placeholder="Confirm Password"><label for="swal-input2">Confirm password</label></div>',
                     focusConfirm: false,
                     preConfirm: () => {
                         pass1=document.getElementById('swal-input1').value
