@@ -2,7 +2,7 @@
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 
-This project allows you to control HAIER heat pumps.
+This project allows you to control HAIER heat pumps. 
 ## Tested with
 1. AU082FYCRA(HW)
 2. AU162FYCRA(HW)

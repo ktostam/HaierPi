@@ -6,8 +6,8 @@
                 const { value: formValues } = await Swal.fire({
                     title: 'Enter new password',
                     html:
-                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input1" name="swal-input1" placeholder="New Password"><label for="swal-input1">New Password</label></div>' +
-                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input2" name="swal-input2" placeholder="Confirm Password"><label for="swal-input2">Confirm Password</label></div>',
+                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input1" name="swal-input1" placeholder="New Password"><label for="swal-input1">New password</label></div>' +
+                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input2" name="swal-input2" placeholder="Confirm Password"><label for="swal-input2">Confirm password</label></div>',
                     focusConfirm: false,
                     preConfirm: () => {
                         pass1=document.getElementById('swal-input1').value
