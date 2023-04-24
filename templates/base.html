@@ -11,7 +11,11 @@
         <!-- Core theme CSS (includes Bootstrap)-->
         <link rel="stylesheet" href="{{ url_for('static', filename='bundle.css') }}">
 	    <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
-        <link rel="stylesheet" href="{{ url_for('static', filename=theme+'.css') }}" id="theme-style">
+        {% if theme is defined %}
+         <link rel="stylesheet" href="{{ url_for('static', filename=theme+'.css') }}" id="theme-style">
+        {% else %}
+         <link rel="stylesheet" href="{{ url_for('static', filename='light.css') }}" id="theme-style">
+        {% endif %}
         <script src="{{ url_for('static', filename='sweetalert2.min.js') }}"></script>
         {% block custom_scripts %}
         {% endblock %}
