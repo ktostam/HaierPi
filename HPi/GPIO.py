@@ -14,12 +14,9 @@ def setup(pin, action):
     file2.close()
 
 def output(pin, value):
-    pinfile="/sys/class/gpio/gpio"+pin+"/value"
+    pinfile="/sys/class/gpio/gpio"+str(pin)+"/value"
     file1 = open(pinfile, 'w')
-    if value == "GPIO.HIGH":
-        file1.write("1")
-    elif value == "GPIO.LOG":
-        file1.write("0")
+    file1.write(str(value))
     file1.close()
 
 def cleanup(pin):
