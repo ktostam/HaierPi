@@ -6,7 +6,7 @@ from pymodbus.client.sync import ModbusSerialClient
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
-import RPi.GPIO as GPIO
+import HPi.GPIO as GPIO # using own function, writing directly to /sys/class/gpio, you need to cleanup() all used pin separetly
 import configparser
 import subprocess
 import threading
@@ -36,16 +36,23 @@ mqtt_username=config['MQTT']['username']
 mqtt_password=config['MQTT']['password']
 newframe=""
 writed=""
+modbuspin=mqtt_password=config['GPIO']['modbus']
+freqlimitpin=mqtt_password=config['GPIO']['freqlimit']
+heatdemandpin=mqtt_password=config['GPIO']['heatdemand']
+cooldemandpin=mqtt_password=config['GPIO']['cooldemand']
+
+
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(6, GPIO.OUT) #modbus
-GPIO.setup(13, GPIO.OUT) #freq limit
-GPIO.setup(19, GPIO.OUT) # heat demand
-GPIO.setup(26, GPIO.OUT) # cool demand
+
+#GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
+GPIO.setup(modbuspin, GPIO.OUT) #modbus
+GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
+GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
+GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
@@ -59,7 +66,10 @@ def handler(signum, frame):
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
-    GPIO.clenaup()
+    GPIO.clenaup(modbuspin)
+    GPIO.clenaup(freqlimitpin)
+    GPIO.clenaup(heatdemandpin)
+    GPIO.clenaup(cooldemandpin)
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
@@ -79,24 +89,24 @@ simple_login = SimpleLogin(app, login_checker=check_my_users)
 def gpiocontrol(control, value):
     if control == "modbus":
         if value == "1":
-            GPIO.output(6, GPIO.HIGH)
+            GPIO.output(modbuspin, GPIO.HIGH)
         elif value == "0":
-            GPIO.output(6, GPIO.LOW)
+            GPIO.output(modbuspin, GPIO.LOW)
     if control == "heatdemand":
         if value == "1":
-            GPIO.output(19, GPIO.HIGH)
+            GPIO.output(heatdemandpin, GPIO.HIGH)
         if value == "0":
-            GPIO.output(19, GPIO.LOW)
+            GPIO.output(heatdemandpin, GPIO.LOW)
     if control == "cooldemand":
         if value == "1":
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(cooldemandpin, GPIO.HIGH)
         if value == "0":
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(cooldemandpin, GPIO.LOW)
     if control == "freqlimit":
         if value == "1":
-            GPIO.output(13, GPIO.HIGH)
+            GPIO.output(freqlimitpin, GPIO.HIGH)
         if value == "0":
-            GPIO.output(13, GPIO.LOW)
+            GPIO.output(freqlimitpin, GPIO.LOW)
 
 def WritePump():
     global newframe
@@ -422,7 +432,6 @@ def GetParameters():
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
-    curvecalc()
     if use_mqtt == '1':
         client.publish(mqtt_topic,str(status))
 
@@ -512,7 +521,8 @@ def getdata_route():
 
 # Function to run the background function using a scheduler
 def run_background_function():
-    job=every(int(timeout)).seconds.do(GetParameters)
+    job=every(10).seconds.do(GetParameters)
+    job2=every(int(timeout)).minutes.do(curvecalc())
     while True:
         run_pending()
         time.sleep(1)
@@ -521,7 +531,6 @@ def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
     client.on_message = on_message  # Define callback function for receipt of a message
     client.on_disconnect = on_disconnect
-    # client.connect("m2m.eclipse.org", 1883, 60)  # Connect to (broker, port, keepalive-time)
     client.will_set(mqtt_topic+"/connected","off",qos=1,retain=True)
     client.username_pw_set(mqtt_username, mqtt_password)
     try:
