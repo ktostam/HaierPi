@@ -6,7 +6,7 @@ from pymodbus.client.sync import ModbusSerialClient
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
-import RPi.GPIO as GPIO
+import HPi.GPIO as GPIO # using own function, writing directly to /sys/class/gpio, you need to cleanup() all used pin separetly
 import configparser
 import subprocess
 import threading
@@ -36,12 +36,19 @@ mqtt_username=config['MQTT']['username']
 mqtt_password=config['MQTT']['password']
 newframe=""
 writed=""
+modbuspin=mqtt_password=config['GPIO']['modbus']
+freqlimitpin=mqtt_password=config['GPIO']['freqlimit']
+heatdemandpin=mqtt_password=config['GPIO']['heatdemand']
+cooldemandpin=mqtt_password=config['GPIO']['cooldemand']
+
+
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 
-GPIO.setmode(GPIO.BCM)
+
+#GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
 GPIO.setup(6, GPIO.OUT) #modbus
 GPIO.setup(13, GPIO.OUT) #freq limit
 GPIO.setup(19, GPIO.OUT) # heat demand
@@ -59,7 +66,10 @@ def handler(signum, frame):
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
-    GPIO.clenaup()
+    GPIO.clenaup(6)
+    GPIO.clenaup(13)
+    GPIO.clenaup(19)
+    GPIO.clenaup(26)
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
@@ -422,7 +432,7 @@ def GetParameters():
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
-    curvecalc()
+    #curvecalc() #no need to calc heating curve every X second
     if use_mqtt == '1':
         client.publish(mqtt_topic,str(status))
 
@@ -513,6 +523,7 @@ def getdata_route():
 # Function to run the background function using a scheduler
 def run_background_function():
     job=every(int(timeout)).seconds.do(GetParameters)
+    job2=every(10).minutes.do(curvecalc())
     while True:
         run_pending()
         time.sleep(1)
