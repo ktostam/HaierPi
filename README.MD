@@ -123,6 +123,17 @@ default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
 ![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
 ## Version
+### 1.1
+In this release I change library to control GPIO, Iam not using RPi.GPIO anymore, there is some issue with RPi.GPIO replacement for Nano Pi, so I decided to control GPIO via system /sys/class/gpio/. This is independent from used SBC,
+
+in `config.ini` there is new configuration for PIN:
+```shell
+[GPIO]
+modbus=17 #17 for raspberrypi, 0 for nanopi neo
+freqlimit=27 #27 for raspberrypi, 2 for nanopi neo
+heatdemand=22 #22 for raspberrypi, 3 for nanopi neo
+cooldemand=10 #10 for raspberrypi, 64 for nanopi neo
+```
 
 ### 1.0
 
