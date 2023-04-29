@@ -6,7 +6,7 @@ from pymodbus.client.sync import ModbusSerialClient
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
-import HPi.GPIO as GPIO # using own function, writing directly to /sys/class/gpio, you need to cleanup() all used pin separetly
+import HPi.GPIO as GPIO
 import configparser
 import subprocess
 import threading

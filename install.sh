@@ -48,7 +48,7 @@ then
   mkdir $installation_dir
 fi
 echo -n -e "Copying files              [ \033[5;33mIN PROGRESS\033[0m ]\r"
-cp -R main.py requirements.txt config.ini users.json static templates .git* $installation_dir
+cp -R main.py requirements.txt HPi config.ini users.json static templates .git* $installation_dir
 echo -e "\rCopying files              [ \033[0;32mOK\033[0m ]         "
 echo -n -e "Generating virtual ENV     [ \033[5;33mIN PROGRESS\033[0m ]\r"
 python -m venv $installation_dir/env
