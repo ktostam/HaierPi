@@ -4,13 +4,28 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-if ! command -v python3 &> /dev/null
+os=$(cat /etc/os-release |grep -oP 'PRETTY_NAME="\K[^"]+')
+
+if [[ $os == *"Raspbian"* ]] || [[ $os == *"Debian"* ]]; then
+        echo -e "Operating System           [ \033[0;32mOK\033[0m ]"
+        install_app='apt-get'
+else
+        echo -e "Operating System           [ \033[0;31mFAIL\033[0m ]"
+        echo -e -n "\033[0;31mSoftware not tested on this system, do you want install anyway? Y/N: \033[0m"
+        read ans
+        if [[ ${ans^^} == "N" ]]; then
+                echo "Installation cancelled"
+                exit 1
+        fi
+fi
+
+if ! command -v python3 &> /dev/null || ! command -v python3-pip &> /dev/null || ! command -v python3-venv &> /dev/null
 then
   echo -e "Python                     [ \033[0;31mFAIL\033[0m ]"
   echo -e -n "\033[0;31mPython not found on your system do you want to install it?\033[0m Y/N"
   read ans
-  if [[ $ans == "Y" ]]; then
-  	$install_app -y install python3 python3-pip python3-venv
+  if [[ ${ans^^} == "Y" ]]; then
+  	$install_app install -y python3 python3-pip python3-venv
   else
 	  echo "Please install python"
 	  exit 1
@@ -27,20 +42,6 @@ requiredver="3.9"
 	 echo -e "\033[0;31mPython version is too old\033[0m"
  fi
 
-os=$(cat /etc/os-release |grep -oP 'PRETTY_NAME="\K[^"]+')
-
-if [[ $os == *"Raspbian"* ]] || [[ $os == *"Debian"* ]]; then
-	echo -e "Operating System           [ \033[0;32mOK\033[0m ]"
-	install_app='apt-get'
-else
-	echo -e "Operating System           [ \033[0;31mFAIL\033[0m ]"
-	echo -e -n "\033[0;31mSoftware not tested on this system, do you want install anyway? Y/N: \033[0m"
-	read ans
-	if [[ ${ans^^} == "N" ]]; then
-		echo "Installation cancelled"
-		exit 1
-	fi
-fi
 workdir=$(pwd)
 installation_dir="/opt/haier"
 if [[ ! -d "$installation_dir" ]]
@@ -64,7 +65,7 @@ cp $workdir/etc/systemd/system/haier.service /etc/systemd/system/
 cp $workdir/etc/systemd/system/haierupdate.service /etc/systemd/system/
 systemctl daemon-reload
 echo -e "\rGenerating systemd service [ \033[0;32mOK\033[0m ]"
-echo -e "Do you want to activate systemd service to automatic start? Y/N"
+echo -n -e "Do you want to activate systemd service to automatic start? Y/N "
 read ans
 if [[ ${ans^^} == "Y" ]]; then
 	systemctl enable haier.service
