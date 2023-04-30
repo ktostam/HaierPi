@@ -4,7 +4,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-if ! command -v python &> /dev/null
+if ! command -v python3 &> /dev/null
 then
   echo -e "Python                     [ \033[0;31mFAIL\033[0m ]"
   echo -e -n "\033[0;31mPython not found on your system do you want to install it?\033[0m Y/N"
@@ -19,7 +19,7 @@ else
 	echo -e "Python                     [ \033[0;32mOK\033[0m ]"
 fi
 
-version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
+version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 requiredver="3.9"
  if [ "$(printf '%s\n' "$requiredver" "$version" | sort -V | head -n1)" = "$requiredver" ]; then
 	 echo -e "Python version             [ \033[0;32mOK\033[0m ]"
@@ -51,7 +51,7 @@ echo -n -e "Copying files              [ \033[5;33mIN PROGRESS\033[0m ]\r"
 cp -R main.py requirements.txt HPi config.ini users.json static templates .git* $installation_dir
 echo -e "\rCopying files              [ \033[0;32mOK\033[0m ]         "
 echo -n -e "Generating virtual ENV     [ \033[5;33mIN PROGRESS\033[0m ]\r"
-python -m venv $installation_dir/env
+python3 -m venv $installation_dir/env
 echo -e "\rPython VENV                [ \033[0;32mOK\033[0m ]             "
 cd $installation_dir
 source env/bin/activate
