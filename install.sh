@@ -10,7 +10,7 @@ then
   echo -e -n "\033[0;31mPython not found on your system do you want to install it?\033[0m Y/N"
   read ans
   if [[ $ans == "Y" ]]; then
-  	$install_app install python
+  	$install_app -y install python3 python3-pip python3-venv
   else
 	  echo "Please install python"
 	  exit 1

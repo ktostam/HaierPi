@@ -36,10 +36,10 @@ mqtt_username=config['MQTT']['username']
 mqtt_password=config['MQTT']['password']
 newframe=""
 writed=""
-modbuspin=mqtt_password=config['GPIO']['modbus']
-freqlimitpin=mqtt_password=config['GPIO']['freqlimit']
-heatdemandpin=mqtt_password=config['GPIO']['heatdemand']
-cooldemandpin=mqtt_password=config['GPIO']['cooldemand']
+modbuspin=config['GPIO']['modbus']
+freqlimitpin=config['GPIO']['freqlimit']
+heatdemandpin=config['GPIO']['heatdemand']
+cooldemandpin=config['GPIO']['cooldemand']
 
 
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
