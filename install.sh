@@ -29,7 +29,7 @@ requiredver="3.9"
 
 os=$(cat /etc/os-release |grep -oP 'PRETTY_NAME="\K[^"]+')
 
-if [[ $os == *"Raspbian"* ]]; then
+if [[ $os == *"Raspbian"* ]] || [[ $os == *"Debian"* ]]; then
 	echo -e "Operating System           [ \033[0;32mOK\033[0m ]"
 	install_app='apt-get'
 else
