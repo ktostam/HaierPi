@@ -19,7 +19,7 @@ else
         fi
 fi
 
-if ! command -v python3 &> /dev/null || ! command -v python3-pip &> /dev/null || ! command -v python3-venv &> /dev/null
+if ! command -v python3 &> /dev/null || ! command -v pip &> /dev/null || ! dpkg -l python3-venv &> /dev/null
 then
   echo -e "Python                     [ \033[0;31mFAIL\033[0m ]"
   echo -e -n "\033[0;31mPython not found on your system do you want to install it?\033[0m Y/N"
