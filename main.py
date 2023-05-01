@@ -304,7 +304,7 @@ def curvecalc():
     settemp=float(status[statusmap.index("settemp")])
     t1=(outsidetemp/(320-(outsidetemp*4)))
     t2=pow(settemp,t1)
-    slope=0.65
+    slope=0.7
     ps=3
     amp=3
     heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
@@ -522,7 +522,7 @@ def getdata_route():
 # Function to run the background function using a scheduler
 def run_background_function():
     job=every(10).seconds.do(GetParameters)
-    job2=every(int(timeout)).minutes.do(curvecalc())
+    job2=every(int(timeout)).minutes.do(curvecalc)
     while True:
         run_pending()
         time.sleep(1)
