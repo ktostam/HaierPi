@@ -63,13 +63,13 @@ R241=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
+    GPIO.cleanup(modbuspin)
+    GPIO.cleanup(freqlimitpin)
+    GPIO.cleanup(heatdemandpin)
+    GPIO.cleanup(cooldemandpin)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
-    GPIO.clenaup(modbuspin)
-    GPIO.clenaup(freqlimitpin)
-    GPIO.clenaup(heatdemandpin)
-    GPIO.clenaup(cooldemandpin)
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
