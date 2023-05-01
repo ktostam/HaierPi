@@ -63,13 +63,13 @@ R241=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
+    GPIO.cleanup(modbuspin)
+    GPIO.cleanup(freqlimitpin)
+    GPIO.cleanup(heatdemandpin)
+    GPIO.cleanup(cooldemandpin)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     ser.close()
-    GPIO.clenaup(modbuspin)
-    GPIO.clenaup(freqlimitpin)
-    GPIO.clenaup(heatdemandpin)
-    GPIO.clenaup(cooldemandpin)
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
@@ -184,15 +184,12 @@ def ReadPump():
 
 def on_connect(client, userdata, flags, rc):
     print(colored("MQTT - Conected", "green", attrs=['bold']))
-    # Print result of connection attempt 
     client.subscribe(mqtt_topic)
     client.publish(mqtt_topic+"/connected","on", qos=1, retain=True)
-    # Subscribe to the topic “digitest/test1”, receive any messages  published on it
 
-def on_disconnect(client, userdata, rc):  # The callback for when 
-    #the client connects to the broker 
+
+def on_disconnect(client, userdata, rc):  # The callback for when
     print(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
-    # Print result of connection attempt 
 
 def on_message(client, userdata, msg):  # The callback for when a PUBLISH 
     #message is received from the server. 
@@ -208,6 +205,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         client.publish(mqtt_topic+"/mode/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"/temperature/set":
         print("New temperature")
+        print(msg.payload)
         client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
 
 def tempchange(which, value, curve):
@@ -309,6 +307,8 @@ def curvecalc():
     amp=3
     heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
     status[statusmap.index("hcurve")]=heatcurve
+    if use_mqtt == '1':
+        client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
     if 25.0 < heatcurve < 55.0:
         gpiocontrol("heatdemand", "1")
         tempchange(heat, heatcurve, "1")
@@ -521,8 +521,8 @@ def getdata_route():
 
 # Function to run the background function using a scheduler
 def run_background_function():
-    job=every(10).seconds.do(GetParameters)
-    job2=every(int(timeout)).minutes.do(curvecalc)
+    job = every(10).seconds.do(GetParameters)
+    job2 = every(int(timeout)).minutes.do(curvecalc)
     while True:
         run_pending()
         time.sleep(1)
@@ -548,7 +548,7 @@ if __name__ == '__main__':
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
     if use_mqtt == '1':
-        client = mqtt.Client()  # Create instance of client with client ID “digi_mqtt_test”
+        client = mqtt.Client()  # Create instance of client
         mqtt_bg = threading.Thread(target=connect_mqtt)
         mqtt_bg.start()
     serial_thread = threading.Thread(target=ReadPump)
