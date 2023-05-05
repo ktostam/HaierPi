@@ -537,7 +537,6 @@ def connect_mqtt():
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))
     except:
         print(colored("MQTT connection error.","red", attrs=['bold']))
-        exit(1)
     client.loop_forever()  # Start networking daemon
 
 # Start the Flask app in a separate thread
