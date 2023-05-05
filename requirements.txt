@@ -9,3 +9,4 @@ termcolor==2.2.0
 waitress==2.1.2
 flask-simplelogin==0.1.1
 Werkzeug==2.2.3
+w1thermsensor=2.0.0
