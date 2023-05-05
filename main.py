@@ -356,6 +356,7 @@ def GetInsideTemp(param):
             resp=requests.get(url, headers=headers)
         except requests.exceptions.RequestException as e:
             print(e)
+            continue
         json_str = json.dumps(resp.json())
         try:
             if 'state' in json_str:
