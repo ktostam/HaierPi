@@ -3,6 +3,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
 from flask import Flask, render_template, request, jsonify
 from pymodbus.client.sync import ModbusSerialClient
+from w1thermsensor import W1ThermSensor, Sensor
+
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
@@ -344,8 +346,13 @@ def getdata():
 
 def GetInsideTemp(param):
     if param == "buildin":
-        # function for getting temp from DHT22 connected to RaspberryPi GPIO. for now return static 22
-        return "22"
+        try:
+            sensor = W1ThermSensor()
+            temperature = sensor.get_temperature()
+            return temperature
+        except W1ThermSensorError as e:
+            sys.stderr.write("Error: cannot read outside temperature")
+            return "0"
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
         url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['insidesensor']
