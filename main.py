@@ -562,6 +562,15 @@ def connect_mqtt():
         print(colored("MQTT connection error.","red", attrs=['bold']))
     client.loop_forever()  # Start networking daemon
 
+def threads_check():
+    while True:
+        if not bg_thread.is_alive():
+            print("Background thread DEAD")
+        elif not serial_thread.is_alive():
+            print("serial Thread DEAD")
+        elif not mqtt_bg.is_alive():
+            print("MQTT thread DEAD")
+
 # Start the Flask app in a separate thread
 if __name__ == '__main__':
     print(colored(welcome,"yellow", attrs=['bold']))
