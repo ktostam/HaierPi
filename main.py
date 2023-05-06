@@ -357,7 +357,6 @@ def GetInsideTemp(param):
             json_str = json.dumps(resp.json())
         except requests.exceptions.RequestException as e:
             print(e)
-            continue
         try:
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
@@ -384,9 +383,18 @@ def GetOutsideTemp(param):
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
-        resp=requests.get(url, headers=headers)
-        json_str = json.dumps(resp.json())
-        response = json.loads(json_str)['state']
+        try:
+            resp = requests.get(url, headers=headers)
+            json_str = json.dumps(resp.json())
+        except requests.exceptions.RequestException as e:
+            print(e)
+        try:
+            if 'state' in json_str:
+                response = json.loads(json_str)['state']
+            else:
+                response = "Entity state not found"
+        except:
+            response = "Error"
         return response
     else:
         return -1
@@ -401,9 +409,18 @@ def GetHumidity(param):
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
-        resp=requests.get(url, headers=headers)
-        json_str = json.dumps(resp.json())
-        response = json.loads(json_str)['state']
+        try:
+            resp = requests.get(url, headers=headers)
+            json_str = json.dumps(resp.json())
+        except requests.exceptions.RequestException as e:
+            print(e)
+        try:
+            if 'state' in json_str:
+                response = json.loads(json_str)['state']
+            else:
+                response = "Entity state not found"
+        except:
+            response = "Error"
         return response
     else:
         return -1
