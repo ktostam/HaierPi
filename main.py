@@ -74,8 +74,16 @@ def handler(signum, frame):
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
+    event.set()
     clear()
     exit(1)
+
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
 
 def check_my_users(user):
     my_users = json.load(open("users.json"))
@@ -146,42 +154,47 @@ def ReadPump():
         if (ser.isOpen() == False):
             print(colored("Closed seial connection.", 'red', attrs=["bold"]))
             break
+        if event.is_set():
+            break
         if newframe:
             WritePump()
-        rs = ser.read(1).hex()
-        if rs == "11":
-            rs = ser.read(2).hex()
-            # # zapisy
-            # if rs == "1000":
-            #     rs = ser.read(8).hex()
-            #     bits = str(rs)[-2:]
-            #     rsa = ser.read(int(bits, 16)).hex()
-            #     head = "111000"
-            #     toprinttmp = head + rs + rsa
-            #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
-            #     print(toprint)
-            #     # zapisy end
-            if rs == "030c":
-                R101 = []
-                for ind in range(6):
-                    rs = ser.read(2).hex()
-                    R101.append(int(rs, 16))
-                # print(R101)
-            if rs == "0320":
-                R141 = []
-                for ind in range(16):
-                    rs = ser.read(2).hex()
-                    R141.append(int(rs, 16))
-            if rs == "0302":
-                R201 = []
-                for ind in range(1):
-                    rs = ser.read(2).hex()
-                    R201.append(int(rs, 16))
-            if rs == "032c":
-                R241 = []
-                for ind in range(22):
-                    rs = ser.read(2).hex()
-                    R241.append(int(rs, 16))
+        try:
+            rs = ser.read(1).hex()
+            if rs == "11":
+                rs = ser.read(2).hex()
+                # # zapisy
+                # if rs == "1000":
+                #     rs = ser.read(8).hex()
+                #     bits = str(rs)[-2:]
+                #     rsa = ser.read(int(bits, 16)).hex()
+                #     head = "111000"
+                #     toprinttmp = head + rs + rsa
+                #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
+                #     print(toprint)
+                #     # zapisy end
+                if rs == "030c":
+                    R101 = []
+                    for ind in range(6):
+                        rs = ser.read(2).hex()
+                        R101.append(int(rs, 16))
+                    # print(R101)
+                if rs == "0320":
+                    R141 = []
+                    for ind in range(16):
+                        rs = ser.read(2).hex()
+                        R141.append(int(rs, 16))
+                if rs == "0302":
+                    R201 = []
+                    for ind in range(1):
+                        rs = ser.read(2).hex()
+                        R201.append(int(rs, 16))
+                if rs == "032c":
+                    R241 = []
+                    for ind in range(22):
+                        rs = ser.read(2).hex()
+                        R241.append(int(rs, 16))
+        except:
+            break
 
 def on_connect(client, userdata, flags, rc):
     print(colored("MQTT - Conected", "green", attrs=['bold']))
@@ -216,13 +229,27 @@ def tempchange(which, value, curve):
         if which == "heat":
             print("Central heating: "+value)
             print(R101)
-            newframe = PyHaier.SetCHTemp(R101, float(value))
-            msgt="Central heating: "
+            chframe = PyHaier.SetCHTemp(R101, float(value))
+            if chframe.__class__ == list:
+                newframe=chframe
+                msgt="Central heating: "
+            else:
+                print("ERROR: Cannot set new CH temp")
+                msg="ERROR: Cannot set new CH temp"
+                state="error"
+                return jsonify(msg=msg, state=state)
         elif which == "dhw":
             print(R101)
             print("Domestic Hot Water: "+value)
-            newframe = PyHaier.SetDHWTemp(R101, int(value))
-            msgt="Domestic Hot Water "
+            dhwframe = PyHaier.SetDHWTemp(R101, int(value))
+            if dhwframe.__class__ == list:
+                newframe=dhwframe
+                msgt="Domestic Hot Water "
+            else:
+                print("Error: Cannot set new DHW temp")
+                msg="ERROR: Cannot set new temp"
+                state="error"
+                return jsonify(msg=msg, state=state)
 
         for i in range(50):
             print(writed)
@@ -298,23 +325,29 @@ def statechange(mode,value):
     return jsonify(msg=msg, state=state)
 
 def curvecalc():
-    insidetemp=float(status[statusmap.index("intemp")])
-    outsidetemp=float(status[statusmap.index("outtemp")])
-    settemp=float(status[statusmap.index("settemp")])
-    t1=(outsidetemp/(320-(outsidetemp*4)))
-    t2=pow(settemp,t1)
-    slope=0.7
-    ps=3
-    amp=3
-    heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
-    status[statusmap.index("hcurve")]=heatcurve
-    if use_mqtt == '1':
-        client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
-    if 25.0 < heatcurve < 55.0:
-        gpiocontrol("heatdemand", "1")
-        tempchange(heat, heatcurve, "1")
+    if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
+        insidetemp=float(status[statusmap.index("intemp")])
+        outsidetemp=float(status[statusmap.index("outtemp")])
+        settemp=float(status[statusmap.index("settemp")])
+        t1=(outsidetemp/(320-(outsidetemp*4)))
+        t2=pow(settemp,t1)
+        slope=0.7
+        ps=3
+        amp=3
+        heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+        status[statusmap.index("hcurve")]=heatcurve
+        if use_mqtt == '1':
+            client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
+        if 25.0 < heatcurve < 55.0:
+            try:
+                gpiocontrol("heatdemand", "1")
+                tempchange("heat", heatcurve, "1")
+            except:
+                print("Set chtemp ERROR")
+        else:
+            gpiocontrol("heatdemand", "0")
     else:
-        gpiocontrol("heatdemand", "0")
+        status[statusmap.index("hcurve")]="Error"
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
@@ -549,6 +582,8 @@ def run_background_function():
     while True:
         run_pending()
         time.sleep(1)
+        if event.is_set():
+            break
 
 def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
@@ -570,6 +605,9 @@ def threads_check():
             print("serial Thread DEAD")
         elif not mqtt_bg.is_alive():
             print("MQTT thread DEAD")
+        time.sleep(1)
+        if event.is_set():
+            break
 
 # Start the Flask app in a separate thread
 if __name__ == '__main__':
@@ -584,5 +622,8 @@ if __name__ == '__main__':
         mqtt_bg.start()
     serial_thread = threading.Thread(target=ReadPump)
     serial_thread.start()
+    threadcheck = threading.Thread(target=threads_check)
+    threadcheck.start()
+    event = threading.Event()
     serve(app, host=bindaddr, port=bindport)
     #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
