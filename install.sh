@@ -42,6 +42,6 @@ G_EXEC systemctl daemon-reload
 echo -n -e "Do you want to activate systemd service to automatic start? Y/N "
 read ans
 if [[ ${ans^^} == "Y" ]]; then
-        G_EXEC systemctl enable haier.service
+  G_EXEC systemctl enable haier.service
 fi
 echo -e "[ \033[6;32mInstallation complete\033[0m ]"
