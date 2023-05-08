@@ -4,9 +4,12 @@ After=local-fs.target
 After=network.target
 
 [Service]
-ExecStart=/opt/haier/update.sh
+ExecStart=/opt/haier/env/bin/python /opt/haier/update.py
 RemainAfterExit=true
 Type=oneshot
+WorkingDirectory=/opt/haier/
+
+
 
 [Install]
 WantedBy=multi-user.target
