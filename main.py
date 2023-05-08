@@ -25,6 +25,7 @@ timeout = config['DEFAULT']['heizfreq']
 bindaddr = config['DEFAULT']['bindaddress']
 bindport = config['DEFAULT']['bindport']
 modbusdev = config['DEFAULT']['modbusdev']
+release = config['DEFAULT']['release']
 settemp = config['SETTINGS']['settemp']
 insidetemp = config['SETTINGS']['insidetemp']
 outsidetemp = config['SETTINGS']['outsidetemp']
@@ -350,8 +351,8 @@ def curvecalc():
         status[statusmap.index("hcurve")]="Error"
 
 def updatecheck():
-    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    localver=subprocess.run(['cat', '.git/refs/remotes/origin/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    localver=subprocess.run(['cat', '.git/refs/heads/dev/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     if localver != gitver:
 	    msg="Availible"
     else:
