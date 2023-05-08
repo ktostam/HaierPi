@@ -352,7 +352,7 @@ def curvecalc():
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    localver=subprocess.run(['cat', '.git/refs/heads/dev/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     if localver != gitver:
 	    msg="Availible"
     else:
