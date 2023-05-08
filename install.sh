@@ -8,11 +8,12 @@ if [ "$EUID" -ne 0 ]
 fi
 if [[ -f '/boot/dietpi/func/dietpi-globals' ]]
 then
-        . /boot/dietpi/func/dietpi-globals
+  . /boot/dietpi/func/dietpi-globals
 else
-        curl -sSf "https://raw.githubusercontent.com/${G_GITOWNER:=MichaIng}/DietPi/${G_GITBRANCH:=master}/dietpi/func/dietpi-globals" -o /tmp/dietpi-globals || exit 1
-        # shellcheck disable=SC1091
-        . /tmp/dietpi-globals
+  curl -sSf "https://raw.githubusercontent.com/${G_GITOWNER:=MichaIng}/DietPi/${G_GITBRANCH:=master}/dietpi/func/dietpi-globals" -o /tmp/dietpi-globals || exit 1
+  # shellcheck disable=SC1091
+  . /tmp/dietpi-globals
+fi
 
 os=$(cat /etc/os-release |grep -oP 'PRETTY_NAME="\K[^"]+'|cut -d" " -f1)
 
