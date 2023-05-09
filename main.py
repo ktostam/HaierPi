@@ -12,6 +12,7 @@ import configparser
 import subprocess
 import threading
 import requests
+import logging
 import PyHaier
 import serial
 import signal
@@ -122,17 +123,17 @@ def WritePump():
     global newframe
     global writed
     if newframe:
-        print(newframe)
+        logging.info(newframe)
         newframelen=len(newframe)
         if newframelen == 6:
-            print("101")
+            logging.info("101")
             gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            print(modbusresult)
+            logging.info(modbusresult)
             writed="1"
             # if hasattr(modbusresult, 'fcode'):
             #     if modbusresult.fcode < 0x80:
@@ -141,7 +142,7 @@ def WritePump():
             #     else:
             #         writed="2"
         elif newframelen == 16:
-            print("141")
+            logging.info("141")
         newframe=""
 
 def ReadPump():
@@ -153,7 +154,7 @@ def ReadPump():
     time.sleep(0.2)
     while (1):
         if (ser.isOpen() == False):
-            print(colored("Closed seial connection.", 'red', attrs=["bold"]))
+            logging.warning(colored("Closed seial connection.", 'red', attrs=["bold"]))
             break
         if event.is_set():
             break
@@ -198,29 +199,29 @@ def ReadPump():
             break
 
 def on_connect(client, userdata, flags, rc):
-    print(colored("MQTT - Conected", "green", attrs=['bold']))
+    logging.info(colored("MQTT - Conected", "green", attrs=['bold']))
     client.subscribe(mqtt_topic)
     client.publish(mqtt_topic+"/connected","on", qos=1, retain=True)
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
-    print(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
+    logging.warning(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
 
 def on_message(client, userdata, msg):  # The callback for when a PUBLISH 
     #message is received from the server. 
     #print("Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
     if msg.topic == mqtt_topic+"/power/set":
-        print("New power state from mqtt:")
+        logging.info("New power state from mqtt:")
         client.publish(mqtt_topic+"/power/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"preset_mode/set":
-        print("New preset mode")
+        logging.info("New preset mode")
         client.publish(mqtt_topic+"/preset_mode/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"mode/set":
-        print("New mode")
+        logging.info("New mode")
         client.publish(mqtt_topic+"/mode/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"/temperature/set":
-        print("New temperature")
-        print(msg.payload)
+        logging.info("New temperature")
+        logging.info(msg.payload)
         client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
 
 def tempchange(which, value, curve):
@@ -228,32 +229,32 @@ def tempchange(which, value, curve):
     global writed
     if curve == "1":
         if which == "heat":
-            print("Central heating: "+value)
-            print(R101)
+            logging.info("Central heating: "+value)
+            logging.info(R101)
             chframe = PyHaier.SetCHTemp(R101, float(value))
             if chframe.__class__ == list:
                 newframe=chframe
                 msgt="Central heating: "
             else:
-                print("ERROR: Cannot set new CH temp")
+                logging.error("ERROR: Cannot set new CH temp")
                 msg="ERROR: Cannot set new CH temp"
                 state="error"
                 return jsonify(msg=msg, state=state)
         elif which == "dhw":
-            print(R101)
-            print("Domestic Hot Water: "+value)
+            logging.info(R101)
+            logging.info("Domestic Hot Water: "+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
             if dhwframe.__class__ == list:
                 newframe=dhwframe
                 msgt="Domestic Hot Water "
             else:
-                print("Error: Cannot set new DHW temp")
+                logging.error("Error: Cannot set new DHW temp")
                 msg="ERROR: Cannot set new temp"
                 state="error"
                 return jsonify(msg=msg, state=state)
 
         for i in range(50):
-            print(writed)
+            logging.info(writed)
             if writed=="1":
                 msg=msgt+" temperature changed!"
                 state="success"
@@ -303,12 +304,12 @@ def statechange(mode,value):
         newstate="off"
     global newframe
     global writed
-    print(writed)
-    print(R101)
-    print(newstate)
+    logging.info(writed)
+    logging.info(R101)
+    logging.info(newstate)
     newframe=PyHaier.SetState(R101,newstate)
     for i in range(50):
-        print(writed)
+        logging.info(writed)
         if writed=="1":
             msg="State changed!"
             state="success"
@@ -344,7 +345,7 @@ def curvecalc():
                 gpiocontrol("heatdemand", "1")
                 tempchange("heat", heatcurve, "1")
             except:
-                print("Set chtemp ERROR")
+                logging.error("Set chtemp ERROR")
         else:
             gpiocontrol("heatdemand", "0")
     else:
@@ -390,7 +391,7 @@ def GetInsideTemp(param):
             resp=requests.get(url, headers=headers)
             json_str = json.dumps(resp.json())
         except requests.exceptions.RequestException as e:
-            print(e)
+            logging.error(e)
         try:
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
@@ -421,7 +422,7 @@ def GetOutsideTemp(param):
             resp = requests.get(url, headers=headers)
             json_str = json.dumps(resp.json())
         except requests.exceptions.RequestException as e:
-            print(e)
+            logging.error(e)
         try:
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
@@ -447,7 +448,7 @@ def GetHumidity(param):
             resp = requests.get(url, headers=headers)
             json_str = json.dumps(resp.json())
         except requests.exceptions.RequestException as e:
-            print(e)
+            logging.error(e)
         try:
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
@@ -460,7 +461,6 @@ def GetHumidity(param):
         return -1
 
 def settheme(theme):
-    print(theme)
     status[statusmap.index("theme")]=theme
     return theme
 
@@ -595,25 +595,25 @@ def connect_mqtt():
     try:
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))
     except:
-        print(colored("MQTT connection error.","red", attrs=['bold']))
+        logging.error(colored("MQTT connection error.","red", attrs=['bold']))
     client.loop_forever()  # Start networking daemon
 
 def threads_check():
     while True:
         if not bg_thread.is_alive():
-            print("Background thread DEAD")
+            logging.error("Background thread DEAD")
         elif not serial_thread.is_alive():
-            print("serial Thread DEAD")
+            logging.error("serial Thread DEAD")
         elif not mqtt_bg.is_alive():
-            print("MQTT thread DEAD")
+            logging.error("MQTT thread DEAD")
         time.sleep(1)
         if event.is_set():
             break
 
 # Start the Flask app in a separate thread
 if __name__ == '__main__':
-    print(colored(welcome,"yellow", attrs=['bold']))
-    print(colored("Service running: http://127.0.0.1:4000 ", "green"))
+    logging.info(colored(welcome,"yellow", attrs=['bold']))
+    logging.info(colored("Service running: http://127.0.0.1:4000 ", "green"))
     signal.signal(signal.SIGINT, handler)
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
