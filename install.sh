@@ -32,7 +32,7 @@ if [[ ! -d "$installation_dir" ]]
 then
   mkdir $installation_dir
 fi
-G_EXEC_DESC="Copying files" G_EXEC cp -R main.py requirements.txt HPi config.ini users.json static templates .git* $installation_dir
+G_EXEC_DESC="Copying files" G_EXEC cp -R main.py requirements.txt HPi update.py config.ini users.json static templates .git* $installation_dir
 G_EXEC_DESC="Generating virtual ENV" G_EXEC python3 -m venv $installation_dir/env
 cd $installation_dir
 G_EXEC source env/bin/activate
