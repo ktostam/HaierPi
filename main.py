@@ -612,8 +612,8 @@ def threads_check():
 
 # Start the Flask app in a separate thread
 if __name__ == '__main__':
-    logging.info(colored(welcome,"yellow", attrs=['bold']))
-    logging.info(colored("Service running: http://127.0.0.1:4000 ", "green"))
+    logging.warning(colored(welcome,"yellow", attrs=['bold']))
+    logging.warning(colored("Service running: http://127.0.0.1:4000 ", "green"))
     signal.signal(signal.SIGINT, handler)
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
