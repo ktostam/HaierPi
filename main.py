@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
 from flask import Flask, render_template, request, jsonify
 from pymodbus.client.sync import ModbusSerialClient
+from w1thermsensor import W1ThermSensor, Sensor
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
@@ -11,19 +12,21 @@ import configparser
 import subprocess
 import threading
 import requests
+import logging
 import PyHaier
 import serial
 import signal
 import json
 import time
 
-welcome="┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
+welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
 timeout = config['DEFAULT']['heizfreq']
 bindaddr = config['DEFAULT']['bindaddress']
 bindport = config['DEFAULT']['bindport']
 modbusdev = config['DEFAULT']['modbusdev']
+release = config['DEFAULT']['release']
 settemp = config['SETTINGS']['settemp']
 insidetemp = config['SETTINGS']['insidetemp']
 outsidetemp = config['SETTINGS']['outsidetemp']
@@ -73,8 +76,16 @@ def handler(signum, frame):
     if use_mqtt == '1':
         client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
         client.disconnect()
+    event.set()
     clear()
     exit(1)
+
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
 
 def check_my_users(user):
     my_users = json.load(open("users.json"))
@@ -112,17 +123,17 @@ def WritePump():
     global newframe
     global writed
     if newframe:
-        print(newframe)
+        logging.info(newframe)
         newframelen=len(newframe)
         if newframelen == 6:
-            print("101")
+            logging.info("101")
             gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            print(modbusresult)
+            logging.info(modbusresult)
             writed="1"
             # if hasattr(modbusresult, 'fcode'):
             #     if modbusresult.fcode < 0x80:
@@ -131,7 +142,7 @@ def WritePump():
             #     else:
             #         writed="2"
         elif newframelen == 16:
-            print("141")
+            logging.info("141")
         newframe=""
 
 def ReadPump():
@@ -143,69 +154,74 @@ def ReadPump():
     time.sleep(0.2)
     while (1):
         if (ser.isOpen() == False):
-            print(colored("Closed seial connection.", 'red', attrs=["bold"]))
+            logging.warning(colored("Closed seial connection.", 'red', attrs=["bold"]))
+            break
+        if event.is_set():
             break
         if newframe:
             WritePump()
-        rs = ser.read(1).hex()
-        if rs == "11":
-            rs = ser.read(2).hex()
-            # # zapisy
-            # if rs == "1000":
-            #     rs = ser.read(8).hex()
-            #     bits = str(rs)[-2:]
-            #     rsa = ser.read(int(bits, 16)).hex()
-            #     head = "111000"
-            #     toprinttmp = head + rs + rsa
-            #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
-            #     print(toprint)
-            #     # zapisy end
-            if rs == "030c":
-                R101 = []
-                for ind in range(6):
-                    rs = ser.read(2).hex()
-                    R101.append(int(rs, 16))
-                # print(R101)
-            if rs == "0320":
-                R141 = []
-                for ind in range(16):
-                    rs = ser.read(2).hex()
-                    R141.append(int(rs, 16))
-            if rs == "0302":
-                R201 = []
-                for ind in range(1):
-                    rs = ser.read(2).hex()
-                    R201.append(int(rs, 16))
-            if rs == "032c":
-                R241 = []
-                for ind in range(22):
-                    rs = ser.read(2).hex()
-                    R241.append(int(rs, 16))
+        try:
+            rs = ser.read(1).hex()
+            if rs == "11":
+                rs = ser.read(2).hex()
+                # # zapisy
+                # if rs == "1000":
+                #     rs = ser.read(8).hex()
+                #     bits = str(rs)[-2:]
+                #     rsa = ser.read(int(bits, 16)).hex()
+                #     head = "111000"
+                #     toprinttmp = head + rs + rsa
+                #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
+                #     print(toprint)
+                #     # zapisy end
+                if rs == "030c":
+                    R101 = []
+                    for ind in range(6):
+                        rs = ser.read(2).hex()
+                        R101.append(int(rs, 16))
+                    # print(R101)
+                if rs == "0320":
+                    R141 = []
+                    for ind in range(16):
+                        rs = ser.read(2).hex()
+                        R141.append(int(rs, 16))
+                if rs == "0302":
+                    R201 = []
+                    for ind in range(1):
+                        rs = ser.read(2).hex()
+                        R201.append(int(rs, 16))
+                if rs == "032c":
+                    R241 = []
+                    for ind in range(22):
+                        rs = ser.read(2).hex()
+                        R241.append(int(rs, 16))
+        except:
+            break
 
 def on_connect(client, userdata, flags, rc):
-    print(colored("MQTT - Conected", "green", attrs=['bold']))
+    logging.info(colored("MQTT - Conected", "green", attrs=['bold']))
     client.subscribe(mqtt_topic)
     client.publish(mqtt_topic+"/connected","on", qos=1, retain=True)
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
-    print(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
+    logging.warning(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
 
 def on_message(client, userdata, msg):  # The callback for when a PUBLISH 
     #message is received from the server. 
     #print("Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
     if msg.topic == mqtt_topic+"/power/set":
-        print("New power state from mqtt:")
+        logging.info("New power state from mqtt:")
         client.publish(mqtt_topic+"/power/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"preset_mode/set":
-        print("New preset mode")
+        logging.info("New preset mode")
         client.publish(mqtt_topic+"/preset_mode/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"mode/set":
-        print("New mode")
+        logging.info("New mode")
         client.publish(mqtt_topic+"/mode/state","new_state_here", qos=1, retain=True)
     elif msg.topic == mqtt_topic+"/temperature/set":
-        print("New temperature")
-        print(msg.payload)
+        logging.info("New temperature")
+        logging.info(msg.payload)
         client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
 
 def tempchange(which, value, curve):
@@ -213,18 +229,32 @@ def tempchange(which, value, curve):
     global writed
     if curve == "1":
         if which == "heat":
-            print("Central heating: "+value)
-            print(R101)
-            newframe = PyHaier.SetCHTemp(R101, float(value))
-            msgt="Central heating: "
+            logging.info("Central heating: "+value)
+            logging.info(R101)
+            chframe = PyHaier.SetCHTemp(R101, float(value))
+            if chframe.__class__ == list:
+                newframe=chframe
+                msgt="Central heating: "
+            else:
+                logging.error("ERROR: Cannot set new CH temp")
+                msg="ERROR: Cannot set new CH temp"
+                state="error"
+                return jsonify(msg=msg, state=state)
         elif which == "dhw":
-            print(R101)
-            print("Domestic Hot Water: "+value)
-            newframe = PyHaier.SetDHWTemp(R101, int(value))
-            msgt="Domestic Hot Water "
+            logging.info(R101)
+            logging.info("Domestic Hot Water: "+value)
+            dhwframe = PyHaier.SetDHWTemp(R101, int(value))
+            if dhwframe.__class__ == list:
+                newframe=dhwframe
+                msgt="Domestic Hot Water "
+            else:
+                logging.error("Error: Cannot set new DHW temp")
+                msg="ERROR: Cannot set new temp"
+                state="error"
+                return jsonify(msg=msg, state=state)
 
         for i in range(50):
-            print(writed)
+            logging.info(writed)
             if writed=="1":
                 msg=msgt+" temperature changed!"
                 state="success"
@@ -274,12 +304,12 @@ def statechange(mode,value):
         newstate="off"
     global newframe
     global writed
-    print(writed)
-    print(R101)
-    print(newstate)
+    logging.info(writed)
+    logging.info(R101)
+    logging.info(newstate)
     newframe=PyHaier.SetState(R101,newstate)
     for i in range(50):
-        print(writed)
+        logging.info(writed)
         if writed=="1":
             msg="State changed!"
             state="success"
@@ -297,27 +327,33 @@ def statechange(mode,value):
     return jsonify(msg=msg, state=state)
 
 def curvecalc():
-    insidetemp=float(status[statusmap.index("intemp")])
-    outsidetemp=float(status[statusmap.index("outtemp")])
-    settemp=float(status[statusmap.index("settemp")])
-    t1=(outsidetemp/(320-(outsidetemp*4)))
-    t2=pow(settemp,t1)
-    slope=0.7
-    ps=3
-    amp=3
-    heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
-    status[statusmap.index("hcurve")]=heatcurve
-    if use_mqtt == '1':
-        client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
-    if 25.0 < heatcurve < 55.0:
-        gpiocontrol("heatdemand", "1")
-        tempchange(heat, heatcurve, "1")
+    if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
+        insidetemp=float(status[statusmap.index("intemp")])
+        outsidetemp=float(status[statusmap.index("outtemp")])
+        settemp=float(status[statusmap.index("settemp")])
+        t1=(outsidetemp/(320-(outsidetemp*4)))
+        t2=pow(settemp,t1)
+        slope=0.7
+        ps=3
+        amp=3
+        heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+        status[statusmap.index("hcurve")]=heatcurve
+        if use_mqtt == '1':
+            client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
+        if 25.0 < heatcurve < 55.0:
+            try:
+                gpiocontrol("heatdemand", "1")
+                tempchange("heat", heatcurve, "1")
+            except:
+                logging.error("Set chtemp ERROR")
+        else:
+            gpiocontrol("heatdemand", "0")
     else:
-        gpiocontrol("heatdemand", "0")
+        status[statusmap.index("hcurve")]="Error"
 
 def updatecheck():
-    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    localver=subprocess.run(['cat', '.git/refs/remotes/origin/master'], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     if localver != gitver:
 	    msg="Availible"
     else:
@@ -344,7 +380,6 @@ def getdata():
 
 def GetInsideTemp(param):
     if param == "buildin":
-        # function for getting temp from DHT22 connected to RaspberryPi GPIO. for now return static 22
         return "22"
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
@@ -354,9 +389,9 @@ def GetInsideTemp(param):
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
         try:
             resp=requests.get(url, headers=headers)
+            json_str = json.dumps(resp.json())
         except requests.exceptions.RequestException as e:
-            raise SystemExit(e)
-        json_str = json.dumps(resp.json())
+            logging.error(e)
         try:
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
@@ -370,17 +405,31 @@ def GetInsideTemp(param):
 
 def GetOutsideTemp(param):
     if param == "buildin":
-        # function for getting temp from DS18b20 connected to RaspberryPi i2c. for now return static 22
-        return "22"
+        try:
+            sensor = W1ThermSensor()
+            temperature = sensor.get_temperature()
+            return temperature
+        except W1ThermSensorError as e:
+            sys.stderr.write("Error: cannot read outside temperature")
+            return "0"
     elif param == "ha":
         # connect to Home Assistant API and get status of outside temperature entity
         url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['outsidesensor']
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
-        resp=requests.get(url, headers=headers)
-        json_str = json.dumps(resp.json())
-        response = json.loads(json_str)['state']
+        try:
+            resp = requests.get(url, headers=headers)
+            json_str = json.dumps(resp.json())
+        except requests.exceptions.RequestException as e:
+            logging.error(e)
+        try:
+            if 'state' in json_str:
+                response = json.loads(json_str)['state']
+            else:
+                response = "Entity state not found"
+        except:
+            response = "Error"
         return response
     else:
         return -1
@@ -395,15 +444,23 @@ def GetHumidity(param):
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
-        resp=requests.get(url, headers=headers)
-        json_str = json.dumps(resp.json())
-        response = json.loads(json_str)['state']
+        try:
+            resp = requests.get(url, headers=headers)
+            json_str = json.dumps(resp.json())
+        except requests.exceptions.RequestException as e:
+            logging.error(e)
+        try:
+            if 'state' in json_str:
+                response = json.loads(json_str)['state']
+            else:
+                response = "Entity state not found"
+        except:
+            response = "Error"
         return response
     else:
         return -1
 
 def settheme(theme):
-    print(theme)
     status[statusmap.index("theme")]=theme
     return theme
 
@@ -526,6 +583,8 @@ def run_background_function():
     while True:
         run_pending()
         time.sleep(1)
+        if event.is_set():
+            break
 
 def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
@@ -536,14 +595,25 @@ def connect_mqtt():
     try:
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))
     except:
-        print(colored("MQTT connection error.","red", attrs=['bold']))
-        exit(1)
+        logging.error(colored("MQTT connection error.","red", attrs=['bold']))
     client.loop_forever()  # Start networking daemon
+
+def threads_check():
+    while True:
+        if not bg_thread.is_alive():
+            logging.error("Background thread DEAD")
+        elif not serial_thread.is_alive():
+            logging.error("serial Thread DEAD")
+        elif not mqtt_bg.is_alive():
+            logging.error("MQTT thread DEAD")
+        time.sleep(1)
+        if event.is_set():
+            break
 
 # Start the Flask app in a separate thread
 if __name__ == '__main__':
-    print(colored(welcome,"yellow", attrs=['bold']))
-    print(colored("Service running: http://127.0.0.1:4000 ", "green"))
+    logging.warning(colored(welcome,"yellow", attrs=['bold']))
+    logging.warning(colored("Service running: http://127.0.0.1:4000 ", "green"))
     signal.signal(signal.SIGINT, handler)
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
@@ -553,5 +623,8 @@ if __name__ == '__main__':
         mqtt_bg.start()
     serial_thread = threading.Thread(target=ReadPump)
     serial_thread.start()
+    threadcheck = threading.Thread(target=threads_check)
+    threadcheck.start()
+    event = threading.Event()
     serve(app, host=bindaddr, port=bindport)
     #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
