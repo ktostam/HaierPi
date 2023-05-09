@@ -127,8 +127,11 @@ default login and password for web interfaces is: ***admin/admin***
 - Add ds18b20 sensor support as outside temp sensor.
 - Fixed error handling that could cause sysexit.
 - Adding new update mechanism
+ need to add new option in `config.ini`:
+```shell
+    release=master
+```
 - Minor fixes
-
 ### 1.1
 In this release I change library to control GPIO, Iam not using RPi.GPIO anymore, there is some issue with RPi.GPIO replacement for Nano Pi, so I decided to control GPIO via system /sys/class/gpio/. This is independent from used SBC,
 
