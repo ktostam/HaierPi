@@ -226,20 +226,20 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         newmode=msg.payload.decode('utf-8')
         if newmode == "heat":
             try:
-                statechange("pch", "on")
+                statechange("pch", "on", "1")
                 client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
         elif newmode == "cool":
             try:
-                statechange("pcool", "on")
+                statechange("pcool", "on", "1")
                 client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
         elif newmode == "off":
             try:
-                statechange("pch", "off")
-                statechange("pcool", "off")
+                statechange("pch", "off", "1")
+                statechange("pcool", "off", "1")
                 client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
@@ -331,7 +331,7 @@ def presetchange(mode):
         state="error"
         return jsonify(msg=msg, state=state)
 
-def statechange(mode,value):
+def statechange(mode,value,mqtt):
     pcool=status[statusmap.index("pcool")]
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
@@ -375,7 +375,10 @@ def statechange(mode,value):
             state="error"
             writed="0"
         time.sleep(0.2)
-    return jsonify(msg=msg, state=state)
+    if mqtt == "1":
+        return "OK"
+    else:
+        return jsonify(msg=msg, state=state)
 
 def curvecalc():
     if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
@@ -591,7 +594,7 @@ def settings():
 def change_state_route():
     mode = request.form['mode']
     value = request.form['value']
-    information = statechange(mode, value)
+    information = statechange(mode, value, "0")
     return information
 
 @app.route('/tempchange', methods=['POST'])
