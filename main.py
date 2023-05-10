@@ -75,7 +75,7 @@ def handler(signum, frame):
     ser.reset_output_buffer()
     ser.close()
     if use_mqtt == '1':
-        client.publish(mqtt_topic+"/connected","off", qos=1, retain=True)
+        client.publish(mqtt_topic+"/connected","offline", qos=1, retain=True)
         client.disconnect()
     event.set()
     clear()
@@ -202,7 +202,7 @@ def ReadPump():
 def on_connect(client, userdata, flags, rc):
     logging.info(colored("MQTT - Conected", "green", attrs=['bold']))
     client.subscribe(mqtt_topic+'/#')
-    client.publish(mqtt_topic+"/connected","on", qos=1, retain=True)
+    client.publish(mqtt_topic+"/connected","online", qos=1, retain=True)
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
@@ -641,7 +641,7 @@ def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
     client.on_message = on_message  # Define callback function for receipt of a message
     client.on_disconnect = on_disconnect
-    client.will_set(mqtt_topic+"/connected","off",qos=1,retain=True)
+    client.will_set(mqtt_topic+"/connected","offline",qos=1,retain=True)
     client.username_pw_set(mqtt_username, mqtt_password)
     try:
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))
