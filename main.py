@@ -214,14 +214,14 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     if msg.topic == mqtt_topic+"/power/set":
         logging.info("New power state from mqtt:")
         client.publish(mqtt_topic+"/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
-    elif msg.topic == mqtt_topic+"preset_mode/set":
+    elif msg.topic == mqtt_topic+"/preset_mode/set":
         logging.info("New preset mode")
         try:
             presetchange(msg.payload.decode('utf-8'))
             client.publish(mqtt_topic+"/preset_mode/state",msg.payload.decode('utf-8'), qos=1, retain=True)
         except:
             logging.error("MQTT: cannot set new preset")
-    elif msg.topic == mqtt_topic+"mode/set":
+    elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
         if newmode == "heat":
