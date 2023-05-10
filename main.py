@@ -19,6 +19,7 @@ import signal
 import json
 import time
 
+version="1.19"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -570,7 +571,7 @@ def background_function():
 @login_required
 def home():
     theme=status[statusmap.index("theme")]
-    return render_template('index.html', theme=theme)
+    return render_template('index.html', theme=theme, version=version)
 
 @app.route('/theme', methods=['POST'])
 def theme_route():
