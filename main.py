@@ -321,7 +321,7 @@ def presetchange(mode):
     try:
         PyHaier.SetMode(mode)
         if use_mqtt == "1":
-            client.publish(mqtt_topic+"/preset_mode/state",str(mode), qos=1, retain=True)
+            client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
         msg="New preset mode: "+str(mode)
         state="success"
         return jsonify(msg=msg, state=state)
