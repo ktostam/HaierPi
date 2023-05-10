@@ -49,7 +49,7 @@ modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
-
+logging.getLogger().setLevel(logging.INFO)
 
 #GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
 GPIO.setup(modbuspin, GPIO.OUT) #modbus
@@ -200,7 +200,7 @@ def ReadPump():
 
 def on_connect(client, userdata, flags, rc):
     logging.info(colored("MQTT - Conected", "green", attrs=['bold']))
-    client.subscribe(mqtt_topic)
+    client.subscribe(mqtt_topic+'/#')
     client.publish(mqtt_topic+"/connected","on", qos=1, retain=True)
 
 
@@ -212,17 +212,45 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     #print("Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
     if msg.topic == mqtt_topic+"/power/set":
         logging.info("New power state from mqtt:")
-        client.publish(mqtt_topic+"/power/state","new_state_here", qos=1, retain=True)
+        client.publish(mqtt_topic+"/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
     elif msg.topic == mqtt_topic+"preset_mode/set":
         logging.info("New preset mode")
-        client.publish(mqtt_topic+"/preset_mode/state","new_state_here", qos=1, retain=True)
+        try:
+            presetchange(msg.payload.decode('utf-8'))
+            client.publish(mqtt_topic+"/preset_mode/state",msg.payload.decode('utf-8'), qos=1, retain=True)
+        except:
+            logging.error("MQTT: cannot set new preset")
     elif msg.topic == mqtt_topic+"mode/set":
         logging.info("New mode")
-        client.publish(mqtt_topic+"/mode/state","new_state_here", qos=1, retain=True)
+        newmode=msg.payload.decode('utf-8')
+        if newmode == "heat":
+            try:
+                statechange("pch", "on")
+                client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
+            except:
+                logging.error("MQTT: cannot set mode")
+        elif newmode == "cool":
+            try:
+                statechange("pcool", "on")
+                client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
+            except:
+                logging.error("MQTT: cannot set mode")
+        elif newmode == "off":
+            try:
+                statechange("pch", "off")
+                statechange("pcool", "off")
+                client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
+            except:
+                logging.error("MQTT: cannot set mode")
+        else:
+            logging.error("MQTT: mode unsupported")
+
     elif msg.topic == mqtt_topic+"/temperature/set":
-        logging.info("New temperature")
-        logging.info(msg.payload)
-        client.publish(mqtt_topic+"/temperature/state","new_state_here", qos=1, retain=True)
+        try:
+            tempchange("heat",format(float(msg.payload)),"2")
+            client.publish(mqtt_topic+"/temperature/state",str(float(msg.payload)), qos=1, retain=True)
+        except:
+            logging.warning("MQTT: New temp error: payload - "+format(float(msg.payload)))
 
 def tempchange(which, value, curve):
     global newframe
@@ -275,10 +303,32 @@ def tempchange(which, value, curve):
             config['SETTINGS']['settemp'] = str(value)    # update
             with open('config.ini', 'w') as configfile:    # save
                 config.write(configfile)
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/temperature/state",str(value), qos=1, retain=True)
             msg = "Central Heating temperature changed!"
             state = "success"
+    elif curve == "2":
+        if which == "heat":
+            status[statusmap.index("settemp")] = float(value)
+            config['SETTINGS']['settemp'] = str(value)
+            with open('config.ini', 'w') as configfile:
+                config.write(configfile)
+            return "OK"
 
     return jsonify(msg=msg, state=state)
+
+def presetchange(mode):
+    try:
+        PyHaier.SetMode(mode)
+        if use_mqtt == "1":
+            client.publish(mqtt_topic+"/preset_mode/state",str(mode), qos=1, retain=True)
+        msg="New preset mode: "+str(mode)
+        state="success"
+        return jsonify(msg=msg, state=state)
+    except:
+        msg="Preset mode not changed"
+        state="error"
+        return jsonify(msg=msg, state=state)
 
 def statechange(mode,value):
     pcool=status[statusmap.index("pcool")]
