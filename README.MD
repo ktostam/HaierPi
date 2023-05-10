@@ -14,7 +14,7 @@ However, it should work with all pumps that feature the YR-e27 remote control
 If you have any question you can find me on discord:
 
 [<img src="https://discordapp.com/api/guilds/1096167750612828210/widget.png?style=banner2" alt="Discord Banner 2"/>
-](https://discord.gg/vpDq6MYj)
+](https://discord.gg/dVXmAfWt3P)
 
 ## Donation
 If you like My work and want to support me, you can:
