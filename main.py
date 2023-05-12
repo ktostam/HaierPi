@@ -238,8 +238,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
                 logging.error("MQTT: cannot set mode")
         elif newmode == "off":
             try:
-                statechange("pch", "off", "1")
-                statechange("pcool", "off", "1")
+                statechange("pump", "off", "1")
                 client.publish(mqtt_topic+"/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
@@ -358,6 +357,9 @@ def statechange(mode,value,mqtt):
     logging.info(writed)
     logging.info(R101)
     logging.info(newstate)
+    if int(R101[0])%2 == 0:
+        newframe=PyHaier.SetState(R101, "on")
+        time.sleep(2)
     newframe=PyHaier.SetState(R101,newstate)
     for i in range(50):
         logging.info(writed)
