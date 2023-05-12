@@ -567,7 +567,7 @@ def GetParameters():
     status[statusmap.index("humid")] = GetHumidity(humidity)
     if use_mqtt == '1':
         #client.publish(mqtt_topic,str(status))
-        client.publish(mqtt_topic+"/dhw/curtemperature/state", str(tank))
+        client.publish(mqtt_topic+"/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
 
 def create_user(**data):
     """Creates user with encrypted password"""
