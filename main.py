@@ -254,6 +254,8 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     elif msg.topic == mqtt_topic+"/dhw/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
+        if newmode == "heat":
+            newmode="on"
         try:
             statechange("pdhw", str(newmode), "1")
             client.publish(mqtt_topic + "/dhw/mode/state", str(newmode), qos=1, retain=True)
