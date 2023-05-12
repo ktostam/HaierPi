@@ -253,6 +253,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             logging.warning("MQTT: New temp error: payload - "+format(float(msg.payload)))
 
 def tempchange(which, value, curve):
+    global R101
     global newframe
     global writed
     if curve == "1":
@@ -331,6 +332,7 @@ def presetchange(mode):
         return jsonify(msg=msg, state=state)
 
 def statechange(mode,value,mqtt):
+    global R101
     pcool=status[statusmap.index("pcool")]
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
@@ -522,6 +524,8 @@ def settheme(theme):
 
 #Reading parameters
 def GetParameters():
+    global R101
+    global R141
     if len(R141) == 16:
         tank=PyHaier.GetDHWCurTemp(R141)
         status[statusmap.index("tank")] = tank
