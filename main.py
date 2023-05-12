@@ -251,6 +251,22 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             client.publish(mqtt_topic+"/temperature/state",str(float(msg.payload)), qos=1, retain=True)
         except:
             logging.warning("MQTT: New temp error: payload - "+format(float(msg.payload)))
+    elif msg.topic == mqtt_topic+"/dhw/mode/set":
+        logging.info("New mode")
+        newmode=msg.payload.decode('utf-8')
+        try:
+            statechange("pdhw", str(newmode), "1")
+            client.publish(mqtt_topic + "/dhw/mode/state", str(newmode), qos=1, retain=True)
+        except:
+            logging.warning("MQTT: cannot change DHW mode - payload:"+str(newmode))
+    elif msg.topic == mqtt_topic+"/dhw/temperature/set":
+        logging.info("New mode")
+        newtemp=msg.payload.decode('utf-8')
+        try:
+            tempchange("dhw", str(newtemp), "1")
+            client.publish(mqtt_topic + "/dhw/temperature/state", str(float(newtemp)), qos=1, retain=True)
+        except:
+            logging.warning("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
 
 def tempchange(which, value, curve):
     global R101
