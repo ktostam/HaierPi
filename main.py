@@ -144,6 +144,16 @@ def WritePump():
             #         writed="2"
         elif newframelen == 16:
             logging.info("141")
+        elif newframelen == 1:
+            loggin.info("201")
+            gpiocontrol("modbus", "1")
+            time.sleep(1)
+            modbus.connect()
+            modbusresult=modbus.write_registers(201, newframe, unit=17)
+            modbus.close()
+            gpiocontrol("modbus","0")
+            logging.info(modbusresult)
+            writed="1"
         newframe=""
 
 def ReadPump():
@@ -349,8 +359,9 @@ def tempchange(which, value, curve):
     return jsonify(msg=msg, state=state)
 
 def presetchange(mode):
+    global newframe
     try:
-        PyHaier.SetMode(mode)
+        newframe=PyHaier.SetMode(mode)
         if use_mqtt == "1":
             client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
             return "OK"
