@@ -19,7 +19,7 @@ import signal
 import json
 import time
 
-version="1.20"
+version="1.21"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -58,8 +58,8 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","humid","pch","pdhw","pcool", "theme"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme"]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -144,6 +144,16 @@ def WritePump():
             #         writed="2"
         elif newframelen == 16:
             logging.info("141")
+        elif newframelen == 1:
+            logging.info("201")
+            gpiocontrol("modbus", "1")
+            time.sleep(1)
+            modbus.connect()
+            modbusresult=modbus.write_registers(201, newframe, unit=17)
+            modbus.close()
+            gpiocontrol("modbus","0")
+            logging.info(modbusresult)
+            writed="1"
         newframe=""
 
 def ReadPump():
@@ -217,10 +227,9 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     elif msg.topic == mqtt_topic+"/preset_mode/set":
         logging.info("New preset mode")
         try:
-            presetchange(msg.payload.decode('utf-8'))
-            client.publish(mqtt_topic+"/preset_mode/state",msg.payload.decode('utf-8'), qos=1, retain=True)
+            presetchange(str(msg.payload.decode('utf-8')))
         except:
-            logging.error("MQTT: cannot set new preset")
+            logging.error("MQTT: cannot set new preset - payload: "+str(msg.payload.decode('utf-8')))
     elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
@@ -350,10 +359,12 @@ def tempchange(which, value, curve):
     return jsonify(msg=msg, state=state)
 
 def presetchange(mode):
+    global newframe
     try:
-        PyHaier.SetMode(mode)
+        newframe=PyHaier.SetMode(mode)
         if use_mqtt == "1":
             client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
+            return "OK"
         msg="New preset mode: "+str(mode)
         state="success"
         return jsonify(msg=msg, state=state)
@@ -461,11 +472,12 @@ def getdata():
     hcurve=status[statusmap.index("hcurve")]
     dhw=status[statusmap.index("dhw")]
     tank=status[statusmap.index("tank")]
+    mode=status[statusmap.index("mode")]
     humid=status[statusmap.index("humid")]
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
     pcool=status[statusmap.index("pcool")]
-    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool)
+    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool)
 
 def GetInsideTemp(param):
     if param == "buildin":
@@ -557,32 +569,51 @@ def settheme(theme):
 def GetParameters():
     global R101
     global R141
+    global R201
     if len(R141) == 16:
         tank=PyHaier.GetDHWCurTemp(R141)
         status[statusmap.index("tank")] = tank
+    if len(R201) == 1:
+        mode=PyHaier.GetMode(R201)
+        status[statusmap.index("mode")] = mode
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
         powerstate=PyHaier.GetState(R101)
         status[statusmap.index("dhw")] = dhw
         if 'Heat' in powerstate:
             status[statusmap.index("pch")] = "on"
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/mode/state", "heat")
         else:
             status[statusmap.index("pch")] = "off"
         if 'Cool' in powerstate:
             status[statusmap.index("pcool")] = "on"
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/mode/state", "cool")
         else:
             status[statusmap.index("pcool")] = "off"
+        if not 'Heat' and not 'Cool' in powerstate:
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/mode/state", "off")
 
         if 'Tank' in powerstate:
             status[statusmap.index("pdhw")] = "on"
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/dhw/mode/state", "heat")
         else:
             status[statusmap.index("pdhw")] = "off"
+            if use_mqtt == "1":
+                client.publish(mqtt_topic + "/dhw/mode/state", "off")
+
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
     if use_mqtt == '1':
         #client.publish(mqtt_topic,str(status))
         client.publish(mqtt_topic+"/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
+        client.publish(mqtt_topic+"/dhw/temperature/state", str(status[statusmap.index("dhw")]))
+        client.publish(mqtt_topic+"/preset_mode/state", str(status[statusmap.index("mode")]))
+        client.publish(mqtt_topic+"/temperature/state", str(status[statusmap.index("settemp")]))
 
 def create_user(**data):
     """Creates user with encrypted password"""
