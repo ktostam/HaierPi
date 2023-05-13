@@ -592,7 +592,7 @@ def GetParameters():
                 client.publish(mqtt_topic+"/mode/state", "cool")
         else:
             status[statusmap.index("pcool")] = "off"
-        if not 'Heat' or not 'Cool' in powerstate:
+        if not 'Heat' and not 'Cool' in powerstate:
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/mode/state", "off")
 
