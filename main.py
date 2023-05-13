@@ -145,7 +145,7 @@ def WritePump():
         elif newframelen == 16:
             logging.info("141")
         elif newframelen == 1:
-            loggin.info("201")
+            logging.info("201")
             gpiocontrol("modbus", "1")
             time.sleep(1)
             modbus.connect()
