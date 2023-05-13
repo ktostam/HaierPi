@@ -596,11 +596,11 @@ def GetParameters():
         if 'Tank' in powerstate:
             status[statusmap.index("pdhw")] = "on"
             if use_mqtt == "1":
-                client.publish(mqtt_topic+"dhw/mode/state", "heat")
+                client.publish(mqtt_topic+"/dhw/mode/state", "heat")
         else:
             status[statusmap.index("pdhw")] = "off"
             if use_mqtt == "1":
-                client.publish(mqtt_topic + "dhw/mode/state", "off")
+                client.publish(mqtt_topic + "/dhw/mode/state", "off")
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
