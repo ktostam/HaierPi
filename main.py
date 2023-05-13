@@ -19,7 +19,7 @@ import signal
 import json
 import time
 
-version="1.19"
+version="1.20"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -253,20 +253,22 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             logging.warning("MQTT: New temp error: payload - "+format(float(msg.payload)))
     elif msg.topic == mqtt_topic+"/dhw/mode/set":
         logging.info("New mode")
-        newmode=msg.payload.decode('utf-8')
-        if newmode == "heat":
+        payload=msg.payload.decode('utf-8')
+        if payload == "heat":
             newmode="on"
+        else:
+            newmode=payload
         try:
             statechange("pdhw", str(newmode), "1")
-            client.publish(mqtt_topic + "/dhw/mode/state", str(newmode), qos=1, retain=True)
+            client.publish(mqtt_topic + "/dhw/mode/state", str(payload), qos=1, retain=True)
         except:
             logging.warning("MQTT: cannot change DHW mode - payload:"+str(newmode))
     elif msg.topic == mqtt_topic+"/dhw/temperature/set":
-        logging.info("New mode")
-        newtemp=msg.payload.decode('utf-8')
+        logging.info("New temperatura")
+        newtemp=int(float(msg.payload.decode('utf-8')))
         try:
-            tempchange("dhw", str(newtemp), "1")
-            client.publish(mqtt_topic + "/dhw/temperature/state", str(float(newtemp)), qos=1, retain=True)
+            tempchange("dhw", str(newtemp), "2")
+            client.publish(mqtt_topic + "/dhw/temperature/state", str(newtemp), qos=1, retain=True)
         except:
             logging.warning("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
 
@@ -333,6 +335,17 @@ def tempchange(which, value, curve):
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
             return "OK"
+    elif which == "dhw":
+        logging.info(R101)
+            logging.info("Domestic Hot Water: "+value)
+            dhwframe = PyHaier.SetDHWTemp(R101, int(value))
+            if dhwframe.__class__ == list:
+                newframe=dhwframe
+                return "OK"
+            else:
+                logging.error("Error: Cannot set new DHW temp")
+                return "ERROR"
+
 
     return jsonify(msg=msg, state=state)
 
@@ -706,4 +719,4 @@ if __name__ == '__main__':
     threadcheck.start()
     event = threading.Event()
     serve(app, host=bindaddr, port=bindport)
-    #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
+        #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
