@@ -23,7 +23,7 @@ try:
     shutil.rmtree('/opt/haier.back')
 except FileNotFoundError:
     print("/opt/haier.back not exist")
-subprocess.check_call(['pip', 'install', '-r', '/opt/haierupdate/requirements.txt'])
+subprocess.check_call(['/opt/haier/env/bin/pip', 'install', '-r', '/opt/haierupdate/requirements.txt'])
 shutil.move('/opt/haier', '/opt/haier.back')
 shutil.move('/opt/haierupdate', '/opt/haier')
 shutil.copytree('/opt/haier.back/env', '/opt/haier/env/')
