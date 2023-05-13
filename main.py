@@ -217,10 +217,9 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     elif msg.topic == mqtt_topic+"/preset_mode/set":
         logging.info("New preset mode")
         try:
-            presetchange(msg.payload.decode('utf-8'))
-            client.publish(mqtt_topic+"/preset_mode/state",msg.payload.decode('utf-8'), qos=1, retain=True)
+            presetchange(str(msg.payload.decode('utf-8')))
         except:
-            logging.error("MQTT: cannot set new preset")
+            logging.error("MQTT: cannot set new preset - payload: "+str(msg.payload.decode('utf-8')))
     elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
@@ -354,6 +353,7 @@ def presetchange(mode):
         PyHaier.SetMode(mode)
         if use_mqtt == "1":
             client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
+            return "OK"
         msg="New preset mode: "+str(mode)
         state="success"
         return jsonify(msg=msg, state=state)
