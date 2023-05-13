@@ -592,7 +592,7 @@ def GetParameters():
                 client.publish(mqtt_topic+"/mode/state", "cool")
         else:
             status[statusmap.index("pcool")] = "off"
-        if not 'Heat' or 'Cool' in powerstate:
+        if not 'Heat' or not 'Cool' in powerstate:
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/mode/state", "off")
 
@@ -604,6 +604,7 @@ def GetParameters():
             status[statusmap.index("pdhw")] = "off"
             if use_mqtt == "1":
                 client.publish(mqtt_topic + "/dhw/mode/state", "off")
+
     status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     status[statusmap.index("humid")] = GetHumidity(humidity)
