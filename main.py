@@ -335,16 +335,16 @@ def tempchange(which, value, curve):
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
             return "OK"
-    elif which == "dhw":
-        logging.info(R101)
-            logging.info("Domestic Hot Water: "+value)
-            dhwframe = PyHaier.SetDHWTemp(R101, int(value))
-            if dhwframe.__class__ == list:
-                newframe=dhwframe
-                return "OK"
-            else:
-                logging.error("Error: Cannot set new DHW temp")
-                return "ERROR"
+        elif which == "dhw":
+            logging.info(R101)
+                logging.info("Domestic Hot Water: "+value)
+                dhwframe = PyHaier.SetDHWTemp(R101, int(value))
+                if dhwframe.__class__ == list:
+                    newframe=dhwframe
+                    return "OK"
+                else:
+                    logging.error("Error: Cannot set new DHW temp")
+                    return "ERROR"
 
 
     return jsonify(msg=msg, state=state)
