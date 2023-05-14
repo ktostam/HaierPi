@@ -19,7 +19,7 @@ import signal
 import json
 import time
 
-version="1.23"
+version="1.24"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -396,6 +396,8 @@ def statechange(mode,value,mqtt):
             newstate="C"
         if value == "on":
             newstate=newstate+"T"
+        else:
+            newstate="off"
     if not newstate:
         newstate="off"
     global newframe
@@ -596,7 +598,7 @@ def GetParameters():
                 client.publish(mqtt_topic+"/mode/state", "cool")
         else:
             status[statusmap.index("pcool")] = "off"
-        if not 'Heat' and not 'Cool' in powerstate:
+        if not any(substring in powerstate for substring in ["Cool", "Heat"]):
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/mode/state", "off")
 
