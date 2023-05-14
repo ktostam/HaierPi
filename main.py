@@ -480,7 +480,7 @@ def getdata():
     return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool)
 
 def GetInsideTemp(param):
-    if param == "buildin":
+    if param == "builtin":
         return "22"
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
@@ -505,7 +505,7 @@ def GetInsideTemp(param):
         return -1
 
 def GetOutsideTemp(param):
-    if param == "buildin":
+    if param == "builtin":
         try:
             sensor = W1ThermSensor()
             temperature = sensor.get_temperature()
@@ -536,7 +536,7 @@ def GetOutsideTemp(param):
         return -1
 
 def GetHumidity(param):
-    if param == "buildin":
+    if param == "builtin":
         # function for getting humidity from DHT22 connected to RaspberryPi GPIO. for now return static 22
         return "22"
     elif param == "ha":
