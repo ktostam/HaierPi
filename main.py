@@ -287,17 +287,19 @@ def tempchange(which, value, curve):
     global writed
     if curve == "1":
         if which == "heat":
-            logging.info("Central heating: "+value)
-            logging.info(R101)
-            chframe = PyHaier.SetCHTemp(R101, float(value))
+            logging.info("Central heating: "+str(value))
+            logging.debug(R101)
+            for a in range(3):
+                if len(R101) == 6:
+                    chframe = PyHaier.SetCHTemp(R101, float(value))
+                    continue
             if chframe.__class__ == list:
                 newframe=chframe
-                msgt="Central heating: "
+                return "OK"
             else:
                 logging.error("ERROR: Cannot set new CH temp")
                 msg="ERROR: Cannot set new CH temp"
-                state="error"
-                return jsonify(msg=msg, state=state)
+                return msg
         elif which == "dhw":
             logging.info(R101)
             logging.info("Domestic Hot Water: "+value)
@@ -442,11 +444,13 @@ def curvecalc():
             client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
         if 25.0 < heatcurve < 55.0:
             try:
+                logging.info("turn on heat demand")
                 gpiocontrol("heatdemand", "1")
                 tempchange("heat", heatcurve, "1")
             except:
                 logging.error("Set chtemp ERROR")
         else:
+            logging.info("turn off heat demand")
             gpiocontrol("heatdemand", "0")
     else:
         status[statusmap.index("hcurve")]="Error"
