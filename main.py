@@ -19,7 +19,7 @@ import signal
 import json
 import time
 
-version="1.22"
+version="1.24"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -287,17 +287,19 @@ def tempchange(which, value, curve):
     global writed
     if curve == "1":
         if which == "heat":
-            logging.info("Central heating: "+value)
-            logging.info(R101)
-            chframe = PyHaier.SetCHTemp(R101, float(value))
+            logging.info("Central heating: "+str(value))
+            logging.debug(R101)
+            for a in range(3):
+                if len(R101) == 6:
+                    chframe = PyHaier.SetCHTemp(R101, float(value))
+                    continue
             if chframe.__class__ == list:
                 newframe=chframe
-                msgt="Central heating: "
+                return "OK"
             else:
                 logging.error("ERROR: Cannot set new CH temp")
                 msg="ERROR: Cannot set new CH temp"
-                state="error"
-                return jsonify(msg=msg, state=state)
+                return msg
         elif which == "dhw":
             logging.info(R101)
             logging.info("Domestic Hot Water: "+value)
@@ -394,6 +396,8 @@ def statechange(mode,value,mqtt):
             newstate="C"
         if value == "on":
             newstate=newstate+"T"
+        else:
+            newstate="off"
     if not newstate:
         newstate="off"
     global newframe
@@ -442,11 +446,13 @@ def curvecalc():
             client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
         if 25.0 < heatcurve < 55.0:
             try:
+                logging.info("turn on heat demand")
                 gpiocontrol("heatdemand", "1")
                 tempchange("heat", heatcurve, "1")
             except:
                 logging.error("Set chtemp ERROR")
         else:
+            logging.info("turn off heat demand")
             gpiocontrol("heatdemand", "0")
     else:
         status[statusmap.index("hcurve")]="Error"
@@ -592,7 +598,7 @@ def GetParameters():
                 client.publish(mqtt_topic+"/mode/state", "cool")
         else:
             status[statusmap.index("pcool")] = "off"
-        if not 'Heat' and not 'Cool' in powerstate:
+        if not any(substring in powerstate for substring in ["Cool", "Heat"]):
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/mode/state", "off")
 
