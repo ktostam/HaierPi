@@ -227,9 +227,9 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     elif msg.topic == mqtt_topic+"/preset_mode/set":
         logging.info("New preset mode")
         try:
-            presetchange(str(msg.payload.decode('utf-8')))
+            msg, state = presetchange(str(msg.payload.decode('utf-8')))
         except:
-            logging.error("MQTT: cannot set new preset - payload: "+str(msg.payload.decode('utf-8')))
+            logging.error("MQTT: cannot set new preset: "+msg+" "+state))
     elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
@@ -357,7 +357,6 @@ def tempchange(which, value, curve):
                 logging.error("Error: Cannot set new DHW temp")
                 return "ERROR"
 
-
     return jsonify(msg=msg, state=state)
 
 def presetchange(mode):
@@ -366,14 +365,13 @@ def presetchange(mode):
         newframe=PyHaier.SetMode(mode)
         if use_mqtt == "1":
             client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
-            return "OK"
         msg="New preset mode: "+str(mode)
         state="success"
-        return jsonify(msg=msg, state=state)
+        return msg, state
     except:
         msg="Preset mode not changed"
         state="error"
-        return jsonify(msg=msg, state=state)
+        return msg, state
 
 def statechange(mode,value,mqtt):
     global R101
@@ -639,7 +637,8 @@ def create_user(**data):
     # commit changes to database
     json.dump(db_users, open("users.json", "w"))
     #return data
-    return jsonify(msg="Password changed")
+    msg="Password changed"
+    return msg
 
 def background_function():
     print("Background function running!")
@@ -697,7 +696,7 @@ def change_pass_route():
     user = request.form['user']
     password = request.form['password']
     response = create_user(username=user, password=password)
-    return response
+    return jsonify(response)
 
 @app.route('/getdata', methods=['GET'])
 @login_required
@@ -733,7 +732,7 @@ def threads_check():
             logging.error("Background thread DEAD")
         elif not serial_thread.is_alive():
             logging.error("serial Thread DEAD")
-        elif not mqtt_bg.is_alive():
+        elif not mqtt_bg.is_alive() and use_mqtt == "1":
             logging.error("MQTT thread DEAD")
         time.sleep(1)
         if event.is_set():
