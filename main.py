@@ -633,9 +633,9 @@ def GetParameters():
     if use_mqtt == '1':
         #client.publish(mqtt_topic,str(status))
         #client.publish(mqtt_topic+"/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
-        client.publish(mqtt_topic+"/dhw/temperature/state", str(status[statusmap.index("dhw")]))
-        client.publish(mqtt_topic+"/preset_mode/state", str(status[statusmap.index("mode")]))
-        client.publish(mqtt_topic+"/temperature/state", str(status[statusmap.index("settemp")]))
+        #client.publish(mqtt_topic+"/dhw/temperature/state", str(status[statusmap.index("dhw")]))
+        #client.publish(mqtt_topic+"/preset_mode/state", str(status[statusmap.index("mode")]))
+        #client.publish(mqtt_topic+"/temperature/state", str(status[statusmap.index("settemp")]))
 
 def create_user(**data):
     """Creates user with encrypted password"""
