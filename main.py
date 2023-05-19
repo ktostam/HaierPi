@@ -624,7 +624,7 @@ def GetParameters():
             status[statusmap.index("pdhw")] = "off"
             if use_mqtt == "1":
                 client.publish(mqtt_topic + "/dhw/mode/state", "off")
-    ischanged("intemp", GetInsidetemp(insidetemp))
+    ischanged("intemp", GetInsideTemp(insidetemp))
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
