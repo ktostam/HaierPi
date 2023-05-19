@@ -573,7 +573,7 @@ def settheme(theme):
 # Function campare new value with old, as "old" you need to provide name of status. for example 'pch'
 def ischanged(old, new):
     if status[statusmap.index(old)] != new:
-        logging.info("ischanged: status "+str(old)+" has changed. Set new value- "+str(new))
+        logging.info("ischanged: status "+str(old)+" has changed. Set new value - "+str(new))
         status[statusmap.index(old)] = new
         if use_mqtt == "1":
             if old == "pdhw" or old == "pch":
