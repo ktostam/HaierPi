@@ -2,72 +2,216 @@
 {% block title %}Login{% endblock %}
 
 {% block page_body %}
-<div class="container">
 <div class="row justify-content-center">
     <div class="col-12 col-lg-10 col-xl-8 mx-auto">
         <h2 class="h3 mb-4 page-title">Settings</h2>
-        <div class="my-4">
+        <div class="my-10">
             <!-- Tabs navs -->
-            <ul class="nav nav-tabs mb-3" id="ex1" role="tablist">
-              <li class="nav-item" role="presentation">
-                <a
-                  class="nav-link active"
-                  id="ex1-tab-1"
-                  data-mdb-toggle="tab"
-                  href="#ex1-tabs-1"
-                  role="tab"
-                  aria-controls="ex1-tabs-1"
-                  aria-selected="true"
-                  >Tab 1</a
-                >
-              </li>
-              <li class="nav-item" role="presentation">
-                <a
-                  class="nav-link"
-                  id="ex1-tab-2"
-                  data-mdb-toggle="tab"
-                  href="#ex1-tabs-2"
-                  role="tab"
-                  aria-controls="ex1-tabs-2"
-                  aria-selected="false"
-                  >Tab 2</a
-                >
-              </li>
-              <li class="nav-item" role="presentation">
-                <a
-                  class="nav-link"
-                  id="ex1-tab-3"
-                  data-mdb-toggle="tab"
-                  href="#ex1-tabs-3"
-                  role="tab"
-                  aria-controls="ex1-tabs-3"
-                  aria-selected="false"
-                  >Tab 3</a
-                >
-              </li>
+            <ul class="nav nav-tabs mb-3" id="settings" role="tablist">
+                <li class="nav-item" role="presentation">
+		            <a class="nav-link active" id="settings-general" data-bs-toggle="tab" data-bs-target="#settings-general-tab" role="tab" aria-controls="settings-general-tab" aria-selected="true" href="#settings-general-tab">General</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settins-ha-tab" role="tab" aria-controls="settins-ha-tab" aria-selected="false" href="#settins-ha-tab">Home Assistant</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="settings-mqtt" data-bs-toggle="tab" data-bs-target="#settings-mqtt-tab" role="tab" aria-controls="settings-mqtt-tab" aria-selected="false" href="#settings-mqtt-tab">MQTT</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="settings-system" data-bs-toggle="tab" data-bs-target="#settings-system-tab" role="tab" aria-controls="settings-system-tab" aria-selected="false" href="#settings-system-tab">System</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link disabled" id="settings-tuya" data-bs-toggle="tab" data-bs-target="#settings-tuya-tab" role="tab" aria-controls="settings-tuya-tab" aria-selected="false" href="#settings-tuya-tab">Tuya</a>
+                </li>
+
             </ul>
             <!-- Tabs navs -->
 
             <!-- Tabs content -->
             <div class="tab-content" id="ex1-content">
-              <div
-                class="tab-pane fade show active"
-                id="ex1-tabs-1"
-                role="tabpanel"
-                aria-labelledby="ex1-tab-1"
-              >
+              <div class="tab-pane fade show active" id="settings-general-tab" role="tabpanel" aria-labelledby="general">
                 Tab 1 content
               </div>
-              <div class="tab-pane fade" id="ex1-tabs-2" role="tabpanel" aria-labelledby="ex1-tab-2">
-                Tab 2 content
+              <div class="tab-pane fade" id="settins-ha-tab" role="tabpanel" aria-labelledby="ex1-tab-2">
+                  <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Home Assistant address</strong>
+                                <p class="text-muted mb-0">Home assistant IP or domainname address</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                        <input type="text" class="form-control" id="haaddr" aria-describedby="haaddr" value="{{ haaddr }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">Home Assistant port</strong>
+                            <p class="text-muted mb-0">Home Assistant port (default 8123)</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                    <input type="text" class="form-control" id="haport" aria-describedby="haport" value="{{ haport }}">
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">Home Assistant Access Key</strong>
+                            <p class="text-muted mb-0">Home Assistant Access Token Key. You can generate key in user settings in HA</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                    <input type="password" class="form-control" id="hakey" aria-describedby="hakey" value="{{ hakey }}">
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">Inside temperature entity</strong>
+                            <p class="text-muted mb-0">Entity name of inside temperature sensor (e.g. sensor.inside_temp)</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="insidesensor" aria-describedby="insidesensor" value="{{ insidesensor }}">
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">Outside temperature entity</strong>
+                            <p class="text-muted mb-0">Entity name of outside temperature sensor (e.g. sensor.outside_temp)</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="outsidesensor" aria-describedby="outsidesensor" value="{{ outsidesensor }}">
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">Inside humidity entity</strong>
+                            <p class="text-muted mb-0">Entity name of inside humidity sensor (e.g. sensor.inside_humidity)</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="humiditysensor" aria-describedby="humiditysensor" value="{{ humiditysensor }}">
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div><button type="submit" class="btn btn-primary">Save</button>
+            </div>
               </div>
-              <div class="tab-pane fade" id="ex1-tabs-3" role="tabpanel" aria-labelledby="ex1-tab-3">
-                Tab 3 content
+              <div class="tab-pane fade" id="settings-mqtt-tab" role="tabpanel" aria-labelledby="ex1-tab-3">
+                <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Using MQTT</strong>
+                                <p class="text-muted mb-0">Do you want to use mqtt (0 - MQTT disabled, 1 - MQTT enabled)</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="mqtt" aria-describedby="mqtt" value="{{ mqtt }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">MQTT Address</strong>
+                                <p class="text-muted mb-0">MQTT Broker ip or hostname address</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="address" aria-describedby="address" value="{{ address }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">MQTT port</strong>
+                                <p class="text-muted mb-0">MQTT Broker port (default 1883)</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="port" aria-describedby="port" value="{{ port }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Main topic</strong>
+                                <p class="text-muted mb-0">Main topic for publishing messages</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="main_topic" aria-describedby="main_topic" value="{{ main_topic }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Username</strong>
+                                <p class="text-muted mb-0">MQTT Broker account username</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="username" aria-describedby="usename" value="{{ username }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Password</strong>
+                                <p class="text-muted mb-0">MQTT Broker account password</p>
+                            </div>
+                                <div class="col-auto">
+                                    <div class="custom-control custom-switch">
+                                        <input type="password" class="form-control" id="password" aria-describedby="password" value="{{ password }}">
+                                        <span class="custom-control-label"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
               </div>
             </div>
         </div>
     </div>
-</div>
 
 </div>
 {% endblock %}
