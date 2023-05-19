@@ -230,7 +230,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         try:
             msg, state = presetchange(str(msg.payload.decode('utf-8')))
         except:
-            logging.error("MQTT: cannot set new preset: "+msg+" "+state))
+            logging.error("MQTT: cannot set new preset: "+msg+" "+state)
     elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
@@ -572,14 +572,13 @@ def settheme(theme):
 
 # Function campare new value with old, as "old" you need to provide name of status. for example 'pch'
 def ischanged(old, new):
-    if status[statusmap.index(old)] == new:
-        continue
-    else:
+    if status[statusmap.index(old)] != new:
         logging.info("ischanged: status "+str(old)+" has changed. Set new value- "+str(new))
         status[statusmap.index(old)] = new
         if use_mqtt == "1":
-            if old == "pdhw" or old == "pch" and new == "on"
-                client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
+            if old == "pdhw" or old == "pch":
+                if new == "on":
+                    client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
             else:
                 client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
 
