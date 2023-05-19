@@ -59,6 +59,7 @@ GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0"]
 status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -569,6 +570,19 @@ def settheme(theme):
     status[statusmap.index("theme")]=theme
     return theme
 
+# Function campare new value with old, as "old" you need to provide name of status. for example 'pch'
+def ischanged(old, new):
+    if status[statusmap.index(old)] == new:
+        continue
+    else:
+        logging.info("ischanged: status "+str(old)+" has changed. Set new value- "+str(new))
+        status[statusmap.index(old)] = new
+        if use_mqtt == "1":
+            if old == "pdhw" or old == "pch" and new == "on"
+                client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
+            else:
+                client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
+
 #Reading parameters
 def GetParameters():
     global R101
@@ -576,14 +590,17 @@ def GetParameters():
     global R201
     if len(R141) == 16:
         tank=PyHaier.GetDHWCurTemp(R141)
-        status[statusmap.index("tank")] = tank
+        #status[statusmap.index("tank")] = tank
+        ischanged("tank", tank)
     if len(R201) == 1:
         mode=PyHaier.GetMode(R201)
-        status[statusmap.index("mode")] = mode
+        #status[statusmap.index("mode")] = mode
+        ischanged("mode", mode)
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
+        #status[statusmap.index("dhw")] = dhw
+        ischanged("dhw", dhw)
         powerstate=PyHaier.GetState(R101)
-        status[statusmap.index("dhw")] = dhw
         if 'Heat' in powerstate:
             status[statusmap.index("pch")] = "on"
             if use_mqtt == "1":
@@ -608,13 +625,15 @@ def GetParameters():
             status[statusmap.index("pdhw")] = "off"
             if use_mqtt == "1":
                 client.publish(mqtt_topic + "/dhw/mode/state", "off")
-
-    status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
-    status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
-    status[statusmap.index("humid")] = GetHumidity(humidity)
+    ischanged("intemp", GetInsidetemp(insidetemp))
+    ischanged("outtemp", GetOutsideTemp(outsidetemp))
+    ischanged("humid", GetHumidity(humidity))
+    #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
+    #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
+    #status[statusmap.index("humid")] = GetHumidity(humidity)
     if use_mqtt == '1':
         #client.publish(mqtt_topic,str(status))
-        client.publish(mqtt_topic+"/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
+        #client.publish(mqtt_topic+"/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
         client.publish(mqtt_topic+"/dhw/temperature/state", str(status[statusmap.index("dhw")]))
         client.publish(mqtt_topic+"/preset_mode/state", str(status[statusmap.index("mode")]))
         client.publish(mqtt_topic+"/temperature/state", str(status[statusmap.index("settemp")]))
