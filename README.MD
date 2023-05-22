@@ -132,7 +132,7 @@ default login and password for web interfaces is: ***admin/admin***
 ### 1.26
 - IMPORTANT: new option added in config.ini. If you're updating
   from previous version you need to add option `firstrun = 0` in `[DEFAULT]` block in `config.ini`
-- Setting page is kinda ready.
+- Setting page is kinda ready. (unfortunetly you need to manualy restart HaierPi service after saving change for now)
 - Added new service for display HaierPi logs via web, for better debugging. Now you don't need to login via ssh
 - Now script can talk with home assistant via MQTT (for now there is no mqtt autodiscovery, so you need to add yaml configuration manualy).
 - Updates only send via mqtt if something is changes, not as before - everything every 10 seconds
