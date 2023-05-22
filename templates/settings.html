@@ -1,6 +1,68 @@
 {% extends 'base.html' %}
 {% block title %}Login{% endblock %}
+{% block custom_scripts %}
+    <style>
+        /* Some basic CSS styles for the template */
+        p {
+                margin: 0px;
+        }
+        h1 {
+            color: #333;
+        }
+        .journal-entry {
+            background-color: #cde8cd;
+            margin-bottom: 5px;
+            transition: background-color 0.5s ease-in-out;
+        }
+        .journal-entry.fadeout {
+            background-color: transparent;
+            transition: background-color 5s ease-in-out;
+        }
+    </style>
+		    <script>
+			    function download_log(){
+				const blob= new Blob([$('#journal')[0].innerText],{type: 'text/plain'});
+				const fileUrl = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.download = 'journal.txt';
+				link.href=fileUrl;
+				link.click();
+				}
+		    </script>
+				    <script>
+			form.addEventListener('submit', () => {
+    			if(document.getElementById("use_mqtt").checked) {
+        			document.getElementById('use_mqtt_hidden').disabled = true;
+			    }
+			}
+		    </script>
+		    {% if saved == '1' %}
+				    <script>
+					    function onloadsave() {
+let timerInterval
+                            Swal.fire({
+                                html: "Changes saved",
+                                icon: "success",
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    const b = Swal.getHtmlContainer().querySelector('b')
+                                    timerInterval = setInterval(() => {
+                                        b.textContent = Swal.getTimerLeft()
+                                    }, 100)
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval)
+                                }
+                            })
 
+					    }
+window.onload = onloadsave;
+				    </script>
+				    {% endif %}
+{% endblock %}
 {% block page_body %}
 <div class="row justify-content-center">
     <div class="col-12 col-lg-10 col-xl-8 mx-auto">
@@ -12,7 +74,10 @@
 		            <a class="nav-link active" id="settings-general" data-bs-toggle="tab" data-bs-target="#settings-general-tab" role="tab" aria-controls="settings-general-tab" aria-selected="true" href="#settings-general-tab">General</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settins-ha-tab" role="tab" aria-controls="settins-ha-tab" aria-selected="false" href="#settins-ha-tab">Home Assistant</a>
+		            <a class="nav-link" id="settings-hcurve" data-bs-toggle="tab" data-bs-target="#settings-hcurve-tab" role="tab" aria-controls="settings-hcurve-tab" aria-selected="true" href="#hcurve-general-tab">Heating curve</a>
+                </li>
+                <li class="nav-item" role="presentation">
+			<a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settings-ha-tab" role="tab" aria-controls="settings-ha-tab" aria-selected="false" href="#settings-ha-tab">Home Assistant</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="settings-mqtt" data-bs-toggle="tab" data-bs-target="#settings-mqtt-tab" role="tab" aria-controls="settings-mqtt-tab" aria-selected="false" href="#settings-mqtt-tab">MQTT</a>
@@ -23,16 +88,112 @@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link disabled" id="settings-tuya" data-bs-toggle="tab" data-bs-target="#settings-tuya-tab" role="tab" aria-controls="settings-tuya-tab" aria-selected="false" href="#settings-tuya-tab">Tuya</a>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="settings-logs" data-bs-toggle="tab" data-bs-target="#settings-logs-tab" role="tab" aria-controls="settings-logs-tab" aria-selected="false" href="#settings-logs-tab">Logs</a>
+                </li>
 
             </ul>
             <!-- Tabs navs -->
 
             <!-- Tabs content -->
             <div class="tab-content" id="ex1-content">
-              <div class="tab-pane fade show active" id="settings-general-tab" role="tabpanel" aria-labelledby="general">
-                Tab 1 content
-              </div>
-              <div class="tab-pane fade" id="settins-ha-tab" role="tabpanel" aria-labelledby="ex1-tab-2">
+                <div class="tab-pane fade show active" id="settings-general-tab" role="tabpanel" aria-labelledby="settings-general-tab">
+                    <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+				    <form method="POST">
+                                <strong class="mb-0">Inside temperture sensor</strong>
+                                <p class="text-muted mb-0">What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <select class="form-select" aria-label="insidetemp" name="SETTINGS$insidetemp" value="{{ insidetemp }}">
+                                        <option value="ha"{% if insidetemp == 'ha' %} selected {% endif %}>HA</option>
+                                        <option value="builtin"{% if insidetemp == 'builtin' %} selected {% endif %}>Builtin</option>
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Outside temperature sensor</strong>
+                                <p class="text-muted mb-0">What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <select class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}">
+                                        <option value="ha"{% if outsidetemp == 'ha' %} selected {% endif %}>HA</option>
+                                        <option value="builtin"{% if outsidetemp == 'builtin' %} selected {% endif %}>Builtin</option>
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Inside humidity sensor</strong>
+                                <p class="text-muted mb-0">What humidity sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <select class="form-select" aria-label="humidity" name="SETTINGS$humidity" value="{{ humidity }}">
+                                        <option value="ha"{% if humidity == 'ha' %} selected {% endif %}>HA</option>
+                                        <option value="builtin"{% if humidity == 'builtin' %} selected {% endif %}>Builtin</option>
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <button type="submit" class="btn btn-primary">Save</button></form>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-hcurve-tab" role="tabpanel" aria-labelledby="settings-hcurve-tab">
+                    <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve type</strong>
+                                <p class="text-muted mb-0">What type of curve you want to use</p>
+                            </div>
+                            <div class="col-auto">
+				    <div class="custom-control custom-switch"><form method="POST">
+                                    <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
+                                        <option value="auto"{% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
+                                        <option value="manual"{% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
+                                        <option value="2">1</option>
+                                        <option value="3">2</option>
+                                        <option value="4">3</option>
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve calculation frequency</strong>
+                                <p class="text-muted mb-0">Frequency in minutes how often heating curve should be recalculate</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="timeout" name="SETTINGS$heizfreq" aria-describedby="timeout" value="{{ timeout }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <button type="submit" class="btn btn-primary">Save</button></form>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-ha-tab" role="tabpanel" aria-labelledby="settings-ha-tab">
                   <div class="list-group mb-5 shadow">
                     <div class="list-group-item">
                         <div class="row align-items-center">
@@ -40,9 +201,9 @@
                                 <strong class="mb-0">Home Assistant address</strong>
                                 <p class="text-muted mb-0">Home assistant IP or domainname address</p>
                             </div>
-                            <div class="col-auto">
+			    <div class="col-auto"><form method="POST">
                                 <div class="custom-control custom-switch">
-                        <input type="text" class="form-control" id="haaddr" aria-describedby="haaddr" value="{{ haaddr }}">
+		    <input type="text" class="form-control" id="haaddr" name="HOMEASSISTANT$HAADDR" aria-describedby="haaddr" value="{{ haaddr }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -56,7 +217,7 @@
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
-                    <input type="text" class="form-control" id="haport" aria-describedby="haport" value="{{ haport }}">
+                    <input type="text" class="form-control" id="haport" name="HOMEASSISTANT$HAPORT" aria-describedby="haport" value="{{ haport }}">
                                 <span class="custom-control-label"></span>
                             </div>
                         </div>
@@ -70,7 +231,7 @@
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
-                    <input type="password" class="form-control" id="hakey" aria-describedby="hakey" value="{{ hakey }}">
+                    <input type="password" class="form-control" id="hakey" name="HOMEASSISTANT$KEY" aria-describedby="hakey" value="{{ hakey }}">
                                 <span class="custom-control-label"></span>
                             </div>
                         </div>
@@ -84,7 +245,7 @@
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="insidesensor" aria-describedby="insidesensor" value="{{ insidesensor }}">
+                                    <input type="text" class="form-control" id="insidesensor" name="HOMEASSISTANT$insidesensor" aria-describedby="insidesensor" value="{{ insidesensor }}">
                                 <span class="custom-control-label"></span>
                             </div>
                         </div>
@@ -98,7 +259,7 @@
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="outsidesensor" aria-describedby="outsidesensor" value="{{ outsidesensor }}">
+                                    <input type="text" class="form-control" id="outsidesensor" name="HOMEASSISTANT$outsidesensor" aria-describedby="outsidesensor" value="{{ outsidesensor }}">
                                 <span class="custom-control-label"></span>
                             </div>
                         </div>
@@ -112,25 +273,26 @@
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="humiditysensor" aria-describedby="humiditysensor" value="{{ humiditysensor }}">
+                                    <input type="text" class="form-control" id="humiditysensor" name="HOMEASSISTANT$humiditysensor" aria-describedby="humiditysensor" value="{{ humiditysensor }}">
                                 <span class="custom-control-label"></span>
                             </div>
                         </div>
                     </div>
-                </div><button type="submit" class="btn btn-primary">Save</button>
+		</div><button type="submit" class="btn btn-primary">Save</button></form>
             </div>
               </div>
-              <div class="tab-pane fade" id="settings-mqtt-tab" role="tabpanel" aria-labelledby="ex1-tab-3">
-                <div class="list-group mb-5 shadow">
+                <div class="tab-pane fade" id="settings-mqtt-tab" role="tabpanel" aria-labelledby="settings-mqtt-tab">
+                    <div class="list-group mb-5 shadow">
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
                                 <strong class="mb-0">Using MQTT</strong>
-                                <p class="text-muted mb-0">Do you want to use mqtt (0 - MQTT disabled, 1 - MQTT enabled)</p>
+                                <p class="text-muted mb-0">Do you want to use mqtt</p>
                             </div>
                             <div class="col-auto">
-                                <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="mqtt" aria-describedby="mqtt" value="{{ mqtt }}">
+				    <div class="custom-control custom-switch"><form method="POST">
+						    <input type="hidden" id="use_mqtt_hidden" value="{{ use_mqtt }}" name="MQTT$mqtt">
+					  <input type="checkbox" class="form-check-input" id="use_mqtt" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="use_mqtt" {%if use_mqtt == '1' %} checked {% endif %}>
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -144,7 +306,7 @@
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="address" aria-describedby="address" value="{{ address }}">
+                                    <input type="text" class="form-control" id="mqtt_broker_addr" name="MQTT$address" aria-describedby="mqtt_broker_addr" value="{{ mqtt_broker_addr }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -158,7 +320,7 @@
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="port" aria-describedby="port" value="{{ port }}">
+                                    <input type="text" class="form-control" id="mqtt_broker_port" name="MQTT$port" aria-describedby="mqtt_broker_port" value="{{ mqtt_broker_port }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -172,7 +334,7 @@
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                        <input type="text" class="form-control" id="main_topic" aria-describedby="main_topic" value="{{ main_topic }}">
+                                        <input type="text" class="form-control" id="mqtt_topic" name="MQTT$main_topic" aria-describedby="mqtt_topic" value="{{ mqtt_topic }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -186,7 +348,7 @@
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                        <input type="text" class="form-control" id="username" aria-describedby="usename" value="{{ username }}">
+                                        <input type="text" class="form-control" id="mqtt_username" name="MQTT$username" aria-describedby="mqtt_username" value="{{ mqtt_username }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -200,14 +362,141 @@
                             </div>
                                 <div class="col-auto">
                                     <div class="custom-control custom-switch">
-                                        <input type="password" class="form-control" id="password" aria-describedby="password" value="{{ password }}">
+                                        <input type="password" class="form-control" id="mqtt_password" name="MQTT$password" aria-describedby="mqtt_password" value="{{ mqtt_password }}">
                                         <span class="custom-control-label"></span>
                                     </div>
                                 </div>
                             </div>
-                        </div><button type="submit" class="btn btn-primary">Save</button>
+		    </div><button type="submit" class="btn btn-primary">Save</button></form>
                     </div>
                 </div>
+                <div class="tab-pane fade" id="settings-system-tab" role="tabpanel" aria-labelledby="settings-system-tab">
+                <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+				<div class="col"><form method="POST">
+                                <strong class="mb-0">Bind address</strong>
+                                <p class="text-muted mb-0">On which address the script should run (default 0.0.0.0)</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="bindaddr" name="DEFAULT$bindaddress" aria-describedby="bindaddr" value="{{ bindaddr }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Bind port</strong>
+                                <p class="text-muted mb-0">On which port the script should run (default 4000)</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="bindport" name="DEFAULT$bindport" aria-describedby="bindport" value="{{ bindport }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>                 </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Serial port</strong>
+                                <p class="text-muted mb-0">On which port you connect modbus converter</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="text" class="form-control" id="modbusdev" name="DEFAULT$modbusdev" aria-describedby="modbusdev" value="{{ modbusdev }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Modbus GPIO</strong>
+                                <p class="text-muted mb-0">What GPIO pin you use for modbus relay</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="modbuspin" name="GPIO$modbus" aria-describedby="modbuspin" value="{{ modbuspin }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Frequency limit GPIO</strong>
+                                <p class="text-muted mb-0">What GPIO pin you use for frequency limit relay</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="freqlimitpin" name="GPIO$freqlimit" aria-describedby="freqlimitpin" value="{{ freqlimitpin }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heat demand GPIO</strong>
+                                <p class="text-muted mb-0">What GPIO pin you use for heat demand relay</p>
+                            </div>
+                                <div class="col-auto">
+                                    <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="heatdemandpin" name="GPIO$heatdemand" aria-describedby="heatdemandpin" value="{{ heatdemandpin }}">
+                                        <span class="custom-control-label"></span>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="list-group-item">
+                     <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Cool demand GPIO</strong>
+                                <p class="text-muted mb-0">What GPIO pin you use for cool demand relay</p>
+                            </div>
+                                <div class="col-auto">
+                                    <div class="custom-control custom-switch">
+                                        <input type="text" class="form-control" id="cooldemandpin" name="GPIO$cooldemand" aria-describedby="cooldemandpin" value="{{ cooldemandpin }}">
+                                        <span class="custom-control-label"></span>
+                                    </div>
+                                </div>
+                            </div>
+		    </div><button type="submit" class="btn btn-primary">Save</button></form>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-logs-tab" role="tabpanel" aria-labelledby="settings-logs-tab">
+                    <div class="list-group mb-5 shadow">
+                    <div class="list-group-item">
+                        <div class="row align-items-center" id="journal">
+
+			</div>
+                        <script>
+        var journalDiv = document.getElementById('journal');
+				var eventSource = new EventSource("http://{{ logserver }}:5000/stream");
+
+        eventSource.onmessage = function(event) {
+            var line = document.createElement('p');
+            line.className = 'journal-entry';
+            line.innerHTML = event.data;
+            journalDiv.appendChild(line);
+
+            setTimeout(function() {
+                line.classList.add('fadeout');
+            }, 2000);
+        };
+    </script>
+
+		    </div><button onclick="download_log();" class="btn btn-primary">Save to file</button>
+                    </div>
+                </div>
+
               </div>
             </div>
         </div>
