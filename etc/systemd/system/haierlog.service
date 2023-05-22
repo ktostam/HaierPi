@@ -1,0 +1,13 @@
+[Unit]
+Description=HaierPi log service
+After=local-fs.target
+After=network.target
+
+[Service]
+ExecStart=/opt/haier/env/bin/python /opt/haier/weblog.py
+RemainAfterExit=true
+Type=simple
+WorkingDirectory=/opt/haier/
+
+[Install]
+WantedBy=multi-user.target
