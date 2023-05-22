@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Linux Journal Entries</title>
+    <style>
+        /* Some basic CSS styles for the template */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        p {
+                margin: 0px;
+        }
+        h1 {
+            color: #333;
+        }
+        .journal-entry {
+            background-color: #cde8cd;
+            margin-bottom: 5px;
+            transition: background-color 0.5s ease-in-out;
+        }
+        .journal-entry.fadeout {
+            background-color: transparent;
+            transition: background-color 5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h1>Linux Journal Entries</h1>
+    <div id="journal"></div>
+
+    <script>
+        var journalDiv = document.getElementById('journal');
+        var eventSource = new EventSource('/stream');
+
+        eventSource.onmessage = function(event) {
+            var line = document.createElement('p');
+            line.className = 'journal-entry';
+            line.innerHTML = event.data;
+            journalDiv.appendChild(line);
+
+            setTimeout(function() {
+                line.classList.add('fadeout');
+            }, 2000);
+        };
+    </script>
+</body>
+</html>

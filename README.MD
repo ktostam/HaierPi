@@ -56,6 +56,11 @@ PCB layout is designed for both RaspberryPi zeroW and NanoPi neo 1.4.
 | REL2-REL4     | HFD23-005-1ZS    | HFD23-005-1ZS    |
 | U1            | MAX3485          | SOP-8            |
 
+### ERRATA
+In the first batch of PCB's was error
+PCB descriptions of R1 and R2 are swapped places, so if you have that PCB,
+you need to solder 1K resistor on R6 and 4.7 on R1
+
 ### Disclaimer
 - R9 is RS485 EOL resistor. For this application don't solder it.
 - Resistor R14-R15 is for choosing what type to board you want to connect (Raspberrypi/NanoPi Neo). For NanoPi, 
@@ -123,6 +128,17 @@ default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
 ![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
 ## Version
+
+### 1.26
+- IMPORTANT: new option added in config.ini. If you're updating
+  from previous version you need to add option `firstrun = 0` in `[DEFAULT]` block in `config.ini`
+- Setting page is kinda ready. (unfortunetly you need to manualy restart HaierPi service after saving change for now)
+- Added new service for display HaierPi logs via web, for better debugging. Now you don't need to login via ssh
+- Now script can talk with home assistant via MQTT (for now there is no mqtt autodiscovery, so you need to add yaml configuration manualy).
+- Updates only send via mqtt if something is changes, not as before - everything every 10 seconds
+- TODO: add option somewhere to restart HaierPi service. (e.g. after config.ini changed via web)
+- Minor fixes
+
 ### 1.18
 - Add ds18b20 sensor support as outside temp sensor.
 - Fixed error handling that could cause sysexit.
