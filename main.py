@@ -397,8 +397,6 @@ def statechange(mode,value,mqtt):
             newstate="C"
         if value == "on":
             newstate=newstate+"T"
-        else:
-            newstate="off"
     if not newstate:
         newstate="off"
     global newframe
