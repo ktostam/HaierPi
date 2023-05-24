@@ -698,7 +698,8 @@ def theme_route():
 def settings():
     if request.method == 'POST':
         saved="1"
-        global needrestart=1
+        global needrestart
+        needrestart=1
         for key, value in request.form.items():
             KEY1=f'{key.split("$")[0]}'
             KEY2=f'{key.split("$")[1]}'
