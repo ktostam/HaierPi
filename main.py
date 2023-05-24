@@ -20,7 +20,7 @@ import signal
 import json
 import time
 
-version="1.28"
+version="1.30"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -31,6 +31,9 @@ bindport = config['DEFAULT']['bindport']
 modbusdev = config['DEFAULT']['modbusdev']
 release = config['DEFAULT']['release']
 settemp = config['SETTINGS']['settemp']
+slope = config['SETTINGS']['hcslope']
+pshift = config['SETTINGS']['hcpshift']
+hcamp = config['SETTINGS']['hcamp']
 insidetemp = config['SETTINGS']['insidetemp']
 outsidetemp = config['SETTINGS']['outsidetemp']
 humidity = config['SETTINGS']['humidity']
@@ -436,10 +439,10 @@ def curvecalc():
         settemp=float(status[statusmap.index("settemp")])
         t1=(outsidetemp/(320-(outsidetemp*4)))
         t2=pow(settemp,t1)
-        slope=0.7
-        ps=3
-        amp=3
-        heatcurve = round(((0.55*slope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+        sslope=float(slope)
+        ps=int(pshift)
+        amp=int(hcamp)
+        heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
         status[statusmap.index("hcurve")]=heatcurve
         if use_mqtt == '1':
             client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
@@ -702,7 +705,12 @@ def settings():
     logserver=socket.gethostbyname(socket.gethostname())
     theme = status[statusmap.index("theme")]
     timeout = config['DEFAULT']['heizfreq']
+    intemp=status[statusmap.index("intemp")]
+    outtemp=status[statusmap.index("outtemp")]
     heatingcurve = config['SETTINGS']['heatingcurve']
+    slope = config['SETTINGS']['hcslope']
+    pshift = config['SETTINGS']['hcpshift']
+    hcamp = config['SETTINGS']['hcamp']
     bindaddr = config['DEFAULT']['bindaddress']
     bindport = config['DEFAULT']['bindport']
     modbusdev = config['DEFAULT']['modbusdev']
