@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Login{% endblock %}
 {% block custom_scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Some basic CSS styles for the template */
         p {
@@ -30,11 +32,11 @@
 				}
 		    </script>
 				    <script>
-			form.addEventListener('submit', () => {
-    			if(document.getElementById("use_mqtt").checked) {
-        			document.getElementById('use_mqtt_hidden').disabled = true;
-			    }
-			}
+//			form.addEventListener('submit', () => {
+//    			if(document.getElementById("use_mqtt").checked) {
+//        			document.getElementById('use_mqtt_hidden').disabled = true;
+//			    }
+//			})
 		    </script>
 		    {% if saved == '1' %}
 				    <script>
@@ -74,7 +76,7 @@ window.onload = onloadsave;
 		            <a class="nav-link active" id="settings-general" data-bs-toggle="tab" data-bs-target="#settings-general-tab" role="tab" aria-controls="settings-general-tab" aria-selected="true" href="#settings-general-tab">General</a>
                 </li>
                 <li class="nav-item" role="presentation">
-		            <a class="nav-link" id="settings-hcurve" data-bs-toggle="tab" data-bs-target="#settings-hcurve-tab" role="tab" aria-controls="settings-hcurve-tab" aria-selected="true" href="#hcurve-general-tab">Heating curve</a>
+		            <a class="nav-link" id="settings-hcurve" data-bs-toggle="tab" data-bs-target="#settings-hcurve-tab" role="tab" aria-controls="settings-hcurve-tab" aria-selected="true" href="#hcurve-general-tab">Heating/Cooling</a>
                 </li>
                 <li class="nav-item" role="presentation">
 			<a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settings-ha-tab" role="tab" aria-controls="settings-ha-tab" aria-selected="false" href="#settings-ha-tab">Home Assistant</a>
@@ -184,9 +186,62 @@ window.onload = onloadsave;
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="text" class="form-control" id="timeout" name="SETTINGS$heizfreq" aria-describedby="timeout" value="{{ timeout }}">
+                                    <input type="number" class="form-control" id="timeout" name="SETTINGS$heizfreq" aria-describedby="timeout" value="{{ timeout }}">
                                     <span class="custom-control-label"></span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve slope</strong>
+                                <p class="text-muted mb-0">heating curve slope</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="number" class="form-control" id="slope" name="SETTINGS$hcslope" aria-describedby="slope" step="0.1" onchange="recalc()" value="{{ slope }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve parallel shift</strong>
+                                <p class="text-muted mb-0">Heating curve parallel shift</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="number" class="form-control" id="pshift" name="SETTINGS$hcpshift" aria-describedby="pshift" onchange="recalc()" value="{{ pshift }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve amplification</strong>
+                                <p class="text-muted mb-0">Heating curve amplification</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="number" class="form-control" id="hcamp" name="SETTINGS$hcamp" aria-describedby="hcamp" onchange="recalc()" value="{{ hcamp }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Heating curve chart</strong>
+				<p><label for="customRange2" id="customtemp" class="form-label">Inside temp: 21</label></p>
+				<input type="range" class="form-range" min="12" max="30" id="customRange1" onchange="recalc();">
+                                <canvas id="hcurvechart"></canvas>
+
                             </div>
                         </div>
                     </div>
@@ -305,7 +360,7 @@ window.onload = onloadsave;
                                 <p class="text-muted mb-0">MQTT Broker ip or hostname address</p>
                             </div>
                             <div class="col-auto">
-                                <div class="custom-control custom-switch">
+                                <div class="curol custom-switch">
                                     <input type="text" class="form-control" id="mqtt_broker_addr" name="MQTT$address" aria-describedby="mqtt_broker_addr" value="{{ mqtt_broker_addr }}">
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -417,7 +472,7 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
                                 <strong class="mb-0">Modbus GPIO</strong>
-                                <p class="text-muted mb-0">What GPIO pin you use for modbus relay</p>
+                                <p class="text-muted mb-0">What GPIO pin use for modbus relay</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -472,8 +527,7 @@ window.onload = onloadsave;
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-logs-tab" role="tabpanel" aria-labelledby="settings-logs-tab">
-                    <div class="list-group mb-5 shadow">
-                    <div class="list-group-item">
+                    <div class="list-group mb-5 sha                    <div class="list-group-item">
                         <div class="row align-items-center" id="journal">
 
 			</div>
@@ -503,4 +557,117 @@ window.onload = onloadsave;
     </div>
 
 </div>
+<script>
+var colors = ['#007bff','#28a745','#333333','#c3e6cb','#dc3545','#6c757d'];
+/* large line chart */
+var chLine = document.getElementById('hcurvechart');
+var settemp = {{ settemp }};
+var insidetemp = document.getElementById("customRange1").value;
+var outsidetemp = {{ outtemp }};
+
+var labels = ["-20", "-19", "-18", "-17", "-16", "-15", "-14", "-13", "-12","-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"];
+var data = [];
+for (const element of labels) {
+	const t1=(outsidetemp/(320-(outsidetemp*4)))
+        const t2=Math.pow(settemp,t1)
+		const slope= {{ slope }}
+		const ps= {{ pshift }}
+		const amp= {{ hcamp }}
+        const heatcurve = Math.round(((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+		data.push(heatcurve);
+		}
+var data1 = [];
+for (const element of labels) {
+	calc=(settemp+(0.5*20)*Math.pow(((settemp-element)/20), 0.7));
+	data1.push(calc);
+}
+var data2 = [];
+for (const element of labels) {
+        calc=(settemp+(0.7*20)*Math.pow(((settemp-element)/20), 0.7));
+        data2.push(calc);
+}
+var data3 = [];
+for (const element of labels) {
+        calc=(settemp+(0.9*20)*Math.pow(((settemp-element)/20), 0.7));
+        data3.push(calc);
+}
+
+
+var chartData = {
+  labels: labels,
+  datasets: [{
+    label: "Auto",
+    data: data,
+    backgroundColor: 'transparent',
+    borderColor: colors[0],
+    borderWidth: 4,
+    pointBackgroundColor: colors[0]
+  },
+   {
+     label: "1",
+     data: data1,
+     backgroundColor: 'transparent',
+     borderColor: colors[1],
+     borderWidth: 4,
+     pointBackgroundColor: colors[1]
+   },
+   {
+     label: "2",
+     data: data2,
+     backgroundColor: 'transparent',
+     borderColor: colors[2],
+     borderWidth: 4,
+     pointBackgroundColor: colors[2]
+   },
+   {
+     label: "3",
+     data: data3,
+     backgroundColor: 'transparent',
+     borderColor: colors[3],
+     borderWidth: 4,
+     pointBackgroundColor: colors[3]
+   }
+
+  ]
+};
+if (chLine) {
+  var myChart = new Chart(chLine, {
+  type: 'line',
+  data: chartData,
+  options: {
+    scales: {
+      xAxes: [{
+        ticks: {
+          beginAtZero: false
+        }
+      }]
+    },
+    legend: {
+      display: false
+    },
+    responsive: true
+  }
+  });
+}
+
+function recalc() {
+var insidetemp = document.getElementById("customRange1").value;
+var outsidetemp = {{ outtemp }};
+document.getElementById("customtemp").innerHTML="Inside temp: "+insidetemp;
+var data = [];
+for (const element of labels) {
+        const t1=(outsidetemp/(320-(outsidetemp*4)))
+        const t2=Math.pow(settemp,t1)
+        const slope=document.getElementById('slope').value;
+        const ps=document.getElementById('pshift').value;
+        const amp=document.getElementById('hcamp').value;
+        const heatcurve = Math.round(((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+                data.push(heatcurve);
+                }
+myChart.data.datasets[0].data = data;
+myChart.update();
+console.log("update");
+	}
+</script>
+
 {% endblock %}
