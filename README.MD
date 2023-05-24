@@ -128,6 +128,12 @@ default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
 ![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
 ## Version
+### 1.30
+- Add possibility to change heating curve parameters via settings page.
+- IMPORTANT: new option added in config.ini. If you're updating
+  from previous version you need to add option `hcslope = 0.7`, `hcpshift = 1` and `hcamp = 1` in `[SETTINGS]` block in `config.ini`
+- Add chart with heating curve visualisation.
+- minor fixes
 
 ### 1.26
 - IMPORTANT: new option added in config.ini. If you're updating
