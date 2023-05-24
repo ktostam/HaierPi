@@ -20,7 +20,7 @@ import signal
 import json
 import time
 
-version="1.30"
+version="1.31"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -49,7 +49,7 @@ modbuspin=config['GPIO']['modbus']
 freqlimitpin=config['GPIO']['freqlimit']
 heatdemandpin=config['GPIO']['heatdemand']
 cooldemandpin=config['GPIO']['cooldemand']
-
+needrestart=0
 
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
@@ -472,6 +472,9 @@ def installupdate():
     subprocess.Popen("systemctl restart haierupdate.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return jsonify(updated="OK")
 
+def restart():
+    subprocess.Popen("systemctl restart haier.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return jsonify(restarted="OK")
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -681,7 +684,7 @@ def home():
         return redirect("/settings", code=302)
     else:
         theme=status[statusmap.index("theme")]
-        return render_template('index.html', theme=theme, version=version)
+        return render_template('index.html', theme=theme, version=version, needrestart=needrestart)
 
 @app.route('/theme', methods=['POST'])
 def theme_route():
@@ -695,6 +698,7 @@ def theme_route():
 def settings():
     if request.method == 'POST':
         saved="1"
+        global needrestart=1
         for key, value in request.form.items():
             KEY1=f'{key.split("$")[0]}'
             KEY2=f'{key.split("$")[1]}'
@@ -735,7 +739,7 @@ def settings():
     insidesensor=config['HOMEASSISTANT']['insidesensor']
     outsidesensor=config['HOMEASSISTANT']['outsidesensor']
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
-    return render_template('settings.html', **locals(), version=version)
+    return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
 
 @app.route('/statechange', methods=['POST'])
@@ -763,6 +767,12 @@ def updatecheck_route():
 @login_required
 def installupdate_route():
     output = installupdate()
+    return output
+
+@app.route('/restart', methods=['GET'])
+@login_required
+def restart_route():
+    output = restart()
     return output
 
 @app.route('/changepass', methods=['POST'])

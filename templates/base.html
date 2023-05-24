@@ -21,6 +21,38 @@
         <script src="{{ url_for('static', filename='sweetalert2.min.js') }}"></script>
         {% block custom_scripts %}
         {% endblock %}
+        <script>
+        function restart() {
+            Swal.fire({
+                title: 'Restart HaierPi service',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $.get('/restart');
+                    Swal.fire({
+                        html: "Restarting service, please wait...",
+                        icon: "info",
+                        showCloseButton: false,
+                        showConfirmButton: false,
+                        timer: 30000,
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            const b = Swal.getHtmlContainer().querySelector('b')
+                            timerInterval = setInterval(() => {
+                                b.textContent = Swal.getTimerLeft()
+                            }, 100)
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval)
+                            window.location.reload();
+                        }
+                    })
+                }
+            })
+        }
+        </script>
     </head>
     <body>
         <div class="d-flex" id="wrapper">
@@ -33,13 +65,22 @@
                 </div>
                 {% if is_logged_in() %}
                 <div class="dropdown p-3">
-                    <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="#" class="d-flex align-items-center position-relative link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="/static/person.svg" alt="" width="32" height="32" class="rounded-circle me-2">
                         <strong>{{ get_username() }}</strong>
+                        {% if needrestart == 1 %}
+                        <span class="position-absolute top-0 start-0 translate-middle p-2 bg-danger border border-light rounded-circle"></span>
+                        {% endif %}
                     </a>
                     <ul class="dropdown-menu text-small shadow p-3" style="">
                         <li><a class="dropdown-item" onclick="changepass()" href="#">Change password</a></li>
                         <li><a class="dropdown-item" onclick="updatecheck()" href="#">Check for update</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item position-relative" onclick="restart()" href="#">Restart
+                        {% if needrestart == 1 %}
+                            <span class="position-absolute top-50 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"></span>
+                            {% endif %}
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout">Log out</a></li>
                     </ul>
