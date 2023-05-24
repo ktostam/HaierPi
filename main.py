@@ -439,9 +439,9 @@ def curvecalc():
         settemp=float(status[statusmap.index("settemp")])
         t1=(outsidetemp/(320-(outsidetemp*4)))
         t2=pow(settemp,t1)
-        sslope=slope
-        ps=pshift
-        amp=hcamp
+        sslope=float(slope)
+        ps=int(pshift)
+        amp=int(hcamp)
         heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
         status[statusmap.index("hcurve")]=heatcurve
         if use_mqtt == '1':
