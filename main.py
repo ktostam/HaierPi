@@ -20,7 +20,7 @@ import signal
 import json
 import time
 
-version="1.27"
+version="1.28"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -727,8 +727,7 @@ def settings():
     insidesensor=config['HOMEASSISTANT']['insidesensor']
     outsidesensor=config['HOMEASSISTANT']['outsidesensor']
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
-    version = version
-    return render_template('settings.html', **locals())
+    return render_template('settings.html', **locals(), version=version)
 
 
 @app.route('/statechange', methods=['POST'])
