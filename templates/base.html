@@ -22,6 +22,61 @@
         {% block custom_scripts %}
         {% endblock %}
         <script>
+        function updatecheck() {
+            $.get('/updatecheck', function(data) {
+                var text=data.update;
+                var state="info";
+                if(text == "Availible") {
+                    Swal.fire({
+                        title: 'New update availible, Do you want install?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Install',
+                    }).then((result) => {
+                        /* Read more about isConfirmed, isDenied below */
+                        if (result.isConfirmed) {
+                            $.get('/installupdate');
+                            Swal.fire({
+                                html: "Installing update, please wait...",
+                                icon: "info",
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 60000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    const b = Swal.getHtmlContainer().querySelector('b')
+                                    timerInterval = setInterval(() => {
+                                        b.textContent = Swal.getTimerLeft()
+                                    }, 100)
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval)
+                                    window.location.reload();
+                                }
+                            })
+
+                        }
+                    })
+                } else {
+                Swal.fire({
+                    html: text,
+                    icon: state,
+                    showCloseButton: false,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                })
+                }
+            });
+        }
         function restart() {
             Swal.fire({
                 title: 'Restart HaierPi service',
