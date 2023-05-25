@@ -238,8 +238,14 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
                                 <strong class="mb-0">Heating curve chart</strong>
-				<p><label for="customRange2" id="customtemp" class="form-label">Inside temp: 21</label></p>
-				<input type="range" class="form-range" min="12" max="30" id="customRange1" onchange="recalc();">
+                                <p class="text-muted mb-0">Show charts with all cheating curve</p>
+                                </div>
+                            <div class="col-auto"
+                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#chartdiv" aria-expanded="false" aria-controls="chartdiv">Show</button>
+                                 </div>
+                        <div id="chartdiv" class="collapse">
+				<p><label for="tempRange" id="customtemp" class="form-label">Inside temp: 21</label></p>
+				<input type="range" class="form-range" min="12" max="30" id="tempRange" onchange="recalc();">
                                 <canvas id="hcurvechart"></canvas>
 
                             </div>
