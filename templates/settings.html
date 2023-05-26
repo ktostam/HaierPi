@@ -167,11 +167,11 @@ window.onload = onloadsave;
                             <div class="col-auto">
 				    <div class="custom-control custom-switch"><form method="POST">
                                     <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
-                                        <option value="auto"{% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
-                                        <option value="manual"{% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
+                                        <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
+                                        <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
+                                        <option value="1"{% if heatingcurve == '1' %} selected {% endif %}>1</option>
+                                        <option value="2" {% if heatingcurve == '2' %} selected {% endif %}>2</option>
+                                        <option value="3" {% if heatingcurve == '3' %} selected {% endif %}>3</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
