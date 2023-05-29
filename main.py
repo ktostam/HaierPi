@@ -20,7 +20,7 @@ import signal
 import json
 import time
 
-version="1.31"
+version="1.32"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -492,7 +492,9 @@ def getdata():
 
 def GetInsideTemp(param):
     if param == "builtin":
-        return "22"
+        result=subprocess.check_output('./bin/dht22s')
+        intemp=result.decode('utf-8').split('#')[1]
+        return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
         url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['insidesensor']
@@ -548,13 +550,9 @@ def GetOutsideTemp(param):
 
 def GetHumidity(param):
     if param == "builtin":
-        try:
-            sensor = W1ThermSensor()
-            temperature = sensor.get_temperature()
-            return temperature
-        except W1ThermSensorError as e:
-            sys.stderr.write("Error: cannot read outside temperature")
-
+        result=subprocess.check_output('./bin/dht22s')
+        intemp=result.decode('utf-8').split('#')[0]
+        return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside humidity entity
         url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['humiditysensor']
