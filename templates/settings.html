@@ -167,11 +167,11 @@ window.onload = onloadsave;
                             <div class="col-auto">
 				    <div class="custom-control custom-switch"><form method="POST">
                                     <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
-                                        <option value="auto"{% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
-                                        <option value="manual"{% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
-                                        <option value="2">1</option>
-                                        <option value="3">2</option>
-                                        <option value="4">3</option>
+                                        <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
+                                        <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
+                                        <option value="1"{% if heatingcurve == '1' %} selected {% endif %}>1</option>
+                                        <option value="2" {% if heatingcurve == '2' %} selected {% endif %}>2</option>
+                                        <option value="3" {% if heatingcurve == '3' %} selected {% endif %}>3</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -238,8 +238,14 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
                                 <strong class="mb-0">Heating curve chart</strong>
-				<p><label for="customRange2" id="customtemp" class="form-label">Inside temp: 21</label></p>
-				<input type="range" class="form-range" min="12" max="30" id="customRange1" onchange="recalc();">
+                                <p class="text-muted mb-0">Show charts with all cheating curve</p>
+                                </div>
+                            <div class="col-auto">
+                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#chartdiv" aria-expanded="false" aria-controls="chartdiv">Show</button>
+                                 </div>
+                        <div id="chartdiv" class="collapse">
+				<p><label for="tempRange" id="customtemp" class="form-label">Inside temp: 21</label></p>
+				<input type="range" class="form-range" min="12" max="30" id="tempRange" onchange="recalc();">
                                 <canvas id="hcurvechart"></canvas>
 
                             </div>
@@ -562,7 +568,7 @@ var colors = ['#007bff','#28a745','#333333','#c3e6cb','#dc3545','#6c757d'];
 /* large line chart */
 var chLine = document.getElementById('hcurvechart');
 var settemp = {{ settemp }};
-var insidetemp = document.getElementById("customRange1").value;
+var insidetemp = document.getElementById("tempRange").value;
 var outsidetemp = {{ outtemp }};
 
 var labels = ["-20", "-19", "-18", "-17", "-16", "-15", "-14", "-13", "-12","-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"];
@@ -651,7 +657,7 @@ if (chLine) {
 }
 
 function recalc() {
-var insidetemp = document.getElementById("customRange1").value;
+var insidetemp = document.getElementById("tempRange").value;
 var outsidetemp = {{ outtemp }};
 document.getElementById("customtemp").innerHTML="Inside temp: "+insidetemp;
 var data = [];
