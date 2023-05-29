@@ -548,8 +548,13 @@ def GetOutsideTemp(param):
 
 def GetHumidity(param):
     if param == "builtin":
-        # function for getting humidity from DHT22 connected to RaspberryPi GPIO. for now return static 22
-        return "22"
+        try:
+            sensor = W1ThermSensor()
+            temperature = sensor.get_temperature()
+            return temperature
+        except W1ThermSensorError as e:
+            sys.stderr.write("Error: cannot read outside temperature")
+
     elif param == "ha":
         # connect to Home Assistant API and get status of inside humidity entity
         url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['humiditysensor']
