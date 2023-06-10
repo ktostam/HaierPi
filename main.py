@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.37"
+version="1.38"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -294,6 +294,8 @@ def tempchange(which, value, curve):
     global newframe
     global writed
     if curve == "1":
+        if which == "cool":
+            logging.info(value)
         if which == "heat":
             logging.info("Central heating: "+str(value))
             logging.debug(R101)
