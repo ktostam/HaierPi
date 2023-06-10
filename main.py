@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.40"
+version="1.41"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -476,6 +476,18 @@ def calcdewpoint():
         h=((243.12*h)/(17.62-h))
         dewpoint=round(h*2)/2
         status[statusmap.index("dewpoint")] = dewpoint
+        if user_mqtt == '1':
+            client.publish(mqtt_topic+"/dewpoint", str(dewpoint))
+        if 6.0 < dewpoint < 20.0
+            try:
+                logging.info("turn on cool demand")
+                gpiocontrol('cooldemand', '1')
+                tempchange("cool", dewpoint, '0')
+            except:
+                logging.error("Set cooltemp ERROR")
+        else:
+            logging.info("turn off cool demand")
+            gpiocontrol("cooldemand",0)
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
