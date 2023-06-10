@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.38"
+version="1.40"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -437,43 +437,45 @@ def statechange(mode,value,mqtt):
         return jsonify(msg=msg, state=state)
 
 def curvecalc():
-    if heatingcurve == "auto":
-        if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
-            insidetemp=float(status[statusmap.index("intemp")])
-            outsidetemp=float(status[statusmap.index("outtemp")])
-            settemp=float(status[statusmap.index("settemp")])
-            t1=(outsidetemp/(320-(outsidetemp*4)))
-            t2=pow(settemp,t1)
-            sslope=float(slope)
-            ps=int(pshift)
-            amp=int(hcamp)
-            heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
-            status[statusmap.index("hcurve")]=heatcurve
-            if use_mqtt == '1':
-                client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
-            if 25.0 < heatcurve < 55.0:
-                try:
-                    logging.info("turn on heat demand")
-                    gpiocontrol("heatdemand", "1")
-                    tempchange("heat", heatcurve, "1")
-                except:
-                    logging.error("Set chtemp ERROR")
+    if status[statusmap.index("pch")] == "on":
+        if heatingcurve == "auto":
+            if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
+                insidetemp=float(status[statusmap.index("intemp")])
+                outsidetemp=float(status[statusmap.index("outtemp")])
+                settemp=float(status[statusmap.index("settemp")])
+                t1=(outsidetemp/(320-(outsidetemp*4)))
+                t2=pow(settemp,t1)
+                sslope=float(slope)
+                ps=int(pshift)
+                amp=int(hcamp)
+                heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+                status[statusmap.index("hcurve")]=heatcurve
+                if use_mqtt == '1':
+                    client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
+                if 25.0 < heatcurve < 55.0:
+                    try:
+                        logging.info("turn on heat demand")
+                        gpiocontrol("heatdemand", "1")
+                        tempchange("heat", heatcurve, "1")
+                    except:
+                        logging.error("Set chtemp ERROR")
+                else:
+                    logging.info("turn off heat demand")
+                    gpiocontrol("heatdemand", "0")
             else:
-                logging.info("turn off heat demand")
-                gpiocontrol("heatdemand", "0")
-        else:
-            status[statusmap.index("hcurve")]="Error"
-    elif heatingcurve == "manual":
-        status[statusmap.index("hcurve")]="11"
-    elif heatingcurve == "1" or heatingcurve == "2" or heatingcurve == "3":
-        status[statusmap.index("hcurve")] = "2"
+                status[statusmap.index("hcurve")]="Error"
+        elif heatingcurve == "manual":
+            status[statusmap.index("hcurve")]="11"
+        elif heatingcurve == "1" or heatingcurve == "2" or heatingcurve == "3":
+            status[statusmap.index("hcurve")] = "2"
 def calcdewpoint():
-    hum=float(status[statusmap.index("humid")])
-    temp=float(status[statusmap.index("intemp")])
-    h=((math.log10(float(hum))-2)/0.4343)+((17.62*float(temp))/(243.12+float(temp)))
-    h=((243.12*h)/(17.62-h))
-    dewpoint=round(h*2)/2
-    status[statusmap.index("dewpoint")] = dewpoint
+    if status[statusmap.index("pcool")] == "on":
+        hum=float(status[statusmap.index("humid")])
+        temp=float(status[statusmap.index("intemp")])
+        h=((math.log10(float(hum))-2)/0.4343)+((17.62*float(temp))/(243.12+float(temp)))
+        h=((243.12*h)/(17.62-h))
+        dewpoint=round(h*2)/2
+        status[statusmap.index("dewpoint")] = dewpoint
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
