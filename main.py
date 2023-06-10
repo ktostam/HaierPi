@@ -20,7 +20,7 @@ import signal
 import json
 import time
 
-version="1.34"
+version="1.35"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -465,8 +465,8 @@ def curvecalc():
     elif heatingcurve == "1" or heatingcurve == "2" or heatingcurve == "3":
         status[statusmap.index("hcurve")] = "2"
 def calcdewpoint():
-    hum=getinsidehumidity()
-    temp=getinsidetemp()
+    hum=float(status[statusmap.index("humid")])
+    temp=float(status[statusmap.index("intemp")])
     h=((math.log10(float(hum))-2)/0.4343)+((17.62*float(temp))/(243.12+float(temp)))
     h=((243.12*h)/(17.62-h))
     dewpoint=round(h*2)/2
