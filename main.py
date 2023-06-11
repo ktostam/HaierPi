@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.42"
+version="1.43"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -295,7 +295,19 @@ def tempchange(which, value, curve):
     global writed
     if curve == "1":
         if which == "cool":
-            logging.info(value)
+            logging.info("Cooling: "+str(value))
+            logging.debug(R101)
+            for a in range(3):
+                if len(R101) == 6:
+                    chframe = PyHaier.SetCHTemp(R101, float(value))
+                    continue
+                if chframe.__class__ == list:
+                    newframe = chframe
+                    return "OK"
+                else:
+                    logging.error("ERROR: Cannot set new COOL temp")
+                    msg = "ERROR: Cannot set new COOL temp"
+                    return msg
         if which == "heat":
             logging.info("Central heating: "+str(value))
             logging.debug(R101)
@@ -476,7 +488,7 @@ def calcdewpoint():
         h=((243.12*h)/(17.62-h))
         dewpoint=round(h*2)/2
         status[statusmap.index("dewpoint")] = dewpoint
-        if user_mqtt == '1':
+        if use_mqtt == '1':
             client.publish(mqtt_topic+"/dewpoint", str(dewpoint))
         if 6.0 < dewpoint < 20.0:
             try:
@@ -621,7 +633,7 @@ def ischanged(old, new):
                     client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
             elif old =="pcool":
                 if new == "on":
-                    cient.publish(mqtt_topic + mqtttop[statusmap.index(old)], "cool")
+                    client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "cool")
             else:
                 client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
 
