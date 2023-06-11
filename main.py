@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.44"
+version="1.45"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -531,7 +531,8 @@ def getdata():
     pdhw=status[statusmap.index("pdhw")]
     pcool=status[statusmap.index("pcool")]
     dewpoint=status[statusmap.index("dewpoint")]
-    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,dewpoint=dewpoint)
+    twitwo = status[statusmap.index("twitwo")]
+    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,dewpoint=dewpoint,twitwo=twitwo)
 
 def GetInsideTemp(param):
     if param == "builtin":
