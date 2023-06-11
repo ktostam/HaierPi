@@ -21,7 +21,7 @@ import math
 import json
 import time
 
-version="1.43"
+version="1.44"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -65,9 +65,9 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "dewpoint"]
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "dewpoint", "twitwo"]
 mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light','N.A.']
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light','N.A.', 'N.A.']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -494,7 +494,7 @@ def calcdewpoint():
             try:
                 logging.info("turn on cool demand")
                 gpiocontrol('cooldemand', '1')
-                tempchange("cool", dewpoint, '0')
+                tempchange("cool", dewpoint, '1')
             except:
                 logging.error("Set cooltemp ERROR")
         else:
@@ -645,7 +645,9 @@ def GetParameters():
     if len(R141) == 16:
         tank=PyHaier.GetDHWCurTemp(R141)
         #status[statusmap.index("tank")] = tank
+        twitwo=PyHaier.GetTwiTwo(R141)
         ischanged("tank", tank)
+        ischanged("twitwo", twitwo)
     if len(R201) == 1:
         mode=PyHaier.GetMode(R201)
         #status[statusmap.index("mode")] = mode
