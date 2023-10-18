@@ -133,7 +133,7 @@ def WritePump():
     if newframe:
         logging.info(newframe)
         newframelen=len(newframe)
-        while(comm=1)
+        while(comm=1):
             rs = ser.read(1).hex()
             if rs == "032c":
                 for ind in range(22):
