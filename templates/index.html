@@ -72,6 +72,8 @@
                 temp = data.setpoint
                 $("#intemp").text(data.intemp)
                 $("#outtemp").text(data.outtemp)
+                $("#flimit").text(data.flimit)
+                alert(data.flimit)
                 switch(data.pcool) {
                     case "on":
                         if ($("#coolpower")[0].classList.contains("iconon") == false ) {
@@ -262,8 +264,8 @@
                                             <div class="custom-control custom-switch">
                                                 <form method="POST" action="/settings">
                                                     <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value="{{ flimit }}">
-                                                        <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>Auto</option>
-                                                        <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>Manual</option>
+                                                        <option value="auto"{% if flimit == 'auto' %} selected {% endif %}>Auto</option>
+                                                        <option value="manual"{% if flimit == 'manual' %} selected {% endif %}>Manual</option>
                                                     </select>
                                                     <span class="custom-control-label"></span>
                                                 </form>
