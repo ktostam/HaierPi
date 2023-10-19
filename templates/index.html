@@ -260,7 +260,7 @@
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
-                                                <form method="POST">
+                                                <form method="POST" action="/settings">
                                                     <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value="{{ flimit }}">
                                                         <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>Auto</option>
                                                         <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>Manual</option>
@@ -274,7 +274,7 @@
                                     <p class="card-text">Relay status: <b id="flrelay">N.A.</b></p>
                                 </div>
                                 <div class="card-footer">
-                                    <a class="btn btn-primary btn-lm float-sm-start" id="heat" onclick="tempchange('heat', '0')" href="#!">Save</a>
+                                    <button type="submit" class="btn btn-primary">Save</button></form>
                                     <a class="float-sm-end" id="pch" onclick="statechange('pch','off')" href="#"><i id="heatpower" class="iconpower iconon"></i></a>
                                 </div>
                             </div>
