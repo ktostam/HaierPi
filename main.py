@@ -689,7 +689,7 @@ def home():
         return redirect("/settings", code=302)
     else:
         theme=status[statusmap.index("theme")]
-        return render_template('index.html', theme=theme, version=version, needrestart=needrestart)
+        return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit)
 
 @app.route('/theme', methods=['POST'])
 def theme_route():
@@ -697,6 +697,21 @@ def theme_route():
     settheme(theme)
     return theme
 
+@app.route('/save', methods=['POST'])
+@login_required
+def save():
+    if request.method=='POST';
+        saved="1"
+        global needrestart
+        needrestart=1
+        for key,value in request.form.items():
+            KEY1=f'{key.split("$")[0]}'
+            KEY2=f'{key.split("$")[1]}'
+            VAL=f'{value}'
+            config[KEY1][KEY2] = str(VAL)    # update
+            with open('config.ini', 'w') as configfile:    # save
+                config.write(configfile)
+    return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
 @app.route('/settings', methods=['GET','POST'])
 @login_required
