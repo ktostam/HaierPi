@@ -489,7 +489,8 @@ def getdata():
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
     pcool=status[statusmap.index("pcool")]
-    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool)
+    flimit = config['SETTINGS']['flimit']
+    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit)
 
 def GetInsideTemp(param):
     if param == "builtin":
