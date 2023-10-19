@@ -261,9 +261,9 @@
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
                                                 <form method="POST">
-                                                    <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="auto">
-                                                        <option value="auto" selected="">Auto</option>
-                                                        <option value="manual">Manual</option>
+                                                    <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value="{{ flimit }}">
+                                                        <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>Auto</option>
+                                                        <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>Manual</option>
                                                     </select>
                                                     <span class="custom-control-label"></span>
                                                 </form>
