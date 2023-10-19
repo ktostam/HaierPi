@@ -700,7 +700,7 @@ def theme_route():
 @app.route('/save', methods=['POST'])
 @login_required
 def save():
-    if request.method=='POST';
+    if request.method=='POST':
         saved="1"
         global needrestart
         needrestart=1
