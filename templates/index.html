@@ -36,7 +36,6 @@
                                     }
                                 })
                             });
-
                         } else {
                             Swal.fire({
                                 html: "Password not match",
@@ -72,7 +71,48 @@
                 temp = data.setpoint
                 $("#intemp").text(data.intemp)
                 $("#outtemp").text(data.outtemp)
-                $("#flimit").text(data.flimit)
+		$("#ltemp").text(data.ltemp)
+				    $("#preset").text(data.presetch)
+		if(data.presetch == "manual") {
+			$("#presetchange").show()
+			$("#presetchange").val(data.mode)
+				} else if (data.presetch == "auto"){
+					$("#presetauto").show();
+					$("#presetquiet").text(data.presetquiet);
+					$("#presetturbo").text(data.presetturbo);
+					switch(data.mode) {
+					case "quiet":
+							$("#quiet").html("<b>QUIET</b>");
+							$("#eco").text("ECO");
+							$("turbo").text("TURBO");
+							break;
+                                        case "eco":
+                                                        $("#quiet").text("QUIET");
+                                                        $("#eco").html("<b>ECO</b>");
+                                                        $("turbo").text("TURBO");
+                                                        break;
+                                        case "turbo":
+                                                        $("#quiet").text("QUIET");
+                                                        $("#eco").text("ECO");
+                                                        $("turbo").html("<b>TURBO</b>");
+                                                        break;
+
+						default:
+					}
+				}
+		switch(data.flimiton) {
+			case "0":
+						if($("#flrelay").text() != "OFF") {
+							$("#flrelay").text("OFF")
+								}
+						break;
+			case "1":
+						if($("#flrelay").text() != "ON") {
+							$("#flrelay").text("ON")
+						}
+						break;
+			default:
+				}
                 switch(data.pcool) {
                     case "on":
                         if ($("#coolpower")[0].classList.contains("iconon") == false ) {
@@ -88,6 +128,19 @@
                         break;
                     default:
                 }
+		switch(data.heatdemand){
+			case "0":
+						if($(".icoheat").css("background-color") == "rgb(255, 132, 132)") {
+						$( ".icoheat" ).css( "background-color", "#848484" );
+						}
+			break;
+			case "1":
+						if($(".icoheat").css("background-color") == "rgb(132, 132, 132)") {
+						$(".icoheat").css("background-color", "#ff8484" );
+						}
+			break;
+			default:
+				}
                 switch(data.pch) {
                     case "on":
                         if ($("#heatpower")[0].classList.contains("iconon") == false ) {
@@ -120,6 +173,29 @@
                 }
             });
         }
+	function modechange(newmode) {
+                $.post('/modechange', {newmode}, function(data) {
+                        var text=data.msg;
+                        var state=data.state
+                        Swal.fire({
+                                html: text,
+                                icon: state,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                                                })
+                        });
+			}
         function statechange(mode, value) {
             $("#"+mode)[0].classList.add("spinn")
             $("#"+mode)[0].classList.add("iconspinner")
@@ -228,7 +304,8 @@
                         <div class="col-md-4 mb-1">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h2 class="card-title"><i class="icondhw"></i> DHW - setpoint: <b id="dhwsetpoint">N.A.</b>&#8451;</h2>
+                                    <h2 class="card-title">
+					    <!--<div class="icondhw2"><img class="wrap-image2" id="wrap-image2" ></div>--> <i class="icondhw"></i> DHW - setpoint: <b id="dhwsetpoint">N.A.</b>&#8451;</h2>
                                     <p class="card-text" >Tank temp: <b id="ttemp">N.A.</b>&#8451;</p>
                                 </div>
                                 <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw', '1')" href="#!">Change</a>
@@ -261,11 +338,6 @@
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
-                                                <form method="POST" action="/save">
-                                                    <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value="{{ flimit }}">
-                                                        <option value="auto"{% if flimit == 'auto' %} selected {% endif %}>Auto</option>
-                                                        <option value="manual"{% if flimit == 'manual' %} selected {% endif %}>Manual</option>
-                                                    </select>
                                                     <span class="custom-control-label"></span>
                                             </div>
                                         </div>
@@ -274,8 +346,7 @@
                                     <p class="card-text">Relay status: <b id="flrelay">N.A.</b></p>
                                 </div>
                                 <div class="card-footer">
-                                    <button type="submit" class="btn btn-primary">Save</button></form>
-                                    <a class="float-sm-end" id="pch" onclick="statechange('pch','off')" href="#"><i id="heatpower" class="iconpower iconon"></i></a>
+					<a class="btn btn-primary btn-lm float-sm-start" href="/settings#settings-hcurve">Settings</a>
                                 </div>
                             </div>
                         </div>
@@ -284,32 +355,34 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col">
-                                            <h2 class="card-title">Preset change</h2>
+						<h2 class="card-title">Preset change - <b id="preset">N.A.</b></h2>
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
                                                 <form method="POST">
-                                                    <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="auto">
-                                                        <option value="auto" selected="">Auto</option>
-                                                        <option value="manual">QUIET</option>
-                                                        <option value="manual">ECO</option>
-                                                        <option value="manual">TURBO</option>
+                                                    <select class="form-select" aria-label="presetchange" id="presetchange" style="display: none;" name="presetchange" onchange="modechange($('#presetchange').val())">
+                                                        <option value="quiet">QUIET</option>
+                                                        <option value="eco">ECO</option>
+                                                        <option value="turbo">TURBO</option>
                                                     </select>
                                                     <span class="custom-control-label"></span>
                                                 </form>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row"><div class="col"><p class="card-text">QUIET </p></div><div class="col">&gt;</div>
-<div class="col"><input type="number"> ℃
+				    <div id="presetauto" style="display: none;">
+                                    <div class="row"><div class="col"><p class="card-text" id="quiet">QUIET </p></div><div class="col">&gt;</div>
+					    <div class="col"><b id=presetquiet></b> ℃
 </div></div>
-                                    <div class="row"><div class="col"><p class="card-text">ECO </p></div></div>
-                                    <div class="row"><div class="col"><p class="card-text">TURBO</p></div><div class="col"> &lt; </div><div class="col"><input type="number">
+                                    <div class="row"><div class="col"><p class="card-text" id="eco">ECO </p></div></div>
+				    <div class="row"><div class="col"><p class="card-text" id="turbo">TURBO</p></div><div class="col"> &lt; </div><div class="col"><b id="presetturbo"></b>
 ℃
+					    </div>
 </div></div>
                                 </div>
                                 <div class="card-footer">
-                                    <a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw', '1')" href="#!">Save</a>
+	                        <a class="btn btn-primary btn-lm float-sm-start"  href="/settings#settings-hcurve">Settings</a>
+
                                 </div>
                             </div>
                         </div>

@@ -19,8 +19,9 @@ import serial
 import signal
 import json
 import time
+import sys
 
-version="DEV-1"
+version="DEV1.0"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -30,14 +31,20 @@ bindaddr = config['DEFAULT']['bindaddress']
 bindport = config['DEFAULT']['bindport']
 modbusdev = config['DEFAULT']['modbusdev']
 release = config['DEFAULT']['release']
+logginglevel = config['DEFAULT']['logging']
 settemp = config['SETTINGS']['settemp']
 slope = config['SETTINGS']['hcslope']
 pshift = config['SETTINGS']['hcpshift']
 hcamp = config['SETTINGS']['hcamp']
+heatingcurve = config['SETTINGS']['heatingcurve']
 insidetemp = config['SETTINGS']['insidetemp']
 outsidetemp = config['SETTINGS']['outsidetemp']
 humidity = config['SETTINGS']['humidity']
 flimit = config['SETTINGS']['flimit']
+flimittemp = config['SETTINGS']['flimittemp']
+presetautochange = config['SETTINGS']['presetautochange']
+presetquiet = config['SETTINGS']['presetquiet']
+presetturbo = config['SETTINGS']['presetturbo']
 use_mqtt = config['MQTT']['mqtt']
 mqtt_broker_addr=config['MQTT']['address']
 mqtt_broker_port=config['MQTT']['port']
@@ -56,6 +63,7 @@ modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 logging.getLogger().setLevel(logging.INFO)
 
 #GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
@@ -131,17 +139,17 @@ def WritePump():
     global newframe
     global writed
     if newframe:
-        logging.info(newframe)
+        logging.debug(newframe)
         newframelen=len(newframe)
         if newframelen == 6:
-            logging.info("101")
+            logging.debug("101")
             gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            logging.info(modbusresult)
+            logging.debug(modbusresult)
             writed="1"
             # if hasattr(modbusresult, 'fcode'):
             #     if modbusresult.fcode < 0x80:
@@ -150,16 +158,16 @@ def WritePump():
             #     else:
             #         writed="2"
         elif newframelen == 16:
-            logging.info("141")
+            logging.debug("141")
         elif newframelen == 1:
-            logging.info("201")
+            logging.debug("201")
             gpiocontrol("modbus", "1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(201, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            logging.info(modbusresult)
+            logging.debug(modbusresult)
             writed="1"
         newframe=""
 
@@ -197,12 +205,13 @@ def ReadPump():
                     for ind in range(6):
                         rs = ser.read(2).hex()
                         R101.append(int(rs, 16))
-                    # print(R101)
+                    logging.debug(R101)
                 if rs == "0320":
                     R141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
                         R141.append(int(rs, 16))
+                    logging.debug(R141)
                 if rs == "0302":
                     R201 = []
                     for ind in range(1):
@@ -213,6 +222,7 @@ def ReadPump():
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         R241.append(int(rs, 16))
+                    logging.debug(R241[2])
         except:
             break
 
@@ -367,18 +377,19 @@ def tempchange(which, value, curve):
     return jsonify(msg=msg, state=state)
 
 def presetchange(mode):
-    global newframe
-    try:
-        newframe=PyHaier.SetMode(mode)
-        if use_mqtt == "1":
-            client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
-        msg="New preset mode: "+str(mode)
-        state="success"
-        return msg, state
-    except:
-        msg="Preset mode not changed"
-        state="error"
-        return msg, state
+    with app.app_context():
+        global newframe
+        try:
+            newframe=PyHaier.SetMode(mode)
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
+            msg="New preset mode: "+str(mode)
+            state="success"
+            return jsonify(msg=msg, state=state)
+        except:
+            msg="Preset mode not changed"
+            state="error"
+            return jsonify(msg=msg, state=state)
 
 def statechange(mode,value,mqtt):
     global R101
@@ -438,27 +449,57 @@ def curvecalc():
         insidetemp=float(status[statusmap.index("intemp")])
         outsidetemp=float(status[statusmap.index("outtemp")])
         settemp=float(status[statusmap.index("settemp")])
-        t1=(outsidetemp/(320-(outsidetemp*4)))
-        t2=pow(settemp,t1)
-        sslope=float(slope)
-        ps=int(pshift)
-        amp=int(hcamp)
-        heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
-        status[statusmap.index("hcurve")]=heatcurve
+        if heatingcurve == 'auto':
+            t1=(outsidetemp/(320-(outsidetemp*4)))
+            t2=pow(settemp,t1)
+            sslope=float(slope)
+            ps=int(pshift)
+            amp=int(hcamp)
+            heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+        elif heatingcurve == '1':
+            heatcurve = round((settemp+(0.5*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+        elif heatingcurve == '2':
+            heatcurve = round((settemp+(0.7*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+        elif heatingcurve == '3':
+            heatcurve = round((settemp+(0.9*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+        
         if use_mqtt == '1':
             client.publish(mqtt_topic+"/heatcurve", str(heatcurve))
         if 25.0 < heatcurve < 55.0:
             try:
-                logging.info("turn on heat demand")
-                gpiocontrol("heatdemand", "1")
-                tempchange("heat", heatcurve, "1")
+                if GPIO.input(heatdemandpin) != "1":
+                    logging.info("turn on heat demand")
+                    gpiocontrol("heatdemand", "1")
+                if str(status[statusmap.index("hcurve")]) != str(heatcurve):
+                    tempchange("heat", heatcurve, "1")
             except:
                 logging.error("Set chtemp ERROR")
         else:
-            logging.info("turn off heat demand")
-            gpiocontrol("heatdemand", "0")
+            if GPIO.input(heatdemandpin) != "0":
+                logging.info("turn off heat demand")
+                gpiocontrol("heatdemand", "0")
+        status[statusmap.index("hcurve")]=heatcurve
     else:
         status[statusmap.index("hcurve")]="Error"
+
+    if flimit == "auto":
+        if outsidetemp >= float(flimittemp):
+            logging.info("turn on freq limit")
+            gpiocontrol("freqlimit", "1")
+        elif outsidetemp <= float(flimittemp)+0.5:
+            logging.info("turn off freq limit")
+            gpiocontrol("freqlimit", "0")
+    logging.info(presetautochange)
+    logging.info(status[statusmap.index("mode")])
+    if presetautochange == "auto":
+        mode=status[statusmap.index("mode")]
+        if outsidetemp >= float(presetquiet) and mode != "quiet":
+            response=presetchange("quiet")
+        elif outsidetemp <= float(presetturbo) and mode != "turbo":
+            response=presetchange("turbo")
+        elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
+            response=presetchange("eco")
+
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
@@ -489,8 +530,13 @@ def getdata():
     pch=status[statusmap.index("pch")]
     pdhw=status[statusmap.index("pdhw")]
     pcool=status[statusmap.index("pcool")]
+    presetch = presetautochange 
     flimit = config['SETTINGS']['flimit']
-    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit)
+    heatdemand=GPIO.input(heatdemandpin)
+    cooldemand=GPIO.input(cooldemandpin)
+    flimiton=GPIO.input(freqlimitpin)
+    ltemp = flimittemp
+    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit,heatdemand=heatdemand,cooldemand=cooldemand,flimiton=flimiton, ltemp=ltemp, presetch=presetch, presetquiet=presetquiet, presetturbo=presetturbo)
 
 def GetInsideTemp(param):
     if param == "builtin":
@@ -525,7 +571,7 @@ def GetOutsideTemp(param):
             sensor = W1ThermSensor()
             temperature = sensor.get_temperature()
             return temperature
-        except W1ThermSensorError as e:
+        except:
             sys.stderr.write("Error: cannot read outside temperature")
             return "0"
     elif param == "ha":
@@ -697,22 +743,6 @@ def theme_route():
     settheme(theme)
     return theme
 
-@app.route('/save', methods=['POST'])
-@login_required
-def save():
-    if request.method=='POST':
-        saved="1"
-        global needrestart
-        needrestart=1
-        for key,value in request.form.items():
-            KEY1=f'{key.split("$")[0]}'
-            KEY2=f'{key.split("$")[1]}'
-            VAL=f'{value}'
-            config[KEY1][KEY2] = str(VAL)    # update
-            with open('config.ini', 'w') as configfile:    # save
-                config.write(configfile)
-    return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
-
 @app.route('/settings', methods=['GET','POST'])
 @login_required
 def settings():
@@ -745,6 +775,10 @@ def settings():
     outsidetemp = config['SETTINGS']['outsidetemp']
     humidity = config['SETTINGS']['humidity']
     flimit = config['SETTINGS']['flimit']
+    flimittemp = config['SETTINGS']['flimittemp']
+    presetautochange = config['SETTINGS']['presetautochange']
+    presetquiet = config['SETTINGS']['presetquiet']
+    presetturbo = config['SETTINGS']['presetturbo']
     modbuspin=config['GPIO']['modbus']
     freqlimitpin=config['GPIO']['freqlimit']
     heatdemandpin=config['GPIO']['heatdemand']
@@ -771,6 +805,12 @@ def change_state_route():
     value = request.form['value']
     information = statechange(mode, value, "0")
     return information
+@app.route('/modechange', methods=['POST'])
+@login_required
+def change_mode_route():
+    newvalue = request.form['newmode']
+    response = presetchange(newvalue)
+    return response
 
 @app.route('/tempchange', methods=['POST'])
 @login_required
