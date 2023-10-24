@@ -21,7 +21,7 @@ import json
 import time
 import sys
 
-version="DEV1.0"
+version="DEV"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -144,12 +144,20 @@ def gpiocontrol(control, value):
 def WritePump():
     global newframe
     global writed
+    comm=1
     if newframe:
         logging.info(newframe)
         newframelen=len(newframe)
+        while (comm):
+            rs = ser.read(1).hex()
+            if rs == "032c":
+                for ind in range(22):
+                    ser.read(2).hex()
+            comm=0
+            gpiocontrol("modbus", "1")
+
         if newframelen == 6:
             logging.info("101")
-            gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
@@ -167,7 +175,6 @@ def WritePump():
             logging.info("141")
         elif newframelen == 1:
             logging.info("201")
-            gpiocontrol("modbus", "1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(201, newframe, unit=17)
