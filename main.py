@@ -173,7 +173,7 @@ def WritePump():
             modbusresult=modbus.write_registers(201, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            logging.ingo(modbusresult)
+            logging.info(modbusresult)
             writed="1"
         newframe=""
 
