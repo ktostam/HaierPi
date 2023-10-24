@@ -31,6 +31,7 @@ bindaddr = config['DEFAULT']['bindaddress']
 bindport = config['DEFAULT']['bindport']
 modbusdev = config['DEFAULT']['modbusdev']
 release = config['DEFAULT']['release']
+logginglevel = config['DEFAULT']['logging']
 settemp = config['SETTINGS']['settemp']
 slope = config['SETTINGS']['hcslope']
 pshift = config['SETTINGS']['hcpshift']
@@ -243,9 +244,15 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
     elif msg.topic == mqtt_topic+"/preset_mode/set":
         logging.info("New preset mode")
         try:
-            msg, state = presetchange(str(msg.payload.decode('utf-8')))
+            presetchange(str(msg.payload.decode('utf-8')))
         except:
             logging.error("MQTT: cannot set new preset: "+msg+" "+state)
+    elif msg.topic == mqtt_topic+"/flimit/set":
+        logging.info("Frequency limit")
+        try:
+            flimitchange(str(msg.payload.decode('utf-8')))
+        except:
+            logging.error("MQTT: cannot set flimit relay")
     elif msg.topic == mqtt_topic+"/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
@@ -381,14 +388,34 @@ def presetchange(mode):
         try:
             newframe=PyHaier.SetMode(mode)
             if use_mqtt == "1":
-                client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=True)
+                client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=False)
             msg="New preset mode: "+str(mode)
             state="success"
             return jsonify(msg=msg, state=state)
         except:
+            if use_mqtt == "1":
+                client.publish(mqtt_topic+"/preset_mode/state", "none", qos=1, retain=False)
             msg="Preset mode not changed"
             state="error"
             return jsonify(msg=msg, state=state)
+
+def flimitchange(mode):
+    try:
+        gpiocontrol("freqlimit", mode)
+        msg="Frequency limit relay: "+str(mode)
+        state="success"
+        logging.info("Frequency limit relay changed to:"+ str(mode))
+        if use_mqtt == "1":
+            client.publish(mqtt_topic+"/flimit/state", str(mode), qos=1, retain=False)
+        return msg,state
+    except:
+        msg="Frequency limit not changed"
+        state="error"
+        logging.error("Cannot change frequency limit relay")
+        if use_mqtt == "1":
+            client.publish(mqtt_topic+"/flimit/state", "error", qos=1, retain=False)
+        return msg, state
+
 
 def statechange(mode,value,mqtt):
     global R101
@@ -530,7 +557,6 @@ def getdata():
     pdhw=status[statusmap.index("pdhw")]
     pcool=status[statusmap.index("pcool")]
     presetch = presetautochange 
-    flimit = config['SETTINGS']['flimit']
     heatdemand=GPIO.input(heatdemandpin)
     cooldemand=GPIO.input(cooldemandpin)
     flimiton=GPIO.input(freqlimitpin)
