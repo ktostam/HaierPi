@@ -837,6 +837,13 @@ def change_mode_route():
     response = presetchange(newvalue)
     return response
 
+@app.route('/flrchange', methods=['POST'])
+@login_required
+def change_flimitrelay_route():
+    newvalue = request.form['newmode']
+    msg,state = flimitchange(newvalue)
+    return jsonify(msg=msg, state=state)
+
 @app.route('/tempchange', methods=['POST'])
 @login_required
 def change_temp_route():

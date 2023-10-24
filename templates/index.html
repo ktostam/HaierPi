@@ -73,6 +73,13 @@
                 $("#outtemp").text(data.outtemp)
 		$("#ltemp").text(data.ltemp)
 				    $("#preset").text(data.presetch)
+				    $("#flimit").text(data.flimit)
+		if(data.flimit == "manual") {
+			$("#flimitchange").show()
+			$("#flimitchange").val(data.flimiton)
+				} else if (data.flimit == "auto"){
+					$("#flimitauto").show()
+						}
 		if(data.presetch == "manual") {
 			$("#presetchange").show()
 			$("#presetchange").val(data.mode)
@@ -196,6 +203,30 @@
                                                 })
                         });
 			}
+        function flrchange(newmode) {
+                $.post('/flrchange', {newmode}, function(data) {
+                        var text=data.msg;
+                        var state=data.state
+                        Swal.fire({
+                                html: text,
+                                icon: state,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                                                })
+                        });
+                        }
+
         function statechange(mode, value) {
             $("#"+mode)[0].classList.add("spinn")
             $("#"+mode)[0].classList.add("iconspinner")
@@ -334,16 +365,24 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col">
-                                            <h2 class="card-title">Frequency limit:</h2>
+                                            <h2 class="card-title">Frequency limit: - <b id="flimit">N.A.</b></h2>
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
+						<form method="POST">
+                                                    <select class="form-select" aria-label="flimitchange" id="flimitchange" style="display: none;" name="flimitchange" onchange="flrchange($('#flimitchange').val())">
+                                                        <option value="1">ON</option>
+                                                        <option value="0">OFF</option>
+                                                    </select>
                                                     <span class="custom-control-label"></span>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
+				                                        <div id="flimitauto" style="display: none;">
                                     <p class="card-text">Frequency limit temp: <b id="ltemp">N.A.</b>℃</p>
                                     <p class="card-text">Relay status: <b id="flrelay">N.A.</b></p>
+									</div>
                                 </div>
                                 <div class="card-footer">
 					<a class="btn btn-primary btn-lm float-sm-start" href="/settings#settings-hcurve">Settings</a>
