@@ -223,12 +223,13 @@ def ReadPump():
                     for ind in range(1):
                         rs = ser.read(2).hex()
                         R201.append(int(rs, 16))
+                    logging.debug(R201)
                 if rs == "032c":
                     R241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         R241.append(int(rs, 16))
-                    logging.debug(R241[2])
+                    logging.debug(R241)
         except:
             break
 
