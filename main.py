@@ -131,12 +131,20 @@ def gpiocontrol(control, value):
 def WritePump():
     global newframe
     global writed
+    comm=1
     if newframe:
         logging.info(newframe)
         newframelen=len(newframe)
+        while (comm):
+            rs = ser.read(1).hex()
+            if rs == "032c":
+                for ind in range(22):
+                    ser.read(2).hex()
+            comm=0
+            gpiocontrol("modbus", "1")
+
         if newframelen == 6:
             logging.info("101")
-            gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
@@ -154,7 +162,6 @@ def WritePump():
             logging.info("141")
         elif newframelen == 1:
             logging.info("201")
-            gpiocontrol("modbus", "1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(201, newframe, unit=17)
