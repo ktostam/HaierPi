@@ -158,6 +158,84 @@ window.onload = onloadsave;
                 </div>
                 <div class="tab-pane fade" id="settings-hcurve-tab" role="tabpanel" aria-labelledby="settings-hcurve-tab">
                     <div class="list-group mb-5 shadow">
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Frequency limit</strong>
+                                <p class="text-muted mb-0">automatic of manual frequency limit relay control</p>
+                            </div>
+                            <div class="col-auto">
+				    <div class="custom-control custom-switch"><form method="POST">
+						    <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value=" {{ flimit }}">
+                                        <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>Auto</option>
+                                        <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>Manual</option>
+
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Frequency limit temperature</strong>
+                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="number" class="form-control" id="flimittemp" name="SETTINGS$flimittemp" aria-describedby="flimittemp" value="{{ flimittemp }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Preset change</strong>
+                                <p class="text-muted mb-0">automatic of manual frequency limit relay control</p>
+                            </div>
+                            <div class="col-auto">
+				    <div class="custom-control custom-switch">
+						    <select class="form-select" aria-label="presetautochange" name="SETTINGS$presetautochange" value="{{ presetautochange }}">
+                                        <option value="auto" {% if presetautochange == 'auto' %} selected {% endif %}>Auto</option>
+                                        <option value="manual" {% if presetautochange == 'manual' %} selected {% endif %}>Manual</option>
+
+                                    </select>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Preset quiet temperature</strong>
+                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="number" class="form-control" id="presetquiet" name="SETTINGS$presetquiet" aria-describedby="presetquiet" value="{{ presetquiet }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Preset turbo temperature</strong>
+                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="number" class="form-control" id="presetturbo" name="SETTINGS$presetturbo" aria-describedby="presetturbo" value="{{ presetturbo }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
@@ -165,7 +243,7 @@ window.onload = onloadsave;
                                 <p class="text-muted mb-0">What type of curve you want to use</p>
                             </div>
                             <div class="col-auto">
-				    <div class="custom-control custom-switch"><form method="POST">
+				    <div class="custom-control custom-switch">
                                     <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
                                         <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
                                         <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
@@ -186,7 +264,7 @@ window.onload = onloadsave;
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="number" class="form-control" id="timeout" name="SETTINGS$heizfreq" aria-describedby="timeout" value="{{ timeout }}">
+                                    <input type="number" class="form-control" id="timeout" name="DEFAULT$heizfreq" aria-describedby="timeout" value="{{ timeout }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
@@ -563,6 +641,13 @@ window.onload = onloadsave;
     </div>
 
 </div>
+       <script>
+    jQuery(document).ready(function ($) {
+    const hash=window.location.hash;
+     const bsTab = new bootstrap.Tab(hash);
+     bsTab.show();
+    })
+       </script>
 <script>
 var colors = ['#007bff','#28a745','#333333','#c3e6cb','#dc3545','#6c757d'];
 /* large line chart */
@@ -580,6 +665,13 @@ for (const element of labels) {
 		const ps= {{ pshift }}
 		const amp= {{ hcamp }}
         const heatcurve = Math.round(((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+		        console.log(element);
+        console.log(t1);
+        console.log(t2);
+        console.log(slope);
+        console.log(ps);
+        console.log(amp);
+	console.log(heatcurve);
 		data.push(heatcurve);
 		}
 var data1 = [];
@@ -664,11 +756,21 @@ var data = [];
 for (const element of labels) {
         const t1=(outsidetemp/(320-(outsidetemp*4)))
         const t2=Math.pow(settemp,t1)
+
         const slope=document.getElementById('slope').value;
         const ps=document.getElementById('pshift').value;
         const amp=document.getElementById('hcamp').value;
-        const heatcurve = Math.round(((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+	console.log(element);
+	console.log(t1);
+        console.log(t2);
+        console.log(slope);
+        console.log(ps);
+        console.log(amp);
+	const heat2 = ((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))
+	console.log(heat2)
+        const heatcurve = (Math.round(((0.55*slope*t2)*((((-element+20)*2)+settemp)+ps)+((settemp-insidetemp)*amp))*2)/2)/10
                 data.push(heatcurve);
+	console.log(heatcurve);
                 }
 myChart.data.datasets[0].data = data;
 myChart.update();
