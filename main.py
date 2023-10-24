@@ -25,6 +25,12 @@ version="DEV1.0"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
+log_level_info = {'DEBUG': logging.DEBUG, 
+                    'INFO': logging.INFO,
+                    'WARNING': logging.WARNING,
+                    'ERROR': logging.ERROR,
+                    }
+loglevel = config['DEFAULT']['log_level']
 timeout = config['DEFAULT']['heizfreq']
 firstrun = config['DEFAULT']['firstrun']
 bindaddr = config['DEFAULT']['bindaddress']
@@ -63,7 +69,8 @@ ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,s
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-logging.getLogger().setLevel(logging.INFO)
+set_log_level = log_level_info.get(loglevel, logging.ERROR)
+logging.getLogger().setLevel(set_log_level)
 
 #GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
 GPIO.setup(modbuspin, GPIO.OUT) #modbus
@@ -138,17 +145,17 @@ def WritePump():
     global newframe
     global writed
     if newframe:
-        logging.debug(newframe)
+        logging.info(newframe)
         newframelen=len(newframe)
         if newframelen == 6:
-            logging.debug("101")
+            logging.info("101")
             gpiocontrol("modbus","1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(101, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            logging.debug(modbusresult)
+            logging.info(modbusresult)
             writed="1"
             # if hasattr(modbusresult, 'fcode'):
             #     if modbusresult.fcode < 0x80:
@@ -157,16 +164,16 @@ def WritePump():
             #     else:
             #         writed="2"
         elif newframelen == 16:
-            logging.debug("141")
+            logging.info("141")
         elif newframelen == 1:
-            logging.debug("201")
+            logging.info("201")
             gpiocontrol("modbus", "1")
             time.sleep(1)
             modbus.connect()
             modbusresult=modbus.write_registers(201, newframe, unit=17)
             modbus.close()
             gpiocontrol("modbus","0")
-            logging.debug(modbusresult)
+            logging.ingo(modbusresult)
             writed="1"
         newframe=""
 
@@ -281,7 +288,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             tempchange("heat",format(float(msg.payload)),"2")
             client.publish(mqtt_topic+"/temperature/state",str(float(msg.payload)), qos=1, retain=True)
         except:
-            logging.warning("MQTT: New temp error: payload - "+format(float(msg.payload)))
+            logging.error("MQTT: New temp error: payload - "+format(float(msg.payload)))
     elif msg.topic == mqtt_topic+"/dhw/mode/set":
         logging.info("New mode")
         payload=msg.payload.decode('utf-8')
@@ -293,7 +300,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             statechange("pdhw", str(newmode), "1")
             client.publish(mqtt_topic + "/dhw/mode/state", str(payload), qos=1, retain=True)
         except:
-            logging.warning("MQTT: cannot change DHW mode - payload:"+str(newmode))
+            logging.error("MQTT: cannot change DHW mode - payload:"+str(newmode))
     elif msg.topic == mqtt_topic+"/dhw/temperature/set":
         logging.info("New temperatura")
         newtemp=int(float(msg.payload.decode('utf-8')))
@@ -301,7 +308,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             tempchange("dhw", str(newtemp), "2")
             client.publish(mqtt_topic + "/dhw/temperature/state", str(newtemp), qos=1, retain=True)
         except:
-            logging.warning("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
+            logging.error("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
 
 def tempchange(which, value, curve):
     global R101
@@ -310,7 +317,6 @@ def tempchange(which, value, curve):
     if curve == "1":
         if which == "heat":
             logging.info("Central heating: "+str(value))
-            logging.debug(R101)
             for a in range(3):
                 if len(R101) == 6:
                     chframe = PyHaier.SetCHTemp(R101, float(value))
@@ -323,7 +329,6 @@ def tempchange(which, value, curve):
                 msg="ERROR: Cannot set new CH temp"
                 return msg
         elif which == "dhw":
-            logging.info(R101)
             logging.info("Domestic Hot Water: "+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
             if dhwframe.__class__ == list:
@@ -369,7 +374,6 @@ def tempchange(which, value, curve):
                 config.write(configfile)
             return "OK"
         elif which == "dhw":
-            logging.info(R101)
             logging.info("Domestic Hot Water: "+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
             if dhwframe.__class__ == list:
