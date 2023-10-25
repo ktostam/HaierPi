@@ -516,26 +516,26 @@ def curvecalc():
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
         status[statusmap.index("hcurve")]=heatcurve
+
+        if flimit == "auto":
+            if outsidetemp >= float(flimittemp):
+                logging.info("turn on freq limit")
+                gpiocontrol("freqlimit", "1")
+            elif outsidetemp <= float(flimittemp)+0.5:
+                logging.info("turn off freq limit")
+                gpiocontrol("freqlimit", "0")
+        logging.info(presetautochange)
+        logging.info(status[statusmap.index("mode")])
+        if presetautochange == "auto":
+            mode=status[statusmap.index("mode")]
+            if outsidetemp >= float(presetquiet) and mode != "quiet":
+                response=presetchange("quiet")
+            elif outsidetemp <= float(presetturbo) and mode != "turbo":
+                response=presetchange("turbo")
+            elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
+                response=presetchange("eco")
     else:
         status[statusmap.index("hcurve")]="Error"
-
-    if flimit == "auto":
-        if outsidetemp >= float(flimittemp):
-            logging.info("turn on freq limit")
-            gpiocontrol("freqlimit", "1")
-        elif outsidetemp <= float(flimittemp)+0.5:
-            logging.info("turn off freq limit")
-            gpiocontrol("freqlimit", "0")
-    logging.info(presetautochange)
-    logging.info(status[statusmap.index("mode")])
-    if presetautochange == "auto":
-        mode=status[statusmap.index("mode")]
-        if outsidetemp >= float(presetquiet) and mode != "quiet":
-            response=presetchange("quiet")
-        elif outsidetemp <= float(presetturbo) and mode != "turbo":
-            response=presetchange("turbo")
-        elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
-            response=presetchange("eco")
 
 
 def updatecheck():
