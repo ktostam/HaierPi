@@ -858,7 +858,7 @@ def settings():
 @login_required
 def parameters():
     theme = status[statusmap.index("theme")]
-    return  render_template('parameters.html', version=version, theme=theme, needrestart=needrestart)
+    return  render_template('parameters.html')
 
 @app.route('/statechange', methods=['POST'])
 @login_required
