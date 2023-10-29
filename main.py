@@ -857,6 +857,7 @@ def settings():
 @app.route('/parameters', methods=['GET','POST'])
 @login_required
 def parameters():
+    theme = status[statusmap.index("theme")]
     return  render_template('parameters.html', version=version, theme=theme, needrestart=needrestart)
 
 @app.route('/statechange', methods=['POST'])
