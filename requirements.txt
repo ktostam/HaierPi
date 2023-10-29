@@ -1,6 +1,6 @@
 Flask==2.2.3
 paho-mqtt==1.6.1
-PyHaier==0.2.0
+PyHaier==0.2.8
 pymodbus==2.5.3
 pyserial==3.5
 requests==2.28.2

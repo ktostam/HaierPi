@@ -21,7 +21,7 @@ import json
 import time
 import sys
 
-version="1.31"
+version="DEV"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -30,13 +30,13 @@ log_level_info = {'DEBUG': logging.DEBUG,
                     'WARNING': logging.WARNING,
                     'ERROR': logging.ERROR,
                     }
-loglevel = config['DEFAULT']['log_level']
-timeout = config['DEFAULT']['heizfreq']
-firstrun = config['DEFAULT']['firstrun']
-bindaddr = config['DEFAULT']['bindaddress']
-bindport = config['DEFAULT']['bindport']
-modbusdev = config['DEFAULT']['modbusdev']
-release = config['DEFAULT']['release']
+loglevel = config['MAIN']['log_level']
+timeout = config['MAIN']['heizfreq']
+firstrun = config['MAIN']['firstrun']
+bindaddr = config['MAIN']['bindaddress']
+bindport = config['MAIN']['bindport']
+modbusdev = config['MAIN']['modbusdev']
+release = config['MAIN']['release']
 settemp = config['SETTINGS']['settemp']
 slope = config['SETTINGS']['hcslope']
 pshift = config['SETTINGS']['hcpshift']
@@ -555,6 +555,27 @@ def restart():
     subprocess.Popen("systemctl restart haier.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return jsonify(restarted="OK")
 
+def getparams():
+    isr241=1
+    isr141=1
+    while (isr241):
+        if (len(R241) == 22):
+            logging.info(R241)
+            tdts=PyHaier.GetTdTs(R241)
+            archerror=PyHaier.GetArchError(R241)
+            compinfo=PyHaier.GetCompInfo(R241)
+            fans=PyHaier.GetFanRpm(R241)
+            tao=PyHaier.GetTao(R241)
+            isr241=0
+    while (isr141):
+        if (len(R141) == 16):
+            logging.info(R141)
+            twitwo = PyHaier.GetTwiTwo(R141)
+            pump=PyHaier.GetPump(R141)
+            threeway=PyHaier.Get3way(R141)
+            isr141=0
+    return twitwo, tdts, archerror, compinfo,fans,tao,pump,threeway
+
 def getdata():
     intemp=status[statusmap.index("intemp")]
     outtemp=status[statusmap.index("outtemp")]
@@ -795,17 +816,17 @@ def settings():
                 config.write(configfile)
     logserver=socket.gethostbyname(socket.gethostname())
     theme = status[statusmap.index("theme")]
-    timeout = config['DEFAULT']['heizfreq']
+    timeout = config['MAIN']['heizfreq']
     intemp=status[statusmap.index("intemp")]
     outtemp=status[statusmap.index("outtemp")]
     heatingcurve = config['SETTINGS']['heatingcurve']
     slope = config['SETTINGS']['hcslope']
     pshift = config['SETTINGS']['hcpshift']
     hcamp = config['SETTINGS']['hcamp']
-    bindaddr = config['DEFAULT']['bindaddress']
-    bindport = config['DEFAULT']['bindport']
-    modbusdev = config['DEFAULT']['modbusdev']
-    release = config['DEFAULT']['release']
+    bindaddr = config['MAIN']['bindaddress']
+    bindport = config['MAIN']['bindport']
+    modbusdev = config['MAIN']['modbusdev']
+    release = config['MAIN']['release']
     settemp = config['SETTINGS']['settemp']
     insidetemp = config['SETTINGS']['insidetemp']
     outsidetemp = config['SETTINGS']['outsidetemp']
@@ -833,6 +854,10 @@ def settings():
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
     return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
+@app.route('/parameters', methods=['GET','POST'])
+@login_required
+def parameters():
+    return  render_template('parameters.html', version=version, theme=theme, needrestart=needrestart)
 
 @app.route('/statechange', methods=['POST'])
 @login_required
@@ -893,6 +918,12 @@ def change_pass_route():
 def getdata_route():
     output = getdata()
     return output
+
+@app.route('/getparams', methods=['GET'])
+@login_required
+def getparams_route():
+    twitwo, tdts, archerror, compinfo, fans, tao, pump, threeway = getparams()
+    return jsonify(twitwo=twitwo, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, tao=tao, pump=pump, threeway=threeway)
 
 # Function to run the background function using a scheduler
 def run_background_function():
