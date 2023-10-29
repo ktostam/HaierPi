@@ -21,7 +21,7 @@ import json
 import time
 import sys
 
-version="DEV"
+version="1.31"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -193,7 +193,7 @@ def ReadPump():
     time.sleep(0.2)
     while (1):
         if (ser.isOpen() == False):
-            logging.warning(colored("Closed seial connection.", 'red', attrs=["bold"]))
+            logging.warning(colored("Closed serial connection.", 'red', attrs=["bold"]))
             break
         if event.is_set():
             break
@@ -241,13 +241,13 @@ def ReadPump():
             break
 
 def on_connect(client, userdata, flags, rc):
-    logging.info(colored("MQTT - Conected", "green", attrs=['bold']))
+    logging.info(colored("MQTT - Connected", "green", attrs=['bold']))
     client.subscribe(mqtt_topic+'/#')
     client.publish(mqtt_topic+"/connected","online", qos=1, retain=True)
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
-    logging.warning(colored("Disconected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
+    logging.warning(colored("Disconnected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
 
 def on_message(client, userdata, msg):  # The callback for when a PUBLISH 
     #message is received from the server. 
@@ -581,7 +581,7 @@ def GetInsideTemp(param):
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
-        url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['insidesensor']
+        url=config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['insidesensor']
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
@@ -612,7 +612,7 @@ def GetOutsideTemp(param):
             return "0"
     elif param == "ha":
         # connect to Home Assistant API and get status of outside temperature entity
-        url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['outsidesensor']
+        url=config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['outsidesensor']
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
@@ -639,7 +639,7 @@ def GetHumidity(param):
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside humidity entity
-        url="http://"+config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['humiditysensor']
+        url=config['HOMEASSISTANT']['HAADDR']+":"+config['HOMEASSISTANT']['HAPORT']+"/api/states/"+config['HOMEASSISTANT']['humiditysensor']
         headers = requests.structures.CaseInsensitiveDict()
         headers["Accept"] = "application/json"
         headers["Authorization"] = "Bearer "+config['HOMEASSISTANT']['KEY']
@@ -921,9 +921,10 @@ def threads_check():
         if not bg_thread.is_alive():
             logging.error("Background thread DEAD")
         elif not serial_thread.is_alive():
-            logging.error("serial Thread DEAD")
-        elif not mqtt_bg.is_alive() and use_mqtt == "1":
-            logging.error("MQTT thread DEAD")
+            logging.error("Serial Thread DEAD")
+        elif use_mqtt == "1":
+            if not mqtt_bg.is_alive():
+                logging.error("MQTT thread DEAD")
         time.sleep(1)
         if event.is_set():
             break

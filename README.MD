@@ -128,6 +128,13 @@ default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
 ![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
 ## Version
+### 1.31
+- Add function for automatic/manual control of frequency limit relay
+- Add function for automatic/manual control of mode quiet/eco/turbo
+- IMPORTANT: new option added in config.ini. If you're updating
+  from previous version you need to add options: `log_leve = ERROR` in  `[DEFAULT]` block in `config.ini`
+  `flimit = manual`, `flimit_temp = 10`, `presetautochange = manual`,`presetquiet = 10`,`presetturbo = -10` in `[SETTINGS]` block in `config.ini`
+- minor fixes
 ### 1.30
 - Add possibility to change heating curve parameters via settings page.
 - IMPORTANT: new option added in config.ini. If you're updating
