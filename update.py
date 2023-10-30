@@ -45,10 +45,10 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 release = config['MAIN']['release']
 
-status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True)
+status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
 print(status)
 subprocess.check_output("systemctl stop haier", shell=True)
-status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True)
+status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
 print(status)
 
 if status == 'inactive':
@@ -68,6 +68,6 @@ if status == 'inactive':
     shutil.copytree('/opt/haier.back/env', '/opt/haier/env/')
     subprocess.check_output("systemctl start haier", shell=True)
 
-    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True)
+    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
     if status == 'active':
         print("HaierPi updated")
