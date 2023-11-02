@@ -59,7 +59,7 @@ if status == 'inactive':
         shutil.rmtree('/opt/haier.back')
     except FileNotFoundError:
         print("/opt/haier.back not exist")
-    subprocess.check_call(['/opt/haier/env/bin/pip', 'install', '-r', '/opt/haierupdate/requirements.txt'])
+    subprocess.check_call(['/opt/haier/env/bin/pip', 'install', '--upgrade', '-r', '/opt/haierupdate/requirements.txt'])
     configold='/opt/haier/config.ini'
     confignew='/opt/haierupdate/config.ini'
     compare_and_update_config_files(configold, confignew)
