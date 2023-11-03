@@ -1,12 +1,13 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, Markup
 from pymodbus.client.sync import ModbusSerialClient
 from w1thermsensor import W1ThermSensor, Sensor
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
+from datetime import datetime
 import HPi.GPIO as GPIO
 import configparser
 import subprocess
@@ -21,7 +22,7 @@ import json
 import time
 import sys
 
-version="1.31"
+version="DEV"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -30,13 +31,13 @@ log_level_info = {'DEBUG': logging.DEBUG,
                     'WARNING': logging.WARNING,
                     'ERROR': logging.ERROR,
                     }
-loglevel = config['DEFAULT']['log_level']
-timeout = config['DEFAULT']['heizfreq']
-firstrun = config['DEFAULT']['firstrun']
-bindaddr = config['DEFAULT']['bindaddress']
-bindport = config['DEFAULT']['bindport']
-modbusdev = config['DEFAULT']['modbusdev']
-release = config['DEFAULT']['release']
+loglevel = config['MAIN']['log_level']
+timeout = config['MAIN']['heizfreq']
+firstrun = config['MAIN']['firstrun']
+bindaddr = config['MAIN']['bindaddress']
+bindport = config['MAIN']['bindport']
+modbusdev = config['MAIN']['modbusdev']
+release = config['MAIN']['release']
 settemp = config['SETTINGS']['settemp']
 slope = config['SETTINGS']['hcslope']
 pshift = config['SETTINGS']['hcpshift']
@@ -50,6 +51,11 @@ flimittemp = config['SETTINGS']['flimittemp']
 presetautochange = config['SETTINGS']['presetautochange']
 presetquiet = config['SETTINGS']['presetquiet']
 presetturbo = config['SETTINGS']['presetturbo']
+antionoff = config['SETTINGS']['antionoff']
+antionoffdelta = config['SETTINGS']['antionoffdelta']
+chscheduler = config['SETTINGS']['chscheduler']
+dhwscheduler = config['SETTINGS']['dhwscheduler']
+dhwwl = config['SETTINGS']['dhwwl']
 use_mqtt = config['MQTT']['mqtt']
 mqtt_broker_addr=config['MQTT']['address']
 mqtt_broker_port=config['MQTT']['port']
@@ -63,6 +69,7 @@ freqlimitpin=config['GPIO']['freqlimit']
 heatdemandpin=config['GPIO']['heatdemand']
 cooldemandpin=config['GPIO']['cooldemand']
 needrestart=0
+dead=0
 
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
@@ -78,13 +85,14 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "pump", "threeway"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/pump/state","/details/threeway/state",]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
 R241=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+twicheck=[0,0]
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
@@ -516,16 +524,16 @@ def curvecalc():
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
         status[statusmap.index("hcurve")]=heatcurve
-
-        if flimit == "auto":
-            if outsidetemp >= float(flimittemp):
-                logging.info("turn on freq limit")
-                gpiocontrol("freqlimit", "1")
-            elif outsidetemp <= float(flimittemp)+0.5:
-                logging.info("turn off freq limit")
-                gpiocontrol("freqlimit", "0")
-        logging.info(presetautochange)
-        logging.info(status[statusmap.index("mode")])
+        if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+            logging.info("dont change flimit in DHW mode")
+        else:
+            if flimit == "auto":
+                if outsidetemp >= float(flimittemp):
+                    logging.info("turn on freq limit")
+                    gpiocontrol("freqlimit", "1")
+                elif outsidetemp <= float(flimittemp)+0.5:
+                    logging.info("turn off freq limit")
+                    gpiocontrol("freqlimit", "0")
         if presetautochange == "auto":
             mode=status[statusmap.index("mode")]
             if outsidetemp >= float(presetquiet) and mode != "quiet":
@@ -554,6 +562,27 @@ def installupdate():
 def restart():
     subprocess.Popen("systemctl restart haier.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return jsonify(restarted="OK")
+
+def getparams():
+    isr241=1
+    isr141=1
+    while (isr241):
+        if (len(R241) == 22):
+            #logging.info(R241)
+            tdts=PyHaier.GetTdTs(R241)
+            archerror=PyHaier.GetArchError(R241)
+            compinfo=PyHaier.GetCompInfo(R241)
+            fans=PyHaier.GetFanRpm(R241)
+            tao=PyHaier.GetTao(R241)
+            isr241=0
+    while (isr141):
+        if (len(R141) == 16):
+            #logging.info(R141)
+            twitwo = PyHaier.GetTwiTwo(R141)
+            pump=PyHaier.GetPump(R141)
+            threeway=PyHaier.Get3way(R141)
+            isr141=0
+    return twitwo, tdts, archerror, compinfo,fans,tao,pump,threeway
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -678,19 +707,162 @@ def ischanged(old, new):
             else:
                 client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
 
+def deltacheck(temps):
+    if antionoff == '1':
+        global twicheck
+        if twicheck[0] == 0:
+            twicheck=[temps, time.time(),temps,time.time()]
+            logging.info(twicheck)
+        else:
+            newtime=time.time()
+            if newtime - twicheck[1] >= 300:
+                delta=temps[0]-twicheck[0][0]
+                logging.info("Delta:"+str(delta))
+                if delta>=float(antionoffdelta):
+                    logging.info("AntiON-OFF: "+str(delta)+", more then: "+antionoffdelta+". Changing mode to lower if possible")
+                    mode=status[statusmap.index("mode")]
+                    flimiton=GPIO.input(freqlimitpin)
+                    logging.info("AntiON-OFF: current mode - "+str(mode))
+                    if mode == "turbo":
+                        logging.info("AntiON-OFF: changing mode to: ECO")
+                        response=presetchange("eco")
+                    elif mode == "eco":
+                        logging.info("AntiON-OFF: changing mode to: quiet")
+                        response=presetchange("wuiet")
+                    elif mode == "quiet":
+                        logging.info("AntiON-OFF: mode in lowest setting, turn on frequency limit relay")
+                        gpiocontrol("freqlimit", "1")
+                    elif mode == "quiet" and flimiton == "1":
+                        logging.info("AntiON-OFF: mode in lowest setting, frequency limit is already ON. I can't do anything else :(")
+                else:
+                    logging.info("AntiON-OFF: "+str(delta)+", no need to change mode")
+                twicheck[0]=temps
+                twicheck[1]=newtime
+
+def schedule_write(which, data):
+    if which == "ch":
+        try:
+            f = open("schedule_ch.json", "w")
+            f.write(data)
+            f.close()
+            msg = "Central Heating chedule saved"
+            state = "success"
+            return msg, state
+        except:
+            msg = "ERROR: Central Heating not saved"
+            state = "error"
+            return msg, state
+    if which == "dhw":
+        logging.info("okokok")
+        try:
+            f = open("schedule_dhw.json", "w")
+            f.write(data)
+            f.close()
+            msg = "Domestic Hot Water chedule saved"
+            state = "success"
+            return msg, state
+        except:
+            msg = "ERROR: Domestic Hot Water not saved"
+            state = "error"
+            return msg, state
+
+def scheduler():
+    if chscheduler == "1":
+        f=open('schedule_ch.json', 'r')
+        data = json.load(f)
+        now=datetime.now().strftime("%H:%M")
+        weekday=datetime.weekday(datetime.now())
+        pch=status[statusmap.index("pch")]
+        schedulestart=[]
+        for x in range(len(data[weekday]['periods'])):
+            y=x-1
+            start=data[weekday]['periods'][y]['start']
+            end=data[weekday]['periods'][y]['end']
+            if end >= now >= start:
+                if pch == 'off':
+                    schedulestart.append('on')
+                else:
+                    schedulestart.append('aon')
+            else:
+                if pch == 'on':
+                    schedulestart.append('off')
+                else:
+                    schedulestart.append('aoff')
+        if 'on' in schedulestart:
+            logging.info("Scheduler: START CH")
+            statechange("pch", "on", "1")
+        elif 'aon' in schedulestart:
+            logging.info("Scheduler: CH ALREADY ON")
+        elif 'aoff' in schedulestart:
+            logging.info("Scheduler: CH ALREADY OFF")
+        else:
+            logging.info("Scheduler: STOP CH")
+            statechange("pch", "off", "1")
+    if dhwscheduler == "1":
+        f=open('schedule_dhw.json', 'r')
+        data = json.load(f)
+        now=datetime.now().strftime("%H:%M")
+        weekday=datetime.weekday(datetime.now())
+        pdhw=status[statusmap.index("pdhw")]
+        schedulestart=[]
+        for x in range(len(data[weekday]['periods'])):
+            y=x-1
+            start=data[weekday]['periods'][y]['start']
+            end=data[weekday]['periods'][y]['end']
+            if end >= now >= start:
+                if pdhw == 'off':
+                    schedulestart.append('on')
+                else:
+                    schedulestart.append('aon')
+            else:
+                if pdhw == 'on':
+                    schedulestart.append('off')
+                else:
+                    schedulestart.append('aoff')
+        if 'on' in schedulestart:
+            logging.info("Scheduler: START DHW")
+            statechange("pdhw", "on", "1")
+        elif 'aon' in schedulestart:
+            logging.info("Scheduler: DHW ALREADY ON")
+        elif 'aoff' in schedulestart:
+            logging.info("Scheduler: DHW ALREADY OFF")
+        else:
+            logging.info("Scheduler: STOP DHW")
+            statechange("pdhw", "off", "1")
+
+
 #Reading parameters
 def GetParameters():
     global R101
     global R141
     global R201
+    global R241
     if len(R141) == 16:
-        tank=PyHaier.GetDHWCurTemp(R141)
+        tank = PyHaier.GetDHWCurTemp(R141)
+        twitwo = PyHaier.GetTwiTwo(R141)
+        pump=PyHaier.GetPump(R141)
+        threeway=PyHaier.Get3way(R141)
         #status[statusmap.index("tank")] = tank
         ischanged("tank", tank)
+        ischanged("twitwo", twitwo)
+        ischanged("pump", pump)
+        ischanged("threeway", threeway)
+        deltacheck(twitwo)
     if len(R201) == 1:
         mode=PyHaier.GetMode(R201)
         #status[statusmap.index("mode")] = mode
         ischanged("mode", mode)
+    if len(R241) == 22:
+        tdts=PyHaier.GetTdTs(R241)
+        archerror=PyHaier.GetArchError(R241)
+        compinfo=PyHaier.GetCompInfo(R241)
+        fans=PyHaier.GetFanRpm(R241)
+        tao=PyHaier.GetTao(R241)
+        ischanged("tdts", tdts)
+        ischanged("archerror", archerror)
+        ischanged("compinfo", compinfo)
+        ischanged("fans", fans)
+        ischanged("tao", tao)
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
         #status[statusmap.index("dhw")] = dhw
@@ -729,6 +901,10 @@ def GetParameters():
     ischanged("intemp", GetInsideTemp(insidetemp))
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
+    scheduler()
+    if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+        gpiocontrol("freqlimit", "0")
+
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
     #status[statusmap.index("humid")] = GetHumidity(humidity)
@@ -795,17 +971,17 @@ def settings():
                 config.write(configfile)
     logserver=socket.gethostbyname(socket.gethostname())
     theme = status[statusmap.index("theme")]
-    timeout = config['DEFAULT']['heizfreq']
+    timeout = config['MAIN']['heizfreq']
     intemp=status[statusmap.index("intemp")]
     outtemp=status[statusmap.index("outtemp")]
     heatingcurve = config['SETTINGS']['heatingcurve']
     slope = config['SETTINGS']['hcslope']
     pshift = config['SETTINGS']['hcpshift']
     hcamp = config['SETTINGS']['hcamp']
-    bindaddr = config['DEFAULT']['bindaddress']
-    bindport = config['DEFAULT']['bindport']
-    modbusdev = config['DEFAULT']['modbusdev']
-    release = config['DEFAULT']['release']
+    bindaddr = config['MAIN']['bindaddress']
+    bindport = config['MAIN']['bindport']
+    modbusdev = config['MAIN']['modbusdev']
+    release = config['MAIN']['release']
     settemp = config['SETTINGS']['settemp']
     insidetemp = config['SETTINGS']['insidetemp']
     outsidetemp = config['SETTINGS']['outsidetemp']
@@ -815,6 +991,11 @@ def settings():
     presetautochange = config['SETTINGS']['presetautochange']
     presetquiet = config['SETTINGS']['presetquiet']
     presetturbo = config['SETTINGS']['presetturbo']
+    antionoff = config['SETTINGS']['antionoff']
+    antionoffdelta = config['SETTINGS']['antionoffdelta']
+    chscheduler = config['SETTINGS']['chscheduler']
+    dhwscheduler = config['SETTINGS']['dhwscheduler']
+    dhwwl = config['SETTINGS']['dhwwl']
     modbuspin=config['GPIO']['modbus']
     freqlimitpin=config['GPIO']['freqlimit']
     heatdemandpin=config['GPIO']['heatdemand']
@@ -833,6 +1014,25 @@ def settings():
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
     return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
+@app.route('/parameters', methods=['GET','POST'])
+@login_required
+def parameters():
+    return  render_template('parameters.html')
+
+@app.route('/scheduler', methods=['GET','POST'])
+@login_required
+def scheduler_route():
+    if request.method == 'POST':
+        if "schedulech" in request.form:
+            msg, state = schedule_write('ch', request.form['schedulech'])
+            return jsonify(msg=msg, state=state)
+        if "scheduledhw" in request.form:
+            msg, state = schedule_write('dhw', request.form['scheduledhw'])
+            return jsonify(msg=msg, state=state)
+
+    schedule1 = open("schedule_ch.json", "r")
+    schedule2 = open("schedule_dhw.json", "r")
+    return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()))
 
 @app.route('/statechange', methods=['POST'])
 @login_required
@@ -894,6 +1094,12 @@ def getdata_route():
     output = getdata()
     return output
 
+@app.route('/getparams', methods=['GET'])
+@login_required
+def getparams_route():
+    twitwo, tdts, archerror, compinfo, fans, tao, pump, threeway = getparams()
+    return jsonify(twitwo=twitwo, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, tao=tao, pump=pump, threeway=threeway)
+
 # Function to run the background function using a scheduler
 def run_background_function():
     job = every(10).seconds.do(GetParameters)
@@ -917,9 +1123,12 @@ def connect_mqtt():
     client.loop_forever()  # Start networking daemon
 
 def threads_check():
+    global dead
     while True:
         if not bg_thread.is_alive():
-            logging.error("Background thread DEAD")
+            if dead == 0:
+                logging.error("Background thread DEAD")
+                dead = 1
         elif not serial_thread.is_alive():
             logging.error("Serial Thread DEAD")
         elif use_mqtt == "1":

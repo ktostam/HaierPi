@@ -153,6 +153,80 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">AntiON-OFF</strong>
+				<p class="text-muted mb-0">A system that try to prevent the heatpump from operating in on-off mode</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="hidden" id="antionoff_hidden" value="{{ antionoff }}" name="SETTINGS$antionoff">
+                                          <input type="checkbox" class="form-check-input" id="antionoff" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="antionoff" {%if antionoff == '1' %} checked {% endif %}>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">AntiON-OFF Delta</strong>
+                                <p class="text-muted mb-0">DELTA</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                    <input type="number" class="form-control" id="antionoffdelta" name="SETTINGS$antionoffdelta" aria-describedby="antionoffdelta" value="{{ antionoffdelta }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+		    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Domestic Hot Water without limit</strong>
+                                <p class="text-muted mb-0">When heating DHW turn off frequency limit relay</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="hidden" id="dhwwl_hidden" value="{{ dhwwl }}" name="SETTINGS$dhwwl">
+                                          <input type="checkbox" class="form-check-input" id="dhwwl" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="dhwwl" {%if dhwwl == '1' %} checked {% endif %}>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Use Central Heating scheduler</strong>
+                                <p class="text-muted mb-0">Default: no</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="hidden" id="chscheduler_hidden" value="{{ chscheduler }}" name="SETTINGS$chscheduler">
+                                          <input type="checkbox" class="form-check-input" id="chscheduler" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="chscheduler" {%if chscheduler == '1' %} checked {% endif %}>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="mb-0">Use Domestic Hot Water scheduler</strong>
+                                <p class="text-muted mb-0">Default: no</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+                                        <input type="hidden" id="dhwscheduler_hidden" value="{{ dhwscheduler }}" name="SETTINGS$dhwscheduler">
+                                          <input type="checkbox" class="form-check-input" id="dhwscheduler" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="dhwscheduler" {%if dhwscheduler == '1' %} checked {% endif %}>
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 		    <button type="submit" class="btn btn-primary">Save</button></form>
                     </div>
                 </div>
@@ -338,7 +412,7 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
                                 <strong class="mb-0">Home Assistant address</strong>
-                                <p class="text-muted mb-0">Home assistant IP or domainname address including http:// or https://</p>
+                                <p class="text-muted mb-0">Home assistant IP or domainname address</p>
                             </div>
 			    <div class="col-auto"><form method="POST">
                                 <div class="custom-control custom-switch">
