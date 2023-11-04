@@ -531,11 +531,11 @@ def curvecalc():
                 if outsidetemp >= float(flimittemp):
                     logging.info("turn on freq limit")
                     #gpiocontrol("freqlimit", "1")
-                    flimitchange(1)
+                    flimitchange("1")
                 elif outsidetemp <= float(flimittemp)+0.5:
                     logging.info("turn off freq limit")
                     #gpiocontrol("freqlimit", "0")
-                    flimitchange(0)
+                    flimitchange("0")
         if presetautochange == "auto":
             mode=status[statusmap.index("mode")]
             if outsidetemp >= float(presetquiet) and mode != "quiet":
