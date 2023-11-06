@@ -1,4 +1,5 @@
 Flask==2.2.3
+flask-babel==4.0.0
 paho-mqtt==1.6.1
 PyHaier==0.3.0
 pymodbus==2.5.3

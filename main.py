@@ -1,7 +1,8 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, render_template, request, jsonify, redirect, Markup
+from flask import Flask, render_template, request, session, jsonify, redirect, Markup
+from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
 from w1thermsensor import W1ThermSensor, Sensor
 import paho.mqtt.client as mqtt
@@ -74,6 +75,7 @@ dead=0
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
+babel = Babel()
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 set_log_level = log_level_info.get(loglevel, logging.ERROR)
@@ -93,6 +95,9 @@ R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
 R241=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 twicheck=[0,0]
+
+def get_locale():
+    return request.accept_languages.best_match(['en', 'pl'])
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
@@ -1141,6 +1146,8 @@ def threads_check():
             break
 
 # Start the Flask app in a separate thread
+babel.init_app(app, locale_selector=get_locale)
+
 if __name__ == '__main__':
     logging.warning(colored(welcome,"yellow", attrs=['bold']))
     logging.warning(colored("Service running: http://127.0.0.1:4000 ", "green"))

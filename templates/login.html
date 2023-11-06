@@ -7,11 +7,11 @@
     <h1 class="h3 mb-3 fw-normal">Please log in</h1>
 {{ form.csrf_token }}
     <div class="form-floating">
-      <input autocapitalize="none" type="text" class="form-control" id="username" name="username" placeholder="Name">
+	    <input autocapitalize="none" type="text" class="form-control" id="username" name="username" placeholder="{{ _('Name') }}">
       <label for="username">{{form.username.label}}</label>
     </div>
     <div class="form-floating">
-      <input type="password" class="form-control" id="password" name="password" required placeholder="Password">
+	    <input type="password" class="form-control" id="password" name="password" required placeholder="{{ _('Password') }}">
       <label for="password">{{form.password.label}}</label>
     </div>
     <button class="w-100 btn btn-lg btn-primary" type="submit">Log in</button>

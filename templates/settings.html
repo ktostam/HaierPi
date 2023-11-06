@@ -43,7 +43,7 @@
 					    function onloadsave() {
 let timerInterval
                             Swal.fire({
-                                html: "Changes saved",
+										html: "{{ _('Changes saved') }}",
                                 icon: "success",
                                 showCloseButton: false,
                                 showConfirmButton: false,
@@ -68,30 +68,30 @@ window.onload = onloadsave;
 {% block page_body %}
 <div class="row justify-content-center">
     <div class="col-12 col-lg-10 col-xl-8 mx-auto">
-        <h2 class="h3 mb-4 page-title">Settings</h2>
+	    <h2 class="h3 mb-4 page-title">{{ _('Settings') }}</h2>
         <div class="my-10">
             <!-- Tabs navs -->
             <ul class="nav nav-tabs mb-3" id="settings" role="tablist">
                 <li class="nav-item" role="presentation">
-		            <a class="nav-link active" id="settings-general" data-bs-toggle="tab" data-bs-target="#settings-general-tab" role="tab" aria-controls="settings-general-tab" aria-selected="true" href="#settings-general-tab">General</a>
+			<a class="nav-link active" id="settings-general" data-bs-toggle="tab" data-bs-target="#settings-general-tab" role="tab" aria-controls="settings-general-tab" aria-selected="true" href="#settings-general-tab">{{ _('General') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-		            <a class="nav-link" id="settings-hcurve" data-bs-toggle="tab" data-bs-target="#settings-hcurve-tab" role="tab" aria-controls="settings-hcurve-tab" aria-selected="true" href="#hcurve-general-tab">Heating/Cooling</a>
+			<a class="nav-link" id="settings-hcurve" data-bs-toggle="tab" data-bs-target="#settings-hcurve-tab" role="tab" aria-controls="settings-hcurve-tab" aria-selected="true" href="#hcurve-general-tab">{{ _('Heating/Cooling') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-			<a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settings-ha-tab" role="tab" aria-controls="settings-ha-tab" aria-selected="false" href="#settings-ha-tab">Home Assistant</a>
+			<a class="nav-link" id="settings-ha" data-bs-toggle="tab" data-bs-target="#settings-ha-tab" role="tab" aria-controls="settings-ha-tab" aria-selected="false" href="#settings-ha-tab">{{ _('Home Assistant') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="settings-mqtt" data-bs-toggle="tab" data-bs-target="#settings-mqtt-tab" role="tab" aria-controls="settings-mqtt-tab" aria-selected="false" href="#settings-mqtt-tab">MQTT</a>
+			<a class="nav-link" id="settings-mqtt" data-bs-toggle="tab" data-bs-target="#settings-mqtt-tab" role="tab" aria-controls="settings-mqtt-tab" aria-selected="false" href="#settings-mqtt-tab">{{ _('MQTT') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="settings-system" data-bs-toggle="tab" data-bs-target="#settings-system-tab" role="tab" aria-controls="settings-system-tab" aria-selected="false" href="#settings-system-tab">System</a>
+			<a class="nav-link" id="settings-system" data-bs-toggle="tab" data-bs-target="#settings-system-tab" role="tab" aria-controls="settings-system-tab" aria-selected="false" href="#settings-system-tab">{{ _('System') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link disabled" id="settings-tuya" data-bs-toggle="tab" data-bs-target="#settings-tuya-tab" role="tab" aria-controls="settings-tuya-tab" aria-selected="false" href="#settings-tuya-tab">Tuya</a>
+			<a class="nav-link disabled" id="settings-tuya" data-bs-toggle="tab" data-bs-target="#settings-tuya-tab" role="tab" aria-controls="settings-tuya-tab" aria-selected="false" href="#settings-tuya-tab">{{ _('Tuya') }}</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="settings-logs" data-bs-toggle="tab" data-bs-target="#settings-logs-tab" role="tab" aria-controls="settings-logs-tab" aria-selected="false" href="#settings-logs-tab">Logs</a>
+			<a class="nav-link" id="settings-logs" data-bs-toggle="tab" data-bs-target="#settings-logs-tab" role="tab" aria-controls="settings-logs-tab" aria-selected="false" href="#settings-logs-tab">{{ _('Logs') }}</a>
                 </li>
 
             </ul>
@@ -105,14 +105,14 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
 				    <form method="POST">
-                                <strong class="mb-0">Inside temperture sensor</strong>
-                                <p class="text-muted mb-0">What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor</p>
+					    <strong class="mb-0">{{ _('Inside temperture sensor') }}</strong>
+					    <p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
                                     <select class="form-select" aria-label="insidetemp" name="SETTINGS$insidetemp" value="{{ insidetemp }}">
-                                        <option value="ha"{% if insidetemp == 'ha' %} selected {% endif %}>HA</option>
-                                        <option value="builtin"{% if insidetemp == 'builtin' %} selected {% endif %}>Builtin</option>
+					    <option value="ha"{% if insidetemp == 'ha' %} selected {% endif %}>{{ _('HA') }}</option>
+					    <option value="builtin"{% if insidetemp == 'builtin' %} selected {% endif %}>{{ _('Builtin') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -122,14 +122,14 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Outside temperature sensor</strong>
-                                <p class="text-muted mb-0">What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor</p>
+				    <strong class="mb-0">{{ _('Outside temperature sensor') }}</strong>
+				<p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
                                     <select class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}">
-                                        <option value="ha"{% if outsidetemp == 'ha' %} selected {% endif %}>HA</option>
-                                        <option value="builtin"{% if outsidetemp == 'builtin' %} selected {% endif %}>Builtin</option>
+					    <option value="ha"{% if outsidetemp == 'ha' %} selected {% endif %}>{{ _('HA') }}</option>
+					<option value="builtin"{% if outsidetemp == 'builtin' %} selected {% endif %}>{{ _('Builtin') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -139,14 +139,14 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Inside humidity sensor</strong>
-                                <p class="text-muted mb-0">What humidity sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor</p>
+				    <strong class="mb-0">{{ _('Inside humidity sensor') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What humidity sensor you using (ha - for home assistant entity, builtin - for physically connect DHT22 sensor') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
                                     <select class="form-select" aria-label="humidity" name="SETTINGS$humidity" value="{{ humidity }}">
-                                        <option value="ha"{% if humidity == 'ha' %} selected {% endif %}>HA</option>
-                                        <option value="builtin"{% if humidity == 'builtin' %} selected {% endif %}>Builtin</option>
+					    <option value="ha"{% if humidity == 'ha' %} selected {% endif %}>{{ _('HA') }}</option>
+					    <option value="builtin"{% if humidity == 'builtin' %} selected {% endif %}>{{ _('Builtin') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -156,8 +156,8 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">AntiON-OFF</strong>
-				<p class="text-muted mb-0">A system that try to prevent the heatpump from operating in on-off mode</p>
+				    <strong class="mb-0">{{ _('AntiON-OFF') }}</strong>
+				    <p class="text-muted mb-0">{{ _('A system that try to prevent the heatpump from operating in on-off mode') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -171,8 +171,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">AntiON-OFF Delta</strong>
-                                <p class="text-muted mb-0">DELTA</p>
+				    <strong class="mb-0">{{ _('AntiON-OFF Delta') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Temperature delta when function is activate') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -185,8 +185,8 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Domestic Hot Water without limit</strong>
-                                <p class="text-muted mb-0">When heating DHW turn off frequency limit relay</p>
+				    <strong class="mb-0">{{ _('Domestic Hot Water without limit') }}</strong>
+				    <p class="text-muted mb-0">{{ _('When heating DHW turn off frequency limit relay') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -200,8 +200,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Use Central Heating scheduler</strong>
-                                <p class="text-muted mb-0">Default: no</p>
+				    <strong class="mb-0">{{ _('Use Central Heating scheduler') }}</strong>
+                                <p class="text-muted mb-0">{{ _('Do you want to use CH scheduler? Default: No')}}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -215,8 +215,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Use Domestic Hot Water scheduler</strong>
-                                <p class="text-muted mb-0">Default: no</p>
+				    <strong class="mb-0">{{ _('Use Domestic Hot Water scheduler') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Do you want to use DHW scheduler? Default: NO') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -227,7 +227,7 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
-		    <button type="submit" class="btn btn-primary">Save</button></form>
+		    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-hcurve-tab" role="tabpanel" aria-labelledby="settings-hcurve-tab">
@@ -235,14 +235,14 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Frequency limit</strong>
-                                <p class="text-muted mb-0">automatic of manual frequency limit relay control</p>
+				    <strong class="mb-0">{{ _('Frequency limit') }}</strong>
+				<p class="text-muted mb-0">{{ _('automatic of manual frequency limit relay control') }}</p>
                             </div>
                             <div class="col-auto">
 				    <div class="custom-control custom-switch"><form method="POST">
 						    <select class="form-select" aria-label="flimit" name="SETTINGS$flimit" value=" {{ flimit }}">
-                                        <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>Auto</option>
-                                        <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>Manual</option>
+							    <option value="auto" {% if flimit == 'auto' %} selected {% endif %}>{{ _('Auto') }}</option>
+							    <option value="manual" {% if flimit == 'manual' %} selected {% endif %}>{{ _('Manual') }}</option>
 
                                     </select>
                                     <span class="custom-control-label"></span>
@@ -253,8 +253,8 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Frequency limit temperature</strong>
-                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+				    <strong class="mb-0">{{ _('Frequency limit temperature') }}</strong>
+				    <p class="text-muted mb-0">{{ _('In auto mode - temperature above which the frequency limitation will be activated') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -267,14 +267,14 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Preset change</strong>
-                                <p class="text-muted mb-0">automatic of manual frequency limit relay control</p>
+				    <strong class="mb-0">{{ _('Preset change') }}</strong>
+				    <p class="text-muted mb-0">{{ _('automatic of manual frequency limit relay control') }}</p>
                             </div>
                             <div class="col-auto">
 				    <div class="custom-control custom-switch">
 						    <select class="form-select" aria-label="presetautochange" name="SETTINGS$presetautochange" value="{{ presetautochange }}">
-                                        <option value="auto" {% if presetautochange == 'auto' %} selected {% endif %}>Auto</option>
-                                        <option value="manual" {% if presetautochange == 'manual' %} selected {% endif %}>Manual</option>
+							    <option value="auto" {% if presetautochange == 'auto' %} selected {% endif %}>{{ _('Auto') }}</option>
+							    <option value="manual" {% if presetautochange == 'manual' %} selected {% endif %}>{{ _('Manual') }}</option>
 
                                     </select>
                                     <span class="custom-control-label"></span>
@@ -285,8 +285,8 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Preset quiet temperature</strong>
-                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+				    <strong class="mb-0">{{ _('Preset quiet temperature') }}</strong>
+				    <p class="text-muted mb-0">{{ _('In auto mode - temperature above which the frequency limitation will be activated') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -299,8 +299,8 @@ window.onload = onloadsave;
 		    <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Preset turbo temperature</strong>
-                                <p class="text-muted mb-0">In auto mode - temperature above which the frequency limitation will be activated</p>
+				    <strong class="mb-0">{{ _('Preset turbo temperature') }}</strong>
+				    <p class="text-muted mb-0">{{ _('In auto mode - temperature above which the frequency limitation will be activated') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -313,17 +313,17 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve type</strong>
-                                <p class="text-muted mb-0">What type of curve you want to use</p>
+				    <strong class="mb-0">{{ _('Heating curve type') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What type of curve you want to use') }}</p>
                             </div>
                             <div class="col-auto">
 				    <div class="custom-control custom-switch">
                                     <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
-                                        <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>Auto</option>
-                                        <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>Manual</option>
-                                        <option value="1"{% if heatingcurve == '1' %} selected {% endif %}>1</option>
-                                        <option value="2" {% if heatingcurve == '2' %} selected {% endif %}>2</option>
-                                        <option value="3" {% if heatingcurve == '3' %} selected {% endif %}>3</option>
+					    <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>{{ _('Auto') }}</option>
+					    <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>{{ _('Manual') }}</option>
+					    <option value="1"{% if heatingcurve == '1' %} selected {% endif %}>{{ _('1') }}</option>
+					    <option value="2" {% if heatingcurve == '2' %} selected {% endif %}>{{ _('2') }}</option>
+					    <option value="3" {% if heatingcurve == '3' %} selected {% endif %}>{{ _('3') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -333,8 +333,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve calculation frequency</strong>
-                                <p class="text-muted mb-0">Frequency in minutes how often heating curve should be recalculate</p>
+				    <strong class="mb-0">{{ _('Heating curve calculation frequency') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Frequency in minutes how often heating curve should be recalculate') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -347,8 +347,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve slope</strong>
-                                <p class="text-muted mb-0">heating curve slope</p>
+				    <strong class="mb-0">{{ _('Heating curve slope') }}</strong>
+				    <p class="text-muted mb-0">{{ _('heating curve slope') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -361,8 +361,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve parallel shift</strong>
-                                <p class="text-muted mb-0">Heating curve parallel shift</p>
+				    <strong class="mb-0">{{ _('Heating curve parallel shift') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Heating curve parallel shift') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -375,8 +375,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve amplification</strong>
-                                <p class="text-muted mb-0">Heating curve amplification</p>
+				    <strong class="mb-0">{{ _('Heating curve amplification') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Heating curve amplification') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -389,21 +389,21 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heating curve chart</strong>
-                                <p class="text-muted mb-0">Show charts with all cheating curve</p>
+				    <strong class="mb-0">{{ _('Heating curve chart') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Show charts with all cheating curve') }}</p>
                                 </div>
                             <div class="col-auto">
-                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#chartdiv" aria-expanded="false" aria-controls="chartdiv">Show</button>
+				    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#chartdiv" aria-expanded="false" aria-controls="chartdiv">{{ _('Show') }}</button>
                                  </div>
                         <div id="chartdiv" class="collapse">
-				<p><label for="tempRange" id="customtemp" class="form-label">Inside temp: 21</label></p>
+				<p><label for="tempRange" id="customtemp" class="form-label">{{ _('Inside temp: 21') }}</label></p>
 				<input type="range" class="form-range" min="12" max="30" id="tempRange" onchange="recalc();">
                                 <canvas id="hcurvechart"></canvas>
 
                             </div>
                         </div>
                     </div>
-		    <button type="submit" class="btn btn-primary">Save</button></form>
+		    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-ha-tab" role="tabpanel" aria-labelledby="settings-ha-tab">
@@ -411,8 +411,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Home Assistant address</strong>
-                                <p class="text-muted mb-0">Home assistant IP or domainname address</p>
+				    <strong class="mb-0">{{ _('Home Assistant address') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Home assistant IP or domainname address') }}</p>
                             </div>
 			    <div class="col-auto"><form method="POST">
                                 <div class="custom-control custom-switch">
@@ -425,8 +425,8 @@ window.onload = onloadsave;
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
-                            <strong class="mb-0">Home Assistant port</strong>
-                            <p class="text-muted mb-0">Home Assistant port (default 8123)</p>
+				<strong class="mb-0">{{ _('Home Assistant port') }}</strong>
+				<p class="text-muted mb-0">{{ _('Home Assistant port (default 8123)') }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
@@ -439,8 +439,8 @@ window.onload = onloadsave;
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
-                            <strong class="mb-0">Home Assistant Access Key</strong>
-                            <p class="text-muted mb-0">Home Assistant Access Token Key. You can generate key in user settings in HA</p>
+				<strong class="mb-0">{{ _('Home Assistant Access Key') }}</strong>
+				<p class="text-muted mb-0">{{ _('Home Assistant Access Token Key. You can generate key in user settings in HA') }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
@@ -453,8 +453,8 @@ window.onload = onloadsave;
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
-                            <strong class="mb-0">Inside temperature entity</strong>
-                            <p class="text-muted mb-0">Entity name of inside temperature sensor (e.g. sensor.inside_temp)</p>
+				<strong class="mb-0">{{ _('Inside temperature entity') }}</strong>
+				<p class="text-muted mb-0">{{ _('Entity name of inside temperature sensor (e.g. sensor.inside_temp)') }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
@@ -467,8 +467,8 @@ window.onload = onloadsave;
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
-                            <strong class="mb-0">Outside temperature entity</strong>
-                            <p class="text-muted mb-0">Entity name of outside temperature sensor (e.g. sensor.outside_temp)</p>
+				<strong class="mb-0">{{ _('Outside temperature entity') }}</strong>
+				<p class="text-muted mb-0">{{ _('Entity name of outside temperature sensor (e.g. sensor.outside_temp)') }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
@@ -481,8 +481,8 @@ window.onload = onloadsave;
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
-                            <strong class="mb-0">Inside humidity entity</strong>
-                            <p class="text-muted mb-0">Entity name of inside humidity sensor (e.g. sensor.inside_humidity)</p>
+				<strong class="mb-0">{{ _('Inside humidity entity') }}</strong>
+				<p class="text-muted mb-0">{{ _('Entity name of inside humidity sensor (e.g. sensor.inside_humidity)') }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="custom-control custom-switch">
@@ -491,7 +491,7 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
-		</div><button type="submit" class="btn btn-primary">Save</button></form>
+		</div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
             </div>
               </div>
                 <div class="tab-pane fade" id="settings-mqtt-tab" role="tabpanel" aria-labelledby="settings-mqtt-tab">
@@ -499,8 +499,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Using MQTT</strong>
-                                <p class="text-muted mb-0">Do you want to use mqtt</p>
+				    <strong class="mb-0">{{ _('Using MQTT') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Do you want to use mqtt') }}</p>
                             </div>
                             <div class="col-auto">
 				    <div class="custom-control custom-switch"><form method="POST">
@@ -514,8 +514,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">MQTT Address</strong>
-                                <p class="text-muted mb-0">MQTT Broker ip or hostname address</p>
+				    <strong class="mb-0">{{ _('MQTT Address') }}</strong>
+				    <p class="text-muted mb-0">{{ _('MQTT Broker ip or hostname address') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="curol custom-switch">
@@ -528,8 +528,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">MQTT port</strong>
-                                <p class="text-muted mb-0">MQTT Broker port (default 1883)</p>
+				    <strong class="mb-0">{{ _('MQTT port') }}</strong>
+				    <p class="text-muted mb-0">{{ _('MQTT Broker port (default 1883)') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -542,8 +542,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Main topic</strong>
-                                <p class="text-muted mb-0">Main topic for publishing messages</p>
+				    <strong class="mb-0">{{ _('Main topic') }}</strong>
+				    <p class="text-muted mb-0">{{ _('Main topic for publishing messages') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -556,8 +556,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Username</strong>
-                                <p class="text-muted mb-0">MQTT Broker account username</p>
+				    <strong class="mb-0">{{ _('Username') }}</strong>
+				<p class="text-muted mb-0">{{ _('MQTT Broker account username') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -570,8 +570,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Password</strong>
-                                <p class="text-muted mb-0">MQTT Broker account password</p>
+				    <strong class="mb-0">{{ _('Password') }}</strong>
+				    <p class="text-muted mb-0">{{ _('MQTT Broker account password') }}</p>
                             </div>
                                 <div class="col-auto">
                                     <div class="custom-control custom-switch">
@@ -580,7 +580,7 @@ window.onload = onloadsave;
                                     </div>
                                 </div>
                             </div>
-		    </div><button type="submit" class="btn btn-primary">Save</button></form>
+		    </div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-system-tab" role="tabpanel" aria-labelledby="settings-system-tab">
@@ -588,8 +588,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
 				<div class="col"><form method="POST">
-                                <strong class="mb-0">Bind address</strong>
-                                <p class="text-muted mb-0">On which address the script should run (default 0.0.0.0)</p>
+						<strong class="mb-0">{{ _('Bind address') }}</strong>
+						<p class="text-muted mb-0">{{ _('On which address the script should run (default 0.0.0.0)') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -602,8 +602,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Bind port</strong>
-                                <p class="text-muted mb-0">On which port the script should run (default 4000)</p>
+				    <strong class="mb-0">{{ _('Bind port') }}</strong>
+				    <p class="text-muted mb-0">{{ _('On which port the script should run (default 4000)') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -615,8 +615,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Serial port</strong>
-                                <p class="text-muted mb-0">On which port you connect modbus converter</p>
+				    <strong class="mb-0">{{ _('Serial port') }}</strong>
+				    <p class="text-muted mb-0">{{ _('On which port you connect modbus converter') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -629,8 +629,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Modbus GPIO</strong>
-                                <p class="text-muted mb-0">What GPIO pin use for modbus relay</p>
+				    <strong class="mb-0">{{ _('Modbus GPIO') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What GPIO pin use for modbus relay') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -643,8 +643,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Frequency limit GPIO</strong>
-                                <p class="text-muted mb-0">What GPIO pin you use for frequency limit relay</p>
+				    <strong class="mb-0">{{ _('Frequency limit GPIO') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What GPIO pin you use for frequency limit relay') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
@@ -657,8 +657,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Heat demand GPIO</strong>
-                                <p class="text-muted mb-0">What GPIO pin you use for heat demand relay</p>
+				    <strong class="mb-0">{{ _('Heat demand GPIO') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What GPIO pin you use for heat demand relay') }}</p>
                             </div>
                                 <div class="col-auto">
                                     <div class="custom-control custom-switch">
@@ -671,8 +671,8 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                      <div class="row align-items-center">
                             <div class="col">
-                                <strong class="mb-0">Cool demand GPIO</strong>
-                                <p class="text-muted mb-0">What GPIO pin you use for cool demand relay</p>
+				    <strong class="mb-0">{{ _('Cool demand GPIO') }}</strong>
+				    <p class="text-muted mb-0">{{ _('What GPIO pin you use for cool demand relay') }}</p>
                             </div>
                                 <div class="col-auto">
                                     <div class="custom-control custom-switch">
@@ -681,7 +681,7 @@ window.onload = onloadsave;
                                     </div>
                                 </div>
                             </div>
-		    </div><button type="submit" class="btn btn-primary">Save</button></form>
+		    </div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-logs-tab" role="tabpanel" aria-labelledby="settings-logs-tab">
@@ -705,7 +705,7 @@ window.onload = onloadsave;
         };
     </script>
 
-		    </div><button onclick="download_log();" class="btn btn-primary">Save to file</button>
+			    </div><button onclick="download_log();" class="btn btn-primary">{{ _('Save to file') }}</button>
                     </div>
                 </div>
 
