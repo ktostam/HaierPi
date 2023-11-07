@@ -323,7 +323,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         except:
             logging.error("MQTT: cannot change DHW mode - payload:"+str(newmode))
     elif msg.topic == mqtt_topic+"/dhw/temperature/set":
-        logging.info("New temperatura")
+        logging.info("New temperature")
         newtemp=int(float(msg.payload.decode('utf-8')))
         try:
             tempchange("dhw", str(newtemp), "2")
@@ -347,33 +347,33 @@ def tempchange(which, value, curve):
                 return "OK"
             else:
                 logging.error("ERROR: Cannot set new CH temp")
-                msg="ERROR: Cannot set new CH temp"
+                msg=gettext("ERROR: Cannot set new CH temp")
                 return msg
         elif which == "dhw":
             logging.info("Domestic Hot Water: "+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
             if dhwframe.__class__ == list:
                 newframe=dhwframe
-                msgt="Domestic Hot Water "
+                msgt=gettext("Domestic Hot Water ")
             else:
-                logging.error("Error: Cannot set new DHW temp")
-                msg="ERROR: Cannot set new temp"
+                logging.error(gettext("Error: Cannot set new DHW temp"))
+                msg=gettext("ERROR: Cannot set new temp")
                 state="error"
                 return jsonify(msg=msg, state=state)
 
         for i in range(50):
             logging.info(writed)
             if writed=="1":
-                msg=msgt+" temperature changed!"
+                msg=msgt+gettext(" temperature changed!")
                 state="success"
                 writed="0"
                 break
             elif writed=="2":
-                msg="Modbus communication error."
+                msg=gettext("Modbus communication error.")
                 state="error"
                 writed="0"
             else:
-                msg="Modbus connection timeout."
+                msg=gettext("Modbus connection timeout.")
                 state="error"
                 writed="0"
             time.sleep(0.2)
@@ -385,7 +385,7 @@ def tempchange(which, value, curve):
                 config.write(configfile)
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/temperature/state",str(value), qos=1, retain=True)
-            msg = "Central Heating temperature changed!"
+            msg = gettext("Central Heating temperature changed!")
             state = "success"
     elif curve == "2":
         if which == "heat":
@@ -395,7 +395,7 @@ def tempchange(which, value, curve):
                 config.write(configfile)
             return "OK"
         elif which == "dhw":
-            logging.info("Domestic Hot Water: "+value)
+            logging.info(gettext("Domestic Hot Water: ")+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
             if dhwframe.__class__ == list:
                 newframe=dhwframe
@@ -413,13 +413,13 @@ def presetchange(mode):
             newframe=PyHaier.SetMode(mode)
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=False)
-            msg="New preset mode: "+str(mode)
+            msg=gettext("New preset mode: ")+str(mode)
             state="success"
             return jsonify(msg=msg, state=state)
         except:
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/preset_mode/state", "none", qos=1, retain=False)
-            msg="Preset mode not changed"
+            msg=gettext("Preset mode not changed")
             state="error"
             return jsonify(msg=msg, state=state)
 
@@ -428,7 +428,7 @@ def flimitchange(mode):
         gpiocontrol("freqlimit", mode)
         msg="Frequency limit relay: "+str(mode)
         state="success"
-        logging.info("Frequency limit relay changed to:"+ str(mode))
+        logging.info("Frequency limit relay changed to: "+ str(mode))
         if use_mqtt == "1":
             client.publish(mqtt_topic+"/flimit/state", str(mode), qos=1, retain=False)
         return msg,state
@@ -476,16 +476,16 @@ def statechange(mode,value,mqtt):
     for i in range(50):
         logging.info(writed)
         if writed=="1":
-            msg="State changed!"
+            msg=gettext("State changed!")
             state="success"
             writed="0"
             break
         elif writed=="2":
-            msg="Modbus communication error."
+            msg=gettext("Modbus communication error.")
             state="error"
             writed="0"
         else:
-            msg="Modbus connection timeout."
+            msg=gettext("Modbus connection timeout.")
             state="error"
             writed="0"
         time.sleep(0.2)
@@ -550,16 +550,16 @@ def curvecalc():
             elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
                 response=presetchange("eco")
     else:
-        status[statusmap.index("hcurve")]="Error"
+        status[statusmap.index("hcurve")]=gettext("Error")
 
 
 def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     if localver != gitver:
-	    msg="Availible"
+	    msg=gettext("Availible")
     else:
-	    msg="Not Availible"
+	    msg=gettext("Not Availible")
     return jsonify(update=msg)
 
 def installupdate():
@@ -630,9 +630,9 @@ def GetInsideTemp(param):
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
             else:
-                response = "Entity state not found"
+                response = gettext("Entity state not found")
         except:
-            response = "Error"
+            response = gettext("Error")
         return response
     else:
         return -1
@@ -661,9 +661,9 @@ def GetOutsideTemp(param):
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
             else:
-                response = "Entity state not found"
+                response = gettext("Entity state not found")
         except:
-            response = "Error"
+            response = gettext("Error")
         return response
     else:
         return -1
@@ -688,9 +688,9 @@ def GetHumidity(param):
             if 'state' in json_str:
                 response = json.loads(json_str)['state']
             else:
-                response = "Entity state not found"
+                response = gettext("Entity state not found")
         except:
-            response = "Error"
+                response = gettext("Error")
         return response
     else:
         return -1
@@ -724,7 +724,7 @@ def deltacheck(temps):
             newtime=time.time()
             if newtime - twicheck[1] >= 300:
                 delta=temps[0]-twicheck[0][0]
-                logging.info("Delta:"+str(delta))
+                logging.info("Delta: "+str(delta))
                 if delta>=float(antionoffdelta):
                     logging.info("AntiON-OFF: "+str(delta)+", more then: "+antionoffdelta+". Changing mode to lower if possible")
                     mode=status[statusmap.index("mode")]
@@ -735,7 +735,7 @@ def deltacheck(temps):
                         response=presetchange("eco")
                     elif mode == "eco":
                         logging.info("AntiON-OFF: changing mode to: quiet")
-                        response=presetchange("wuiet")
+                        response=presetchange("quiet")
                     elif mode == "quiet":
                         logging.info("AntiON-OFF: mode in lowest setting, turn on frequency limit relay")
                         gpiocontrol("freqlimit", "1")
@@ -752,24 +752,23 @@ def schedule_write(which, data):
             f = open("schedule_ch.json", "w")
             f.write(data)
             f.close()
-            msg = "Central Heating chedule saved"
+            msg = gettext("Central Heating chedule saved")
             state = "success"
             return msg, state
         except:
-            msg = "ERROR: Central Heating not saved"
+            msg = gettext("ERROR: Central Heating not saved")
             state = "error"
             return msg, state
     if which == "dhw":
-        logging.info("okokok")
         try:
             f = open("schedule_dhw.json", "w")
             f.write(data)
             f.close()
-            msg = "Domestic Hot Water chedule saved"
+            msg = gettext("Domestic Hot Water chedule saved")
             state = "success"
             return msg, state
         except:
-            msg = "ERROR: Domestic Hot Water not saved"
+            msg = gettext("ERROR: Domestic Hot Water not saved")
             state = "error"
             return msg, state
 
@@ -925,7 +924,7 @@ def GetParameters():
 def create_user(**data):
     """Creates user with encrypted password"""
     if "username" not in data or "password" not in data:
-        raise ValueError("username and password are required.")
+        raise ValueError(gettext("username and password are required."))
 
     # Hash the user password
     data["password"] = generate_password_hash(
@@ -940,7 +939,7 @@ def create_user(**data):
     # commit changes to database
     json.dump(db_users, open("users.json", "w"))
     #return data
-    msg="Password changed"
+    msg=gettext("Password changed")
     return msg
 
 def background_function():

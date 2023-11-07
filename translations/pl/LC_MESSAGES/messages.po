@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-11-05 21:37+0100\n"
+"POT-Creation-Date: 2023-11-07 09:37+0100\n"
 "PO-Revision-Date: 2023-11-05 20:51+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -18,6 +18,102 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.13.1\n"
+
+#: main.py:350
+msgid "ERROR: Cannot set new CH temp"
+msgstr "BŁĄÐ: Nie można ustawić nowej temperatury CO"
+
+#: main.py:357
+msgid "Domestic Hot Water "
+msgstr "Ciepła Woda Użytkowa"
+
+#: main.py:359
+msgid "Error: Cannot set new DHW temp"
+msgstr "BŁĄD: nie można ustawić nowej temperatury CWU"
+
+#: main.py:360
+msgid "ERROR: Cannot set new temp"
+msgstr "BŁĄD: nie można ustawić nowej temperatury"
+
+#: main.py:367
+msgid " temperature changed!"
+msgstr " temperatura zmieniona!"
+
+#: main.py:372 main.py:484
+msgid "Modbus communication error."
+msgstr "Błąd komunikacji Modbus"
+
+#: main.py:376 main.py:488
+msgid "Modbus connection timeout."
+msgstr "Przekroczono limit czasu dla połączenia Modbus"
+
+#: main.py:388
+msgid "Central Heating temperature changed!"
+msgstr "Zmieniono temperaturę dla Centralnego Ogrzewania"
+
+#: main.py:398
+msgid "Domestic Hot Water: "
+msgstr "Ciepła Woda Użytkowa: "
+
+#: main.py:416
+msgid "New preset mode: "
+msgstr "Nowy tryb: "
+
+#: main.py:422
+msgid "Preset mode not changed"
+msgstr "Tryb nie zmieniony"
+
+#: main.py:429
+msgid "Frequency limit relay: "
+msgstr "Przekaźnik ograniczenia częstotliwości: "
+
+#: main.py:436
+msgid "Frequency limit not changed"
+msgstr "Ograniczenie częstotliwości nie zmienione"
+
+#: main.py:479
+msgid "State changed!"
+msgstr "Stan zmieniony!"
+
+#: main.py:553 main.py:635 main.py:666 main.py:693
+msgid "Error"
+msgstr "Błąd"
+
+#: main.py:560
+msgid "Availible"
+msgstr "Dostępna"
+
+#: main.py:562
+msgid "Not Availible"
+msgstr "Brak Aktualizacji"
+
+#: main.py:633 main.py:664 main.py:691
+msgid "Entity state not found"
+msgstr "Nie znaleziono stanu encji"
+
+#: main.py:755
+msgid "Central Heating chedule saved"
+msgstr "Zapisano harmonogram dla Centralnego Ogrzewania"
+
+#: main.py:759
+msgid "ERROR: Central Heating not saved"
+msgstr "BŁĄD: Nie zapisano Centralnego Ogrzewania"
+
+#: main.py:767
+msgid "Domestic Hot Water chedule saved"
+msgstr "Zapisano harmonogram dla Ciepłej Wody Użytkowej"
+
+#: main.py:771
+msgid "ERROR: Domestic Hot Water not saved"
+msgstr "BŁĄD: Nie zapisano CWU"
+
+#: main.py:927
+msgid "username and password are required."
+msgstr "Nazwa użytkownika i hasło są wymagane."
+
+#: main.py:942
+msgid "Password changed"
+msgstr "Hasło zmienione"
 
 #: templates/base.html:31
 msgid "New update availible, Do you want install?"
@@ -45,7 +141,7 @@ msgstr "Restartowanie usługi, proszę czekać..."
 
 #: templates/base.html:118
 msgid "Dashboard"
-msgstr "Dashboard"
+msgstr "Pulpit"
 
 #: templates/base.html:119 templates/index.html:387 templates/index.html:422
 #: templates/settings.html:71
@@ -168,6 +264,10 @@ msgstr "Status przekaźnika: "
 msgid "Preset change - "
 msgstr "Zmiana trybu - "
 
+#: templates/login.html:7
+msgid "Please log in"
+msgstr "Proszę się zalogować"
+
 #: templates/login.html:10
 msgid "Name"
 msgstr "Nazwa użytkownika"
@@ -175,6 +275,25 @@ msgstr "Nazwa użytkownika"
 #: templates/login.html:14 templates/settings.html:573
 msgid "Password"
 msgstr "Hasło"
+
+#: templates/login.html:17
+msgid "Log in"
+msgstr "Zaloguj"
+
+#: templates/scheduler.html:12
+msgid "Central Heating scheduler"
+msgstr "Harmonogram dla CO"
+
+#: templates/scheduler.html:15 templates/scheduler.html:27
+#: templates/settings.html:230 templates/settings.html:406
+#: templates/settings.html:494 templates/settings.html:583
+#: templates/settings.html:684
+msgid "Save"
+msgstr "Zapisz"
+
+#: templates/scheduler.html:24
+msgid "Domestic Hot Water scheduler"
+msgstr "Harmonogram dla CWU"
 
 #: templates/settings.html:46
 msgid "Changes saved"
@@ -250,7 +369,8 @@ msgstr "Sensor czujnika wilgotności"
 msgid ""
 "What humidity sensor you using (ha - for home assistant entity, builtin -"
 " for physically connect DHT22 sensor"
-msgstr ""
+msgstr "Jakiego sensora wilgotności używasz (ha - dla encji z Home Assistant, "
+"wbudowany - dla fizycznie podłączonego sensora DHT22"
 
 #: templates/settings.html:159
 msgid "AntiON-OFF"
@@ -258,7 +378,9 @@ msgstr "Anty ON-OFF"
 
 #: templates/settings.html:160
 msgid "A system that try to prevent the heatpump from operating in on-off mode"
-msgstr "System próbujący zapobiec taktowaniu pompy ciepła poprzez automatyczną zmianę trybów"
+msgstr ""
+"System próbujący zapobiec taktowaniu pompy ciepła poprzez automatyczną "
+"zmianę trybów"
 
 #: templates/settings.html:174
 msgid "AntiON-OFF Delta"
@@ -274,7 +396,9 @@ msgstr "Ciepła Woda Użytkowa bez limitu"
 
 #: templates/settings.html:189
 msgid "When heating DHW turn off frequency limit relay"
-msgstr "Kiedy grzana jest CWU, zworka ograniczenia częstotliwości zostanie wyłączona"
+msgstr ""
+"Kiedy grzana jest CWU, zworka ograniczenia częstotliwości zostanie "
+"wyłączona"
 
 #: templates/settings.html:203
 msgid "Use Central Heating scheduler"
@@ -292,19 +416,15 @@ msgstr "Używaj harmonogramu dla Ciepłej Wody Użytkowej"
 msgid "Do you want to use DHW scheduler? Default: NO"
 msgstr "Czy chcesz używać harmonogramu dla CWU? Domyślnie: Nie"
 
-#: templates/settings.html:230 templates/settings.html:406
-#: templates/settings.html:494 templates/settings.html:583
-#: templates/settings.html:684
-msgid "Save"
-msgstr "Zapisz"
-
 #: templates/settings.html:238
 msgid "Frequency limit"
 msgstr "Ograniczenie częstotliwości"
 
 #: templates/settings.html:239 templates/settings.html:271
 msgid "automatic of manual frequency limit relay control"
-msgstr "automatyczne lub ręczne sterowanie przekaźnikiem ograniczenia częstotliwości"
+msgstr ""
+"automatyczne lub ręczne sterowanie przekaźnikiem ograniczenia "
+"częstotliwości"
 
 #: templates/settings.html:244 templates/settings.html:276
 #: templates/settings.html:322
@@ -367,7 +487,9 @@ msgstr "Częstotliwość obliczania krzywej grzewczej"
 
 #: templates/settings.html:337
 msgid "Frequency in minutes how often heating curve should be recalculate"
-msgstr "Częstotliwość w minutach, jak często krzywa grzewcza powinna być przeliczana"
+msgstr ""
+"Częstotliwość w minutach, jak często krzywa grzewcza powinna być "
+"przeliczana"
 
 #: templates/settings.html:350
 msgid "Heating curve slope"
@@ -426,8 +548,8 @@ msgid ""
 "Home Assistant Access Token Key. You can generate key in user settings in"
 " HA"
 msgstr ""
-"Klucz dostępowy API do Home Assistant. Możes go wygenerować w"
-"ustawieniach użytkownika w HA"
+"Klucz dostępowy API do Home Assistant. Możes go wygenerować wustawieniach"
+" użytkownika w HA"
 
 #: templates/settings.html:456
 msgid "Inside temperature entity"
@@ -535,7 +657,9 @@ msgstr "Pin GPIO ograniczenia częstotliwości"
 
 #: templates/settings.html:647
 msgid "What GPIO pin you use for frequency limit relay"
-msgstr "Na którym pinie GPIO podłączony jest przekaźnik ograniczenia częstotliwości"
+msgstr ""
+"Na którym pinie GPIO podłączony jest przekaźnik ograniczenia "
+"częstotliwości"
 
 #: templates/settings.html:660
 msgid "Heat demand GPIO"
@@ -551,9 +675,182 @@ msgstr "Ping GPIO zapotrzebowania na chłodzenie"
 
 #: templates/settings.html:675
 msgid "What GPIO pin you use for cool demand relay"
-msgstr "Na którym pinie GPIO podłączony jest przekaźnik zapotrzebowania na chłodzenie"
+msgstr ""
+"Na którym pinie GPIO podłączony jest przekaźnik zapotrzebowania na "
+"chłodzenie"
 
 #: templates/settings.html:708
 msgid "Save to file"
 msgstr "Zapisz do pliku"
+
+#~ msgid ""
+#~ "\r"
+#~ "Ctrl-C - Closing... please wait, this can take a while."
+#~ msgstr ""
+#~ "\r"
+#~ "Ctrl-C - Zamykanie... proszę czekać, to może chwilę potrwać."
+
+#~ msgid "Closed serial connection."
+#~ msgstr "Zamnięte połączenie szeregowe"
+
+#~ msgid "MQTT - Connected"
+#~ msgstr "MQTT - Połączono"
+
+#~ msgid "Disconnected from MQTT with code: {0}"
+#~ msgstr "Rozłączono z MQTT z kodem: {0}"
+
+#~ msgid "New power state from mqtt:"
+#~ msgstr "Nowy stan z mqtt:"
+
+#~ msgid "New preset mode"
+#~ msgstr "Nowy tryb"
+
+#~ msgid "MQTT: cannot set new preset: "
+#~ msgstr "MQTT: nie można ustawić trybu: "
+
+#~ msgid "MQTT: cannot set flimit relay"
+#~ msgstr "MQTT: nie można ustawić przekaźnika limitu częstotliwości"
+
+#~ msgid "New mode"
+#~ msgstr "Nowa funkcja"
+
+#~ msgid "MQTT: cannot set mode"
+#~ msgstr "MQTT: nie można ustawić funkcji"
+
+#~ msgid "MQTT: mode unsupported"
+#~ msgstr "MQTT: funkcja nieobsługiwana"
+
+#~ msgid "MQTT: New temp error: payload - "
+#~ msgstr "MQTT: nie można ustawić nowej temperatury: payload - "
+
+#~ msgid "MQTT: cannot change DHW mode - payload:"
+#~ msgstr "MQTT: nie można zmienić trybu CWU - payload: "
+
+#~ msgid "New temperature"
+#~ msgstr "Nowa temperatura"
+
+#~ msgid "MQTT: cannot change DHW temperature - payload:"
+#~ msgstr "Nie można zmienić temperatury CWU - payload:"
+
+#~ msgid "Central heating: "
+#~ msgstr "Centralne ogrzewanie: "
+
+#~ msgid "OK"
+#~ msgstr "OK"
+
+#~ msgid "ERROR"
+#~ msgstr "BŁĄD"
+
+#~ msgid "Frequency limit relay changed to: "
+#~ msgstr "Przekaźnik limitu częstotliwości zmieniono na: "
+
+#~ msgid "Cannot change frequency limit relay"
+#~ msgstr "Nie można zmienić przekaźnika limitu częstotliwości"
+
+#~ msgid "turn on heat demand"
+#~ msgstr "włączam zapotrzebowanie na grzanie"
+
+#~ msgid "Set chtemp ERROR"
+#~ msgstr "Błąd ustawienia chtemp"
+
+#~ msgid "turn off heat demand"
+#~ msgstr "wyłączam zapogrzebowanie na grzanie"
+
+#~ msgid "dont change flimit in DHW mode"
+#~ msgstr "nie zmieniaj flimit w trybie CWU"
+
+#~ msgid "turn on freq limit"
+#~ msgstr "Włączam ograniczenie częstotliwości"
+
+#~ msgid "turn off freq limit"
+#~ msgstr "Wyłączam ograniczenie częstotliwości"
+
+#~ msgid "Error: cannot read outside temperature"
+#~ msgstr "BŁĄD: nie mogę odczytać temperatury zewnętrznej"
+
+#~ msgid "ischanged: status "
+#~ msgstr "ischanged: status "
+
+#~ msgid " has changed. Set new value - "
+#~ msgstr " się zmienił. Ustawiam nową wartość - "
+
+#~ msgid "Delta: "
+#~ msgstr "Delta: "
+
+#~ msgid "AntiON-OFF: "
+#~ msgstr "Anty ON-OFF: "
+
+#~ msgid ", more then: "
+#~ msgstr ", większa niż: "
+
+#~ msgid ". Changing mode to lower if possible"
+#~ msgstr ". Zmieniam tryb na niższy jeśli to możliwe"
+
+#~ msgid "AntiON-OFF: current mode - "
+#~ msgstr "Anty ON-OFF: aktualny tryb - "
+
+#~ msgid "AntiON-OFF: changing mode to: ECO"
+#~ msgstr "Anty ON-OFF: zmieniam tryb na: ECO"
+
+#~ msgid "AntiON-OFF: changing mode to: quiet"
+#~ msgstr "Anty ON-OFF: zmieniam tryb na: quiet"
+
+#~ msgid "AntiON-OFF: mode in lowest setting, turn on frequency limit relay"
+#~ msgstr ""
+#~ "Anty ON-OFF: Najniższy możliwy tryb, "
+#~ "włączam ograniczenie częstotliwości"
+
+#~ msgid ""
+#~ "AntiON-OFF: mode in lowest setting, "
+#~ "frequency limit is already ON. I "
+#~ "can't do anything else :("
+#~ msgstr ""
+#~ "Anty ON-OFF: Najniższy możliwy tryb, "
+#~ "ograniczenie częstotliwości włączone. Nie mogę"
+#~ " nic więcej zrobić :("
+
+#~ msgid ", no need to change mode"
+#~ msgstr ", nie ma potrzeby zmiany trybu"
+
+#~ msgid "Scheduler: START CH"
+#~ msgstr "Harmonogram: Startuje CO"
+
+#~ msgid "Scheduler: CH ALREADY ON"
+#~ msgstr "Harmonogram: CO jest już włączone"
+
+#~ msgid "Scheduler: CH ALREADY OFF"
+#~ msgstr "Harmonogram: CO jest już wyłączone"
+
+#~ msgid "Scheduler: STOP CH"
+#~ msgstr "Harmonogram: Wyłączam CO"
+
+#~ msgid "Scheduler: START DHW"
+#~ msgstr "Harmonogram: Włączam CWU"
+
+#~ msgid "Scheduler: DHW ALREADY ON"
+#~ msgstr "Harmonogram: CWU jest już włączone"
+
+#~ msgid "Scheduler: DHW ALREADY OFF"
+#~ msgstr "Harmonogram: CWU jest już wyłączone"
+
+#~ msgid "Scheduler: STOP DHW"
+#~ msgstr "Harmonogram: Wyłączam CWU"
+
+#~ msgid "Background function running!"
+#~ msgstr "Funkcje w tle uruchomione!"
+
+#~ msgid "MQTT connection error."
+#~ msgstr "MQTT: błąd połączenia."
+
+#~ msgid "Background thread DEAD"
+#~ msgstr "Wątek w tle UMARŁ"
+
+#~ msgid "Serial Thread DEAD"
+#~ msgstr "Wątek Serial UMARŁ"
+
+#~ msgid "MQTT thread DEAD"
+#~ msgstr "Wątek MQTT UMARŁ"
+
+#~ msgid "Service running: http://127.0.0.1:4000 "
+#~ msgstr "Usługa jest włączona: http://127.0.0.1:4000 "
 

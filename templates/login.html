@@ -4,7 +4,7 @@
 {% block page_body %}
 <main class="w-100 m-auto" style="max-width:350px; padding: 15px">
 <form action="{{ url_for('simplelogin.login', next=request.args.get('next', '/')) }}" method="post">
-    <h1 class="h3 mb-3 fw-normal">Please log in</h1>
+	<h1 class="h3 mb-3 fw-normal">{{ _('Please log in') }}</h1>
 {{ form.csrf_token }}
     <div class="form-floating">
 	    <input autocapitalize="none" type="text" class="form-control" id="username" name="username" placeholder="{{ _('Name') }}">
@@ -14,7 +14,7 @@
 	    <input type="password" class="form-control" id="password" name="password" required placeholder="{{ _('Password') }}">
       <label for="password">{{form.password.label}}</label>
     </div>
-    <button class="w-100 btn btn-lg btn-primary" type="submit">Log in</button>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">{{ _('Log in') }}</button>
   </form>
 </main>
 {% endblock %}
