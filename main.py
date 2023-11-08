@@ -32,43 +32,84 @@ log_level_info = {'DEBUG': logging.DEBUG,
                     'WARNING': logging.WARNING,
                     'ERROR': logging.ERROR,
                     }
-loglevel = config['MAIN']['log_level']
-timeout = config['MAIN']['heizfreq']
-firstrun = config['MAIN']['firstrun']
-bindaddr = config['MAIN']['bindaddress']
-bindport = config['MAIN']['bindport']
-modbusdev = config['MAIN']['modbusdev']
-release = config['MAIN']['release']
-settemp = config['SETTINGS']['settemp']
-slope = config['SETTINGS']['hcslope']
-pshift = config['SETTINGS']['hcpshift']
-hcamp = config['SETTINGS']['hcamp']
-heatingcurve = config['SETTINGS']['heatingcurve']
-insidetemp = config['SETTINGS']['insidetemp']
-outsidetemp = config['SETTINGS']['outsidetemp']
-humidity = config['SETTINGS']['humidity']
-flimit = config['SETTINGS']['flimit']
-flimittemp = config['SETTINGS']['flimittemp']
-presetautochange = config['SETTINGS']['presetautochange']
-presetquiet = config['SETTINGS']['presetquiet']
-presetturbo = config['SETTINGS']['presetturbo']
-antionoff = config['SETTINGS']['antionoff']
-antionoffdelta = config['SETTINGS']['antionoffdelta']
-chscheduler = config['SETTINGS']['chscheduler']
-dhwscheduler = config['SETTINGS']['dhwscheduler']
-dhwwl = config['SETTINGS']['dhwwl']
-use_mqtt = config['MQTT']['mqtt']
-mqtt_broker_addr=config['MQTT']['address']
-mqtt_broker_port=config['MQTT']['port']
-mqtt_topic=config['MQTT']['main_topic']
-mqtt_username=config['MQTT']['username']
-mqtt_password=config['MQTT']['password']
+
+def loadconfig():
+    logging.info("Loading new config.ini")
+    global loglevel
+    loglevel = config['MAIN']['log_level']
+    global timeout
+    timeout = config['MAIN']['heizfreq']
+    global firstrun
+    firstrun = config['MAIN']['firstrun']
+    global bindaddr
+    bindaddr = config['MAIN']['bindaddress']
+    global bindport
+    bindport = config['MAIN']['bindport']
+    global modbusdev
+    modbusdev = config['MAIN']['modbusdev']
+    global release
+    release = config['MAIN']['release']
+    global settemp
+    settemp = config['SETTINGS']['settemp']
+    global slope
+    slope = config['SETTINGS']['hcslope']
+    global pshift
+    pshift = config['SETTINGS']['hcpshift']
+    global hcamp
+    hcamp = config['SETTINGS']['hcamp']
+    global heatingcurve
+    heatingcurve = config['SETTINGS']['heatingcurve']
+    global insidetemp
+    insidetemp = config['SETTINGS']['insidetemp']
+    global outsidetemp
+    outsidetemp = config['SETTINGS']['outsidetemp']
+    global humidity
+    humidity = config['SETTINGS']['humidity']
+    global flimit
+    flimit = config['SETTINGS']['flimit']
+    global flimittemp
+    flimittemp = config['SETTINGS']['flimittemp']
+    global presetautochange
+    presetautochange = config['SETTINGS']['presetautochange']
+    global presetquiet
+    presetquiet = config['SETTINGS']['presetquiet']
+    global presetturbo
+    presetturbo = config['SETTINGS']['presetturbo']
+    global antionoff
+    antionoff = config['SETTINGS']['antionoff']
+    global antionoffdelta
+    antionoffdelta = config['SETTINGS']['antionoffdelta']
+    global chscheduler
+    chscheduler = config['SETTINGS']['chscheduler']
+    global dhwscheduler
+    dhwscheduler = config['SETTINGS']['dhwscheduler']
+    global dhwwl
+    dhwwl = config['SETTINGS']['dhwwl']
+    global use_mqtt
+    use_mqtt = config['MQTT']['mqtt']
+    global mqtt_broker_addr
+    mqtt_broker_addr=config['MQTT']['address']
+    global mqtt_broker_port
+    mqtt_broker_port=config['MQTT']['port']
+    global mqtt_topic
+    mqtt_topic=config['MQTT']['main_topic']
+    global mqtt_username
+    mqtt_username=config['MQTT']['username']
+    global mqtt_password
+    mqtt_password=config['MQTT']['password']
+    global modbuspin
+    modbuspin=config['GPIO']['modbus']
+    global freqlimitpin
+    freqlimitpin=config['GPIO']['freqlimit']
+    global heatdemandpin
+    heatdemandpin=config['GPIO']['heatdemand']
+    global cooldemandpin
+    cooldemandpin=config['GPIO']['cooldemand']
+
+
+loadconfig()
 newframe=""
 writed=""
-modbuspin=config['GPIO']['modbus']
-freqlimitpin=config['GPIO']['freqlimit']
-heatdemandpin=config['GPIO']['heatdemand']
-cooldemandpin=config['GPIO']['cooldemand']
 needrestart=0
 dead=0
 
@@ -413,13 +454,15 @@ def presetchange(mode):
             newframe=PyHaier.SetMode(mode)
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/preset_mode/state", str(mode), qos=1, retain=False)
-            msg=gettext("New preset mode: ")+str(mode)
+            #msg=gettext("New preset mode: ")+str(mode)
+            msg="New preset mode: "+str(mode)
             state="success"
             return jsonify(msg=msg, state=state)
         except:
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/preset_mode/state", "none", qos=1, retain=False)
-            msg=gettext("Preset mode not changed")
+            #msg=gettext("Preset mode not changed")
+            msg="Preset mode not changed"
             state="error"
             return jsonify(msg=msg, state=state)
 
@@ -561,6 +604,12 @@ def updatecheck():
     else:
 	    msg=gettext("Not Availible")
     return jsonify(update=msg)
+
+def logdaemon(action):
+    subprocess.check_output("systemctl "+str(action)+" haierlog.service", shell=True).decode().rstrip('\n')
+    status = subprocess.check_output("systemctl show -p ActiveState --value haierlog", shell=True).decode().rstrip('\n')
+    logging.info(status)
+    return status
 
 def installupdate():
     subprocess.Popen("systemctl restart haierupdate.service", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -802,8 +851,9 @@ def scheduler():
         elif 'aoff' in schedulestart:
             logging.info("Scheduler: CH ALREADY OFF")
         else:
-            logging.info("Scheduler: STOP CH")
-            statechange("pch", "off", "1")
+            if pch != 'off':
+                logging.info("Scheduler: STOP CH")
+                statechange("pch", "off", "1")
     if dhwscheduler == "1":
         f=open('schedule_dhw.json', 'r')
         data = json.load(f)
@@ -965,9 +1015,9 @@ def theme_route():
 @login_required
 def settings():
     if request.method == 'POST':
-        saved="1"
-        global needrestart
-        needrestart=1
+        #saved="1"
+        #global needrestart
+        #needrestart=1
         for key, value in request.form.items():
             KEY1=f'{key.split("$")[0]}'
             KEY2=f'{key.split("$")[1]}'
@@ -975,6 +1025,7 @@ def settings():
             config[KEY1][KEY2] = str(VAL)    # update
             with open('config.ini', 'w') as configfile:    # save
                 config.write(configfile)
+        loadconfig()
     logserver=socket.gethostbyname(socket.gethostname())
     theme = status[statusmap.index("theme")]
     timeout = config['MAIN']['heizfreq']
@@ -1074,6 +1125,13 @@ def updatecheck_route():
     response = updatecheck()
     return response
 
+@app.route('/logdaemon', methods=['POST'])
+@login_required
+def logdaemon_reoute():
+    action = request.form['action']
+    output = logdaemon(action)
+    return jsonify(output=output)
+
 @app.route('/installupdate', methods=['GET'])
 @login_required
 def installupdate_route():
@@ -1148,6 +1206,7 @@ def threads_check():
 babel.init_app(app, locale_selector=get_locale)
 
 if __name__ == '__main__':
+    loadconfig()
     logging.warning(colored(welcome,"yellow", attrs=['bold']))
     logging.warning(colored("Service running: http://127.0.0.1:4000 ", "green"))
     signal.signal(signal.SIGINT, handler)

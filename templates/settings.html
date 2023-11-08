@@ -30,6 +30,16 @@
 				link.href=fileUrl;
 				link.click();
 				}
+			   function start_log(action) {
+				$.post('/logdaemon', {action: action}, function(data) {
+					if ( data.output == 'active' ) {
+				$('#startlogbutton').text("Stop logging")
+				$('#startlogbutton').attr("onclick", "start_log('stop')")
+						} else {
+				$('#startlogbutton').text("Start logging")
+				$('#startlogbutton').attr("onclick", "start_log('restart')")					    }
+						       })
+						       }
 		    </script>
 				    <script>
 //			form.addEventListener('submit', () => {
@@ -691,7 +701,7 @@ window.onload = onloadsave;
 			</div>
                         <script>
         var journalDiv = document.getElementById('journal');
-				var eventSource = new EventSource("http://{{ logserver }}:5000/stream");
+				var eventSource = new EventSource(window.location.origin+":5000/stream");
 
         eventSource.onmessage = function(event) {
             var line = document.createElement('p');
@@ -705,7 +715,7 @@ window.onload = onloadsave;
         };
     </script>
 
-			    </div><button onclick="download_log();" class="btn btn-primary">{{ _('Save to file') }}</button>
+			    </div><div class="btn-group" role="group"><button id="startlogbutton" onclick="start_log('restart');" class="btn btn-outline-primary">{{ _('Start logging') }}</button><button onclick="download_log();" class="btn btn-outline-primary">{{ _('Save to file') }}</button> </div>
                     </div>
                 </div>
 
