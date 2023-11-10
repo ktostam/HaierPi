@@ -29,7 +29,6 @@ def compare_and_update_config_files(file1_path, file2_path):
     else:
         print("No updates needed.")
 
-
 with open('config.ini', 'r') as file:
   filedata = file.read()
 
