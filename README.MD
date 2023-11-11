@@ -16,6 +16,10 @@ If you have any question you can find me on discord:
 [<img src="https://discordapp.com/api/guilds/1096167750612828210/widget.png?style=banner2" alt="Discord Banner 2"/>
 ](https://discord.gg/dVXmAfWt3P)
 
+## Contributors
+- @kocur on discord channel
+- @Radek on discord channel
+
 ## Donation
 If you like My work and want to support me, you can:
 
@@ -127,7 +131,21 @@ By default sript listen on all interfaces on port 4000, you can change it in **c
 default login and password for web interfaces is: ***admin/admin***
 ### Screenshot
 ![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
+
+## Translation
+- en
+- pl
+### if you want to help create a translation into another language write me an email or on the discord channel
+
 ## Version
+### 1.32
+- Add parameters
+- Add scheduler for CH and DHW
+- Add translation to polish
+- Now changes to settings do not require a restart of the service
+- New update script, from now all new update dont need to manualy add option in config.ini.
+- Minor fixes
+
 ### 1.31
 - Add function for automatic/manual control of frequency limit relay
 - Add function for automatic/manual control of mode quiet/eco/turbo
