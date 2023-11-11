@@ -3,6 +3,10 @@
 * Released under the MIT License.
 */
 
+#svg1 {
+filter: brightness(50%);
+}
+
 .swal2-popup.swal2-toast {
   box-sizing: border-box;
   grid-column: 1/4 !important;
