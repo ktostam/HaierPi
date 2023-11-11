@@ -212,6 +212,8 @@ In this release, MQTT support is not finished
 
 In this project I'am using:
 
+[jquery-schedule](https://github.com/Yehzuna/jquery-schedule) - MIT License
+
 [sweetalert2](https://github.com/sweetalert2/sweetalert2) - MIT License
 
 [bootstrap](https://github.com/twbs/bootstrap) - MIT License
