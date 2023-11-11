@@ -106,9 +106,9 @@ password = password
 [GPIO]
 #17 for raspberrypi, 0 for nanopi neo
 modbus=17
-#27 for raspberrypi, 2 for nanopi neo
+#27 for raspberrypi, 64 for nanopi neo
 freqlimit=27
-#22 for raspberrypi, 3 for nanopi neo
+#22 for raspberrypi, 2 for nanopi neo
 heatdemand=22
-#10 for raspberrypi, 64 for nanopi neo
+#10 for raspberrypi, 3 for nanopi neo
 cooldemand=10
