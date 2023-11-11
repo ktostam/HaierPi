@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block custom_scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='jquery.'+theme+'.schedule.css') }}">
+<script src="{{ url_for('static', filename='jquery.schedule.js') }}"></script>
+{% endblock %}
+{% block page_body %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-10 mx-auto">
+
+<div class="row">
+	<div class="col-lg-6">
+		<h1 class="display-4 float-sm-start">{{ _('Central Heating scheduler') }}</h1>
+	</div>
+	<div class="col-lg-6 align-self-center">
+		<button class="btn btn-primary btn-lg float-sm-end" id="savech">{{ _('Save') }}</button>
+	</div>
+            <div class="col-lg-12">
+                <div id="schedule3" class="jqs-demo mb-3 jqs jqs-mode-edit">
+            </div>
+
+        </div>
+<div class="row">
+       <div class="col-lg-8">
+	       <h1 class="display-4 float-sm-start">{{ _('Domestic Hot Water scheduler') }}</h1>
+        </div>
+        <div class="col-lg-4 align-self-center">
+		<button class="btn btn-primary btn-lg float-sm-end" id="savedhw">{{ _('Save') }}</button>
+        </div>
+	<div class="col-lg-12">
+		<div id="schedule4" class="jqs-demo mb-3 jqs jqs-mode-edit">
+	</div>
+</div>
+</div>
+</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+			<script>
+				$('#schedule3').jqs({
+      onInit: function () {
+        $('#logs').val('onInit fire !\n' + $('#logs').val());
+      },
+      onAddPeriod: function () {
+        $('#logs').val('onAddPeriod fire !\n' + $('#logs').val());
+      },
+      onRemovePeriod: function () {
+        $('#logs').val('onRemovePeriod fire !\n' + $('#logs').val());
+      },
+      onClickPeriod: function () {
+        $('#logs').val('onClickPeriod fire !\n' + $('#logs').val());
+      }
+    });
+				$('#schedule4').jqs({
+      onInit: function () {
+        $('#logs').val('onInit fire !\n' + $('#logs').val());
+      },
+      onAddPeriod: function () {
+        $('#logs').val('onAddPeriod fire !\n' + $('#logs').val());
+      },
+      onRemovePeriod: function () {
+        $('#logs').val('onRemovePeriod fire !\n' + $('#logs').val());
+      },
+      onClickPeriod: function () {
+        $('#logs').val('onClickPeriod fire !\n' + $('#logs').val());
+      }
+    });
+$('#schedule3').jqs('import', {{ ch }});
+$('#schedule4').jqs('import', {{ dhw }});
+$('#savech').click(function () {
+      var schedulech=$('#schedule3').jqs('export');
+	$.post('/scheduler', {schedulech: schedulech}, function(data) {
+		         var text=data.msg;
+                        var state=data.state
+                        Swal.fire({
+                                html: text,
+                                icon: state,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                                                })
+
+                        });
+    });
+$('#savedhw').click(function () {
+      var scheduledhw=$('#schedule4').jqs('export');
+        $.post('/scheduler', {scheduledhw: scheduledhw}, function(data) {
+                        var text=data.msg;
+                        var state=data.state
+                        Swal.fire({
+                                html: text,
+                                icon: state,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                        const b = Swal.getHtmlContainer().querySelector('b')
+                        timerInterval = setInterval(() => {
+                            b.textContent = Swal.getTimerLeft()
+                        }, 100)
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval)
+                    }
+                                                })
+
+                        });
+    });
+
+
+			</script>
+{% endblock %}
+

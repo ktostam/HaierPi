@@ -1,4 +1,4 @@
-[DEFAULT]
+[MAIN]
 # on which port the program will listen (for ports below 1024 you need root permision)
 bindport = 4000
 
@@ -68,6 +68,18 @@ presetquiet = 10
 # In auto mode temperature below which the turbo mode will be switched on
 presetturbo = -10
 
+# Anti on-off function -default off
+antionoff = 0
+# Anti on-off temp change required to change mode
+antionoffdelta = 1.5
+
+# Central Heating scheduler
+chscheduler = 0
+# Domestic Hot Water scheduler
+dhwscheduler = 0
+# Domestic Hot Water without limit (when heating DHW turn off frequency limit if turned on)
+dhwwl = 0
+
 # insidetemp,outsidetemp and humidity can be set to:
 #  builtin - for using sensor connected to PCB
 #  ha - for read sensor from Home Assistant api
@@ -94,9 +106,9 @@ password = password
 [GPIO]
 #17 for raspberrypi, 0 for nanopi neo
 modbus=17
-#27 for raspberrypi, 2 for nanopi neo
+#27 for raspberrypi, 64 for nanopi neo
 freqlimit=27
-#22 for raspberrypi, 3 for nanopi neo
+#22 for raspberrypi, 2 for nanopi neo
 heatdemand=22
-#10 for raspberrypi, 64 for nanopi neo
+#10 for raspberrypi, 3 for nanopi neo
 cooldemand=10
