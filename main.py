@@ -958,8 +958,9 @@ def GetParameters():
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
-    if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-        gpiocontrol("freqlimit", "0")
+    if 'compinfo' in locals():
+        if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+            gpiocontrol("freqlimit", "0")
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
@@ -1074,7 +1075,8 @@ def settings():
 @app.route('/parameters', methods=['GET','POST'])
 @login_required
 def parameters():
-    return  render_template('parameters.html')
+    theme=status[statusmap.index("theme")]
+    return  render_template('parameters.html', version=version, theme=theme)
 
 @app.route('/scheduler', methods=['GET','POST'])
 @login_required
@@ -1089,7 +1091,8 @@ def scheduler_route():
 
     schedule1 = open("schedule_ch.json", "r")
     schedule2 = open("schedule_dhw.json", "r")
-    return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()))
+    theme=status[statusmap.index("theme")]
+    return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()), version=version, theme=theme)
 
 @app.route('/statechange', methods=['POST'])
 @login_required

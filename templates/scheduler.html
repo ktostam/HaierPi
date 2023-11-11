@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block custom_scripts %}
-<link rel="stylesheet" href="{{ url_for('static', filename='jquery.schedule.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='jquery.'+theme+'.schedule.css') }}">
 <script src="{{ url_for('static', filename='jquery.schedule.js') }}"></script>
 {% endblock %}
 {% block page_body %}
