@@ -4,10 +4,10 @@
 	    function changepass() {
             (async () => {
                 const { value: formValues } = await Swal.fire({
-                    title: 'Enter new password',
+					title: "{{ _('Enter new password') }}",
                     html:
-                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input1" name="swal-input1" placeholder="New Password"><label for="swal-input1">New password</label></div>' +
-                    '<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input2" name="swal-input2" placeholder="Confirm Password"><label for="swal-input2">Confirm password</label></div>',
+					'<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input1" name="swal-input1" placeholder="{{ _('New Password') }}"><label for="swal-input1">"{{ _('New password') }}"</label></div>' +
+					'<div class="form-floating"><input autocapitalize="none" type="password" class="form-control" id="swal-input2" name="swal-input2" placeholder="{{ _('Confirm Password') }}"><label for="swal-input2">{{ _('Confirm password') }}</label></div>',
                     focusConfirm: false,
                     preConfirm: () => {
                         pass1=document.getElementById('swal-input1').value
@@ -38,7 +38,7 @@
                             });
                         } else {
                             Swal.fire({
-                                html: "Password not match",
+						    html: "{{ _('Password not match') }}",
                                 icon: "error",
                                 showCloseButton: false,
                                 showConfirmButton: false,
@@ -269,7 +269,7 @@
         }
             (async () => {
                 const { value: inputValue } = await Swal.fire({
-                    title: 'Change temperature',
+					title: "{{ _('Change temperature') }}",
                     input: 'range',
                     inputAttributes: {
                         min: minimum,
@@ -321,12 +321,12 @@
                         <div class="col-md-4 mb-1">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h2 class="card-title"><i class="icoheat"></i> Heating - setpoint: <b id="setpoint">N.A.</b>&#8451;</h2>
-                                    <p class="card-text">Inside temp: <b id="intemp">N.A.</b>&#8451;</p>
-                                    <p class="card-text" >Outside temp: <b id="outtemp">N.A.</b>&#8451;</p>
-                                    <p class="card-text" >Heating-curve: <b id="hcurve">N.A.</b>&#8451;</p>
+					<h2 class="card-title"><i class="icoheat"></i>{{ _('Heating - setpoint: ') }}<b id="setpoint">N.A.</b>&#8451;</h2>
+					<p class="card-text">{{ _('Inside temp: ') }}<b id="intemp">N.A.</b>&#8451;</p>
+					<p class="card-text" >{{ _('Outside temp: ') }}<b id="outtemp">N.A.</b>&#8451;</p>
+					<p class="card-text" >{{ _('Heating-curve: ') }}<b id="hcurve">N.A.</b>&#8451;</p>
                                 </div>
-                                <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="heat" onclick="tempchange('heat', '0')" href="#!">Change</a>
+				<div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="heat" onclick="tempchange('heat', '0')" href="#!">{{ _('Change') }}</a>
                                     <a class="float-sm-end" id="pch" onclick="statechange('pch','on')" href="#"><i id="heatpower" class="iconpower"></i></a>
                                 </div>
                             </div>
@@ -335,10 +335,10 @@
                             <div class="card h-100">
                                 <div class="card-body">
                                     <h2 class="card-title">
-					    <!--<div class="icondhw2"><img class="wrap-image2" id="wrap-image2" ></div>--> <i class="icondhw"></i> DHW - setpoint: <b id="dhwsetpoint">N.A.</b>&#8451;</h2>
-                                    <p class="card-text" >Tank temp: <b id="ttemp">N.A.</b>&#8451;</p>
+					    <!--<div class="icondhw2"><img class="wrap-image2" id="wrap-image2" ></div>--> <i class="icondhw"></i>{{ _('DHW - setpoint: ') }}<b id="dhwsetpoint">N.A.</b>&#8451;</h2>
+				    <p class="card-text" >{{ _('Tank temp: ') }}<b id="ttemp">N.A.</b>&#8451;</p>
                                 </div>
-                                <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw', '1')" href="#!">Change</a>
+				<div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="dhw" onclick="tempchange('dhw', '1')" href="#!">{{ _('Change') }}</a>
                                         <a class="float-sm-end" id="pdhw" onclick="statechange('pdhw','on')" href="#"><i id="dhwpower" class="iconpower"></i></a>
                                 </div>
                             </div>
@@ -346,11 +346,11 @@
                         <div class="col-md-4 mb-1">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h2 class="card-title"><i class="iconcool"></i>Cooling</h2>
-                                    <p class="card-text">Inside humidity: <b id="humid">N.A.</b>%</p>
+					<h2 class="card-title"><i class="iconcool"></i>{{ _('Cooling') }}</h2>
+					<p class="card-text">{{ _('Inside humidity: ') }}<b id="humid">N.A.</b>%</p>
 
                                 </div>
-                                <div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="cool" onclick="tempchange('cool')" href="#!">Change</a>
+				<div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="cool" onclick="tempchange('cool')" href="#!">{{ _('Change') }}</a>
                                     <a class="float-sm-end" id="pcool" onclick="statechange('pcool','on')" href="#"><i id="coolpower" class="iconpower"></i></a>
                                 </div>
                             </div>
@@ -364,7 +364,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col">
-                                            <h2 class="card-title">Frequency limit: - <b id="flimit">N.A.</b></h2>
+						<h2 class="card-title">{{ _('Frequency limit: - ') }}<b id="flimit">N.A.</b></h2>
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
@@ -379,12 +379,12 @@
                                         </div>
                                     </div>
 				                                        <div id="flimitauto" style="display: none;">
-                                    <p class="card-text">Frequency limit temp: <b id="ltemp">N.A.</b>℃</p>
-                                    <p class="card-text">Relay status: <b id="flrelay">N.A.</b></p>
+										<p class="card-text">{{ _('Frequency limit temp: ')}}<b id="ltemp">N.A.</b>℃</p>
+										<p class="card-text">{{ _('Relay status: ') }}<b id="flrelay">N.A.</b></p>
 									</div>
                                 </div>
                                 <div class="card-footer">
-					<a class="btn btn-primary btn-lm float-sm-start" href="/settings#settings-hcurve">Settings</a>
+					<a class="btn btn-primary btn-lm float-sm-start" href="/settings#settings-hcurve">{{ _('Settings') }}</a>
                                 </div>
                             </div>
                         </div>
@@ -393,7 +393,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col">
-						<h2 class="card-title">Preset change - <b id="preset">N.A.</b></h2>
+						<h2 class="card-title">{{ _('Preset change - ') }}<b id="preset">N.A.</b></h2>
                                         </div>
                                         <div class="col-auto">
                                             <div class="custom-control custom-switch">
@@ -419,7 +419,7 @@
 </div></div>
                                 </div>
                                 <div class="card-footer">
-	                        <a class="btn btn-primary btn-lm float-sm-start"  href="/settings#settings-hcurve">Settings</a>
+					<a class="btn btn-primary btn-lm float-sm-start"  href="/settings#settings-hcurve">{{ _('Settings') }}</a>
 
                                 </div>
                             </div>

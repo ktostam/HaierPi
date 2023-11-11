@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block custom_scripts %}
-<link rel="stylesheet" href="{{ url_for('static', filename='jquery.schedule.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='jquery.'+theme+'.schedule.css') }}">
 <script src="{{ url_for('static', filename='jquery.schedule.js') }}"></script>
 {% endblock %}
 {% block page_body %}
@@ -9,10 +9,10 @@
 
 <div class="row">
 	<div class="col-lg-6">
-<h1 class="display-4 float-sm-start">Central Heating scheduler</h1>
+		<h1 class="display-4 float-sm-start">{{ _('Central Heating scheduler') }}</h1>
 	</div>
 	<div class="col-lg-6 align-self-center">
-<button class="btn btn-primary btn-lg float-sm-end" id="savech">Save</button>
+		<button class="btn btn-primary btn-lg float-sm-end" id="savech">{{ _('Save') }}</button>
 	</div>
             <div class="col-lg-12">
                 <div id="schedule3" class="jqs-demo mb-3 jqs jqs-mode-edit">
@@ -21,10 +21,10 @@
         </div>
 <div class="row">
        <div class="col-lg-8">
-<h1 class="display-4 float-sm-start">Domestic Hot Water scheduler</h1>
+	       <h1 class="display-4 float-sm-start">{{ _('Domestic Hot Water scheduler') }}</h1>
         </div>
         <div class="col-lg-4 align-self-center">
-<button class="btn btn-primary btn-lg float-sm-end" id="savedhw">Save</button>
+		<button class="btn btn-primary btn-lg float-sm-end" id="savedhw">{{ _('Save') }}</button>
         </div>
 	<div class="col-lg-12">
 		<div id="schedule4" class="jqs-demo mb-3 jqs jqs-mode-edit">

@@ -13,6 +13,8 @@
 .idea/**/shelf
 config.ini
 users.json
+schedule_ch.json
+schedule_dhw.json
 # AWS User-specific
 .idea/**/aws.xml
 
