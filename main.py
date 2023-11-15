@@ -572,8 +572,9 @@ def curvecalc():
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
         status[statusmap.index("hcurve")]=heatcurve
-        if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-            logging.info("dont change flimit in DHW mode")
+        if 'compinfo' in locals():
+            if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+                logging.info("dont change flimit in DHW mode")
         else:
             if flimit == "auto":
                 if outsidetemp >= float(flimittemp):
