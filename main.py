@@ -1214,7 +1214,6 @@ def connect_mqtt():
 
 def configure_ha_mqtt_discovery():
     logging.info("Configuring HA discovery")
-    logging.info("Tao")
 
     msg = json.dumps({"name" : "Tao", \
                       "stat_t" : "climate/haier/details/tao/state", \
@@ -1230,16 +1229,198 @@ def configure_ha_mqtt_discovery():
                           "mf" : "ktostam", \
                           "mdl" : "HaierPi", \
                           "sw" : version} })
-    
-    logging.info(msg)
-
     client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/tao/config", msg, qos=1)
 
-    # # Configure the required parameters for the MQTT broker
-    # mqtt_settings = Settings.MQTT(host=mqtt_broker_addr, port=mqtt_broker_port, username=mqtt_username, password=mqtt_password)
-    # # Define the device. At least one of `identifiers` or `connections` must be supplied
-    # device_info = DeviceInfo(name="HaierPi", identifiers="haierpi", model="HaierPi", manufacturer="ktostam", sw_version=version, configuration_url=f"http://{ip_address}:{bindport}")
-    
+    msg = json.dumps({"name" : "Twi", \
+                      "stat_t" : "climate/haier/details/twitwo/state", \
+                      "value_template": "{{ value_json[0] | float}}", \
+                      "uniq_id" : "HaierPi_Twi", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/twi/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Two", \
+                      "stat_t" : "climate/haier/details/twitwo/state", \
+                      "value_template": "{{ value_json[1] | float}}", \
+                      "uniq_id" : "HaierPi_Two", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/two/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Fan 1", \
+                      "stat_t" : "climate/haier/details/fans/state", \
+                      "value_template": "{{ value_json[0] | float}}", \
+                      "uniq_id" : "HaierPi_Fan1", \
+                      "unit_of_meas" : "rpm", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/fan1/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Fan 2", \
+                      "stat_t" : "climate/haier/details/fans/state", \
+                      "value_template": "{{ value_json[1] | float}}", \
+                      "uniq_id" : "HaierPi_Fan2", \
+                      "unit_of_meas" : "rpm", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/fan2/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Compressor fact", \
+                      "stat_t" : "climate/haier/details/compinfo/state", \
+                      "value_template": "{{ value_json[0] | float}}", \
+                      "uniq_id" : "HaierPi_Compfact", \
+                      "unit_of_meas" : "Hz", \
+                      "dev_cla" : "frequency", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/compfact/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Compressor fset", \
+                      "stat_t" : "climate/haier/details/compinfo/state", \
+                      "value_template": "{{ value_json[1] | float}}", \
+                      "uniq_id" : "HaierPi_Compfset", \
+                      "unit_of_meas" : "Hz", \
+                      "dev_cla" : "frequency", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/compfset/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Compressor current", \
+                      "stat_t" : "climate/haier/details/compinfo/state", \
+                      "value_template": "{{ value_json[2] | float}}", \
+                      "uniq_id" : "HaierPi_Compcurrent", \
+                      "unit_of_meas" : "A", \
+                      "dev_cla" : "current", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/compcurrent/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Compressor voltage", \
+                      "stat_t" : "climate/haier/details/compinfo/state", \
+                      "value_template": "{{ value_json[3] | float}}", \
+                      "uniq_id" : "HaierPi_Compvoltage", \
+                      "unit_of_meas" : "V", \
+                      "dev_cla" : "voltage", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/compvoltage/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Compressor temperature", \
+                      "stat_t" : "climate/haier/details/compinfo/state", \
+                      "value_template": "{{ value_json[4] | float}}", \
+                      "uniq_id" : "HaierPi_Comptemperature", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/comptemperature/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Td", \
+                      "stat_t" : "climate/haier/details/tdts/state", \
+                      "value_template": "{{ value_json[0] | float}}", \
+                      "uniq_id" : "HaierPi_Td", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/td/config", msg, qos=1)
+
+    msg = json.dumps({"name" : "Ts", \
+                      "stat_t" : "climate/haier/details/tdts/state", \
+                      "value_template": "{{ value_json[1] | float}}", \
+                      "uniq_id" : "HaierPi_Ts", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/ts/config", msg, qos=1)
+
+
+# "settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "pump", "threeway"]
+# "/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/pump/state","/details/threeway/state",]
+
+
     # # settemp
     # Settemp_number_info = NumberInfo(name="Set temp", min=10, max=30, mode="slider", step=0.1, unique_id="settemp", device=device_info, unit_of_measurement="°C")
     # # To receive number updates from HA, define a callback function:
@@ -1251,18 +1432,7 @@ def configure_ha_mqtt_discovery():
     # Settemp_number = Number(Settemp_number_settings, my_callback)
     # logging.warning(float(settemp))
     # Settemp_number.set_value(float(settemp))
-    
-    # # Information about the sensor Twi
-    # Twi_sensor_info = SensorInfo(name="Twi", device_class="temperature", unique_id="Twi", device=device_info, unit_of_measurement="°C")
-    # Twi_sensor_settings = Settings(mqtt=mqtt_settings, entity=Twi_sensor_info)
-    # global Twi_sensor
-    # Twi_sensor = Sensor(Twi_sensor_settings)
-    
-    # # Information about the sensor Two
-    # Two_sensor_info = SensorInfo(name="Two", device_class="temperature", unique_id="Two", device=device_info, unit_of_measurement="°C")
-    # Two_sensor_settings = Settings(mqtt=mqtt_settings, entity=Two_sensor_info)
-    # global Two_sensor
-    # Two_sensor = Sensor(Two_sensor_settings)
+
     pass
 
 def threads_check():
