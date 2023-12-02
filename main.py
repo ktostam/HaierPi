@@ -4,7 +4,7 @@ from schedule import every, run_pending, get_jobs, clear, cancel_job
 from flask import Flask, render_template, request, session, jsonify, redirect, Markup
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
-from w1thermsensor import W1ThermSensor, Sensor
+from w1thermsensor import W1ThermSensor
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
@@ -24,6 +24,7 @@ import time
 import sys
 
 version="1.32"
+ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -105,7 +106,10 @@ def loadconfig():
     heatdemandpin=config['GPIO']['heatdemand']
     global cooldemandpin
     cooldemandpin=config['GPIO']['cooldemand']
-
+    global ha_mqtt_discovery
+    ha_mqtt_discovery=config['HOMEASSISTANT']['ha_mqtt_discovery']
+    global ha_mqtt_discovery_prefix
+    ha_mqtt_discovery_prefix = 'homeassistant'
 
 loadconfig()
 newframe=""
@@ -298,6 +302,10 @@ def on_connect(client, userdata, flags, rc):
     logging.info(colored("MQTT - Connected", "green", attrs=['bold']))
     client.subscribe(mqtt_topic+'/#')
     client.publish(mqtt_topic+"/connected","online", qos=1, retain=True)
+    if ha_mqtt_discovery == "1":
+        client.subscribe(ha_mqtt_discovery_prefix+"/status")
+        client.subscribe("hass/status")
+        configure_ha_mqtt_discovery()
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
@@ -371,7 +379,13 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             client.publish(mqtt_topic + "/dhw/temperature/state", str(newtemp), qos=1, retain=True)
         except:
             logging.error("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
-
+    elif msg.topic == ha_mqtt_discovery_prefix + "/status" or msg.topic == "hass/status":
+        if ha_mqtt_discovery == "1":
+            logging.info(msg.topic + " | " + msg.payload.decode('utf-8'))
+            if msg.payload.decode('utf-8').strip() == "online":
+                logging.info("Home Assistant online")
+                configure_ha_mqtt_discovery()
+    
 def tempchange(which, value, curve):
     global R101
     global newframe
@@ -426,6 +440,8 @@ def tempchange(which, value, curve):
                 config.write(configfile)
             if use_mqtt == "1":
                 client.publish(mqtt_topic+"/temperature/state",str(value), qos=1, retain=True)
+                if ha_mqtt_discovery=="1":
+                    Settemp_number.set_value(float(value))
             msg = gettext("Central Heating temperature changed!")
             state = "success"
     elif curve == "2":
@@ -601,9 +617,9 @@ def updatecheck():
     gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
     if localver != gitver:
-	    msg=gettext("Availible")
+        msg=gettext("Available")
     else:
-	    msg=gettext("Not Availible")
+        msg=gettext("Not Available")
     return jsonify(update=msg)
 
 def logdaemon(action):
@@ -760,9 +776,14 @@ def ischanged(old, new):
                     client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
             elif old =="pcool":
                 if new == "on":
-                    cient.publish(mqtt_topic + mqtttop[statusmap.index(old)], "cool")
+                    client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "cool")
             else:
                 client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
+
+            # if ha_mqtt_discovery == "1":
+            #     if old == "twitwo":
+            #         Twi_sensor.set_state(new[0])
+            #         Two_sensor.set_state(new[1])
 
 def deltacheck(temps):
     if antionoff == '1':
@@ -1071,6 +1092,7 @@ def settings():
     insidesensor=config['HOMEASSISTANT']['insidesensor']
     outsidesensor=config['HOMEASSISTANT']['outsidesensor']
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
+    ha_mqtt_discovery=config['HOMEASSISTANT']['ha_mqtt_discovery']
     return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
 @app.route('/parameters', methods=['GET','POST'])
@@ -1190,6 +1212,59 @@ def connect_mqtt():
         logging.error(colored("MQTT connection error.","red", attrs=['bold']))
     client.loop_forever()  # Start networking daemon
 
+def configure_ha_mqtt_discovery():
+    logging.info("Configuring HA discovery")
+    logging.info("Tao")
+
+    msg = json.dumps({"name" : "Tao", \
+                      "stat_t" : "climate/haier/details/tao/state", \
+                      "uniq_id" : "HaierPi_Tao", \
+                      "unit_of_meas" : "°C", \
+                      "dev_cla" : "temperature", \
+                      "stat_cla" : "measurement", \
+                      "exp_aft" : "300", \
+                      "dev" : { \
+                          "name" : "HaierPi", \
+                          "ids" : "HaierPi", \
+                          "cu" : f"http://{ip_address}:{bindport}", \
+                          "mf" : "ktostam", \
+                          "mdl" : "HaierPi", \
+                          "sw" : version} })
+    
+    logging.info(msg)
+
+    client.publish(ha_mqtt_discovery_prefix+"/sensor/HaierPi/tao/config", msg, qos=1)
+
+    # # Configure the required parameters for the MQTT broker
+    # mqtt_settings = Settings.MQTT(host=mqtt_broker_addr, port=mqtt_broker_port, username=mqtt_username, password=mqtt_password)
+    # # Define the device. At least one of `identifiers` or `connections` must be supplied
+    # device_info = DeviceInfo(name="HaierPi", identifiers="haierpi", model="HaierPi", manufacturer="ktostam", sw_version=version, configuration_url=f"http://{ip_address}:{bindport}")
+    
+    # # settemp
+    # Settemp_number_info = NumberInfo(name="Set temp", min=10, max=30, mode="slider", step=0.1, unique_id="settemp", device=device_info, unit_of_measurement="°C")
+    # # To receive number updates from HA, define a callback function:
+    # def my_callback(client: mqtt.Client, user_data, message: mqtt.MQTTMessage):
+    #     logging.warning(message.payload.decode("utf-8"))
+    #     tempchange("heat",message.payload.decode("utf-8"),"2")
+    # Settemp_number_settings = Settings(mqtt=mqtt_settings, entity=Settemp_number_info)    
+    # global Settemp_number
+    # Settemp_number = Number(Settemp_number_settings, my_callback)
+    # logging.warning(float(settemp))
+    # Settemp_number.set_value(float(settemp))
+    
+    # # Information about the sensor Twi
+    # Twi_sensor_info = SensorInfo(name="Twi", device_class="temperature", unique_id="Twi", device=device_info, unit_of_measurement="°C")
+    # Twi_sensor_settings = Settings(mqtt=mqtt_settings, entity=Twi_sensor_info)
+    # global Twi_sensor
+    # Twi_sensor = Sensor(Twi_sensor_settings)
+    
+    # # Information about the sensor Two
+    # Two_sensor_info = SensorInfo(name="Two", device_class="temperature", unique_id="Two", device=device_info, unit_of_measurement="°C")
+    # Two_sensor_settings = Settings(mqtt=mqtt_settings, entity=Two_sensor_info)
+    # global Two_sensor
+    # Two_sensor = Sensor(Two_sensor_settings)
+    pass
+
 def threads_check():
     global dead
     while True:
@@ -1212,7 +1287,9 @@ babel.init_app(app, locale_selector=get_locale)
 if __name__ == '__main__':
     loadconfig()
     logging.warning(colored(welcome,"yellow", attrs=['bold']))
-    logging.warning(colored("Service running: http://127.0.0.1:4000 ", "green"))
+    logging.warning(colored(f"Service running: http://{ip_address}:{bindport} ", "green"))
+    logging.warning(f"MQTT: {'enabled' if use_mqtt == '1' else 'disabled'}")
+    logging.warning(f"Home Assistant MQTT Discovery: {'enabled' if ha_mqtt_discovery == '1' and use_mqtt == '1' else 'disabled'}")
     signal.signal(signal.SIGINT, handler)
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
