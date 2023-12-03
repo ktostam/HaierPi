@@ -23,7 +23,7 @@ import json
 import time
 import sys
 
-version="1.32"
+version="1.33"
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -572,9 +572,10 @@ def curvecalc():
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
         status[statusmap.index("hcurve")]=heatcurve
-        if 'compinfo' in locals():
-            if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-                logging.info("dont change flimit in DHW mode")
+        if 'compinfo' in locals() and 'threeway' in locals():
+            if len(compinfo) > 0:
+                if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+                    logging.info("dont change flimit in DHW mode")
         else:
             if flimit == "auto":
                 if outsidetemp >= float(flimittemp):
@@ -959,9 +960,10 @@ def GetParameters():
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
-    if 'compinfo' in locals():
-        if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-            gpiocontrol("freqlimit", "0")
+    if 'compinfo' in locals() and 'threeway' in locals():
+        if len(compinfo) > 0:
+            if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
+                gpiocontrol("freqlimit", "0")
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
