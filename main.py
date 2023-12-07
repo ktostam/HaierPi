@@ -572,20 +572,21 @@ def curvecalc():
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
         status[statusmap.index("hcurve")]=heatcurve
-        if 'compinfo' in locals() and 'threeway' in locals():
-            if len(compinfo) > 0:
-                if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-                    logging.info("dont change flimit in DHW mode")
-        else:
-            if flimit == "auto":
-                if outsidetemp >= float(flimittemp):
-                    logging.info("turn on freq limit")
-                    #gpiocontrol("freqlimit", "1")
-                    flimitchange("1")
-                elif outsidetemp <= float(flimittemp)+0.5:
-                    logging.info("turn off freq limit")
-                    #gpiocontrol("freqlimit", "0")
-                    flimitchange("0")
+        threeway=status[statusmap.index("threeway")]
+        compinfo=status[statusmap.index("compinfo")]
+        if len(compinfo) > 0:
+            if dhwwl=="1" and compinfo[0] != 0 and threeway == "DHW":
+                logging.info("dont change flimit in DHW mode")
+            else:
+                if flimit == "auto":
+                    if outsidetemp >= float(flimittemp):
+                        logging.info("turn on freq limit")
+                        #gpiocontrol("freqlimit", "1")
+                        flimitchange("1")
+                    elif outsidetemp <= float(flimittemp)+0.5:
+                        logging.info("turn off freq limit")
+                        #gpiocontrol("freqlimit", "0")
+                        flimitchange("0")
         if presetautochange == "auto":
             mode=status[statusmap.index("mode")]
             if outsidetemp >= float(presetquiet) and mode != "quiet":
@@ -960,10 +961,13 @@ def GetParameters():
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
-    if 'compinfo' in locals() and 'threeway' in locals():
-        if len(compinfo) > 0:
-            if dhwwl=="1" and compinfo[0] != 0 and threeway == "dhw":
-                gpiocontrol("freqlimit", "0")
+    threeway=status[statusmap.index("threeway")]
+    compinfo=status[statusmap.index("compinfo")]
+    flimiton=GPIO.input(freqlimitpin)
+    if len(compinfo) > 0:
+        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and flimiton == "1":
+            logging.info("DHWWL Function ON")
+            gpiocontrol("freqlimit", "0")
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
