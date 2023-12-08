@@ -37,8 +37,9 @@ settemp = 20
 
 # heating curve can be defined as:
 #  auto - for using buildin alghoritm (depend both on external and internal temp)
-#  1-5 - choose one of predefined static heating curve (depend only on external temp)
+#  1-3 - choose one of predefined static heating curve (depend only on external temp)
 #  manual - use your own static curve for preset temperature thresholds (-20℃ - 20℃ with 5℃  step)
+#  directly - directly set water temp for CH 
 heatingcurve = auto
 
 # option for "auto" heating curve:

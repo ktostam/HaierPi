@@ -571,6 +571,8 @@ def curvecalc():
             heatcurve = round((settemp+(0.7*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == '3':
             heatcurve = round((settemp+(0.9*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+        elif heatingcurve == 'directly':
+            heatcurve = settemp
         
         if use_mqtt == '1':
             client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
@@ -676,7 +678,8 @@ def getdata():
     cooldemand=GPIO.input(cooldemandpin)
     flimiton=GPIO.input(freqlimitpin)
     ltemp = flimittemp
-    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit,heatdemand=heatdemand,cooldemand=cooldemand,flimiton=flimiton, ltemp=ltemp, presetch=presetch, presetquiet=presetquiet, presetturbo=presetturbo)
+    heatingcurve = config['SETTINGS']['heatingcurve']
+    return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit,heatdemand=heatdemand,cooldemand=cooldemand,flimiton=flimiton, ltemp=ltemp, presetch=presetch, presetquiet=presetquiet, presetturbo=presetturbo, heatingcurve=heatingcurve)
 
 def GetInsideTemp(param):
     if param == "builtin":

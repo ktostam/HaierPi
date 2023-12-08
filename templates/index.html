@@ -71,6 +71,13 @@
                 temp = data.setpoint
                 $("#intemp").text(data.intemp)
                 $("#outtemp").text(data.outtemp)
+		if(data.heatingcurve == "directly" ) {
+					minch=25
+					maxch=55
+				} else {
+					minch=12
+					maxch=30
+				}
 		$("#ltemp").text(data.ltemp)
 				    $("#preset").text(data.presetch)
 				    $("#flimit").text(data.flimit)
@@ -256,8 +263,8 @@
 
         function tempchange(which, directly) {
         if (which ==  "heat") {
-            minimum=12
-            maximum=30
+            minimum=minch
+            maximum=maxch
             stepp=0.5
             inputval=temp
         }
