@@ -94,6 +94,8 @@ KEY = Home Assistenet HA
 insidesensor = sensor.temperature_in
 outsidesensor = sensor.temperature_out
 humiditysensor = sensor.humidity
+ha_mqtt_discovery = 1
+ha_mqtt_discovery_prefix = homeassistant
 
 [MQTT]
 mqtt = 0

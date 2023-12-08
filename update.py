@@ -111,4 +111,3 @@ if status == 'inactive':
     status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
     if status == 'active':
         print("HaierPi updated")
-
