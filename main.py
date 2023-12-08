@@ -22,6 +22,7 @@ import signal
 import json
 import time
 import sys
+import io
 
 version="1.32"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
@@ -159,6 +160,13 @@ def handler(signum, frame):
     event.set()
     clear()
     exit(1)
+
+def is_raspberrypi():
+    try:
+        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
+            if 'raspberry pi' in m.read().lower(): return True
+    except Exception: pass
+    return False
 
 def isfloat(num):
     try:
@@ -683,7 +691,11 @@ def getdata():
 
 def GetInsideTemp(param):
     if param == "builtin":
-        result=subprocess.check_output('./bin/dht22s')
+        if is_raspberrypi():
+            dhtexec='dht22r'
+        else:
+            dhtexec='dht22n'
+        result=subprocess.check_output('./bin/'+dhtexec)
         intemp=result.decode('utf-8').split('#')[1]
         return intemp
     elif param == "ha":
@@ -741,7 +753,11 @@ def GetOutsideTemp(param):
 
 def GetHumidity(param):
     if param == "builtin":
-        result=subprocess.check_output('./bin/dht22s')
+        if is_raspberrypi():
+                dhtexec='dht22r'
+            else:
+                dhtexec='dht22n'
+        result=subprocess.check_output('./bin/'+dhtexec)
         intemp=result.decode('utf-8').split('#')[0]
         return intemp
     elif param == "ha":
