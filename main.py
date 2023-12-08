@@ -755,7 +755,7 @@ def GetHumidity(param):
     if param == "builtin":
         if is_raspberrypi():
                 dhtexec='dht22r'
-            else:
+        else:
                 dhtexec='dht22n'
         result=subprocess.check_output('./bin/'+dhtexec)
         intemp=result.decode('utf-8').split('#')[0]
