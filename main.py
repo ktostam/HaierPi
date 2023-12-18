@@ -51,6 +51,8 @@ def loadconfig():
     modbusdev = config['MAIN']['modbusdev']
     global release
     release = config['MAIN']['release']
+    global expert_mode
+    expert_mode = config['MAIN']['expert_mode']
     global settemp
     settemp = config['SETTINGS']['settemp']
     global slope
@@ -87,6 +89,8 @@ def loadconfig():
     dhwscheduler = config['SETTINGS']['dhwscheduler']
     global dhwwl
     dhwwl = config['SETTINGS']['dhwwl']
+    global hcman
+    hcman = config['SETTINGS']['hcman'].split(',')
     global use_mqtt
     use_mqtt = config['MQTT']['mqtt']
     global mqtt_broker_addr
@@ -562,29 +566,49 @@ def statechange(mode,value,mqtt):
         return jsonify(msg=msg, state=state)
 
 def curvecalc():
+    if expert_mode == "1":
+        mintemp=float(20)
+        maxtemp=float(55)
+    else:
+        mintemp=float(25)
+        maxtemp=float(55)
     if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
         insidetemp=float(status[statusmap.index("intemp")])
         outsidetemp=float(status[statusmap.index("outtemp")])
         settemp=float(status[statusmap.index("settemp")])
-        if heatingcurve == 'auto':
+        if heatingcurve == 'directly':
+            heatcurve=settemp
+        elif heatingcurve == 'auto':
             t1=(outsidetemp/(320-(outsidetemp*4)))
             t2=pow(settemp,t1)
             sslope=float(slope)
-            ps=int(pshift)
-            amp=int(hcamp)
-            heatcurve = round(((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
-        elif heatingcurve == '1':
-            heatcurve = round((settemp+(0.5*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
-        elif heatingcurve == '2':
-            heatcurve = round((settemp+(0.7*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
-        elif heatingcurve == '3':
-            heatcurve = round((settemp+(0.9*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
-        elif heatingcurve == 'directly':
-            heatcurve = settemp
-        
+            ps=float(pshift)
+            amp=float(hcamp)
+            heatcurve = round((((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))+ps)*2)/2
+        elif heatingcurve == 'static':
+            sslope=float(slope)
+            heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+        elif heatingcurve == 'manual':
+            if -20 < outsidetemp < -15:
+                heatingcurve=hcman[0]
+            elif -15 < outsidetemp < -10:
+                heatingcurve=hcman[1]
+            elif -10 < outsidetemp < -5:
+                heatingcurve=hcman[2]
+            elif -5 < outsidetemp < 0:
+                heatingcurve=hcman[3]
+            elif 0 < outsidetemp < 5:
+                heatingcurve=hcman[4]
+            elif 5 < outsidetemp < 10:
+                heatingcurve=hcman[5]
+            elif 10 < outsidetemp < 15:
+                heatingcurve=hcman[6]
+            elif outsidetemp > 15:
+                heatingcurve=hcman[7]
+
         if use_mqtt == '1':
             client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
-        if 25.0 < heatcurve < 55.0:
+        if mintemp < heatcurve < maxtemp:
             try:
                 if GPIO.input(heatdemandpin) != "1":
                     logging.info("turn on heat demand")
@@ -1101,6 +1125,7 @@ def settings():
     chscheduler = config['SETTINGS']['chscheduler']
     dhwscheduler = config['SETTINGS']['dhwscheduler']
     dhwwl = config['SETTINGS']['dhwwl']
+    hcman = config['SETTINGS']['hcman'].split(',')
     modbuspin=config['GPIO']['modbus']
     freqlimitpin=config['GPIO']['freqlimit']
     heatdemandpin=config['GPIO']['heatdemand']
@@ -1354,10 +1379,14 @@ def threads_check():
                 logging.error("Background thread DEAD")
                 dead = 1
         elif not serial_thread.is_alive():
-            logging.error("Serial Thread DEAD")
+            if dead == 0:
+                logging.error("Serial Thread DEAD")
+                dead = 1
         elif use_mqtt == "1":
             if not mqtt_bg.is_alive():
-                logging.error("MQTT thread DEAD")
+                if dead == 0:
+                    logging.error("MQTT thread DEAD")
+                    dead = 1
         time.sleep(1)
         if event.is_set():
             break
