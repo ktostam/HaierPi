@@ -544,6 +544,21 @@ window.onload = onloadsave;
                         </div>
                     </div>
                 </div>
+		<div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">{{ _('Use MQTT discovery') }}</strong>
+                            <p class="text-muted mb-0">{{ _('Automatic device discovery in Home Assistant') }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                <input type="hidden" id="ha_mqtt_discovery_hidden" value="{{ ha_mqtt_discovery }}" name="HOMEASSISTANT$ha_mqtt_discovery">
+                                <input type="checkbox" class="form-check-input" id="ha_mqtt_discovery" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="ha_mqtt_discovery" {%if ha_mqtt_discovery == '1' %} checked {% endif %}>
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
