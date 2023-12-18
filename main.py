@@ -1377,6 +1377,7 @@ def threads_check():
         if not bg_thread.is_alive():
             if dead == 0:
                 logging.error("Background thread DEAD")
+
                 dead = 1
         elif not serial_thread.is_alive():
             if dead == 0:
@@ -1387,6 +1388,15 @@ def threads_check():
                 if dead == 0:
                     logging.error("MQTT thread DEAD")
                     dead = 1
+        if dead == 1:
+            now = datetime.now()
+            crash_date=now.strftime("%Y-%m-%d_%H-%M-%S")
+            proc = subprocess.Popen(['journalctl', '-t', 'HaierPi', '-p','debug'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+            f=open("/opt/haier/crashlog-"+crash_date+".log", "w")
+            for line in iter(proc.stdout.readline, ''):
+                f.write(line)
+            f.close()
+
         time.sleep(1)
         if event.is_set():
             break
