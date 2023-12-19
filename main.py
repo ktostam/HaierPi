@@ -576,6 +576,7 @@ def curvecalc():
         insidetemp=float(status[statusmap.index("intemp")])
         outsidetemp=float(status[statusmap.index("outtemp")])
         settemp=float(status[statusmap.index("settemp")])
+        global heatingcurve
         if heatingcurve == 'directly':
             heatcurve=settemp
         elif heatingcurve == 'auto':
@@ -607,7 +608,11 @@ def curvecalc():
                 heatingcurve=hcman[7]
 
         if use_mqtt == '1':
-            client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
+            try:
+                client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
+            except:
+                logging.error("curvecalc: cannot publish heatcurve")
+
         if mintemp < heatcurve < maxtemp:
             try:
                 if GPIO.input(heatdemandpin) != "1":
@@ -719,8 +724,12 @@ def GetInsideTemp(param):
             dhtexec='dht22r'
         else:
             dhtexec='dht22n'
-        result=subprocess.check_output('./bin/'+dhtexec)
-        intemp=result.decode('utf-8').split('#')[1]
+
+        try:
+            result=subprocess.check_output('./bin/'+dhtexec)
+            intemp=result.decode('utf-8').split('#')[1]
+        except:
+            intemp='ERROR'
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
@@ -778,11 +787,16 @@ def GetOutsideTemp(param):
 def GetHumidity(param):
     if param == "builtin":
         if is_raspberrypi():
-                dhtexec='dht22r'
+            dhtexec='dht22r'
         else:
-                dhtexec='dht22n'
-        result=subprocess.check_output('./bin/'+dhtexec)
-        intemp=result.decode('utf-8').split('#')[0]
+            dhtexec='dht22n'
+
+        try:
+            result=subprocess.check_output('./bin/'+dhtexec)
+            intemp=result.decode('utf-8').split('#')[0]
+        except:
+            intemp='ERROR'
+
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside humidity entity
