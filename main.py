@@ -576,6 +576,7 @@ def curvecalc():
         insidetemp=float(status[statusmap.index("intemp")])
         outsidetemp=float(status[statusmap.index("outtemp")])
         settemp=float(status[statusmap.index("settemp")])
+        global heatingcurve
         if heatingcurve == 'directly':
             heatcurve=settemp
         elif heatingcurve == 'auto':
