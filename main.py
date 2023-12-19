@@ -719,8 +719,12 @@ def GetInsideTemp(param):
             dhtexec='dht22r'
         else:
             dhtexec='dht22n'
-        result=subprocess.check_output('./bin/'+dhtexec)
-        intemp=result.decode('utf-8').split('#')[1]
+
+        try:
+            result=subprocess.check_output('./bin/'+dhtexec)
+            intemp=result.decode('utf-8').split('#')[1]
+        except:
+            intemp='ERROR'
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside temperature entity
@@ -778,11 +782,16 @@ def GetOutsideTemp(param):
 def GetHumidity(param):
     if param == "builtin":
         if is_raspberrypi():
-                dhtexec='dht22r'
+            dhtexec='dht22r'
         else:
-                dhtexec='dht22n'
-        result=subprocess.check_output('./bin/'+dhtexec)
-        intemp=result.decode('utf-8').split('#')[0]
+            dhtexec='dht22n'
+
+        try:
+            result=subprocess.check_output('./bin/'+dhtexec)
+            intemp=result.decode('utf-8').split('#')[0]
+        except:
+            intemp='ERROR'
+
         return intemp
     elif param == "ha":
         # connect to Home Assistant API and get status of inside humidity entity
