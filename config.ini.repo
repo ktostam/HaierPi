@@ -31,14 +31,19 @@ firstrun = 1
 # Default log level, you can set ERROR,WARNING,INFO,DEBUG
 log_level = ERROR
 
+# in expert mode pump can set CH temp from 20 to 55 (default is 25-55)
+# USE THIS AT YOUR OWN RISK
+expert_mode = 0
+
 [SETTINGS]
 # desired room temperature
 settemp = 20
 
 # heating curve can be defined as:
 #  auto - for using buildin alghoritm (depend both on external and internal temp)
-#  1-5 - choose one of predefined static heating curve (depend only on external temp)
-#  manual - use your own static curve for preset temperature thresholds (-20℃ - 20℃ with 5℃  step)
+#  static - choose static heatingcurve (depend only on slope and external temp)
+#  manual - use your own static curve for preset temperature thresholds (-20℃ - 15℃ with 5℃  step). values stored in 'hcman' variable
+#  directly - directly set water temp for CH 
 heatingcurve = auto
 
 # option for "auto" heating curve:
@@ -46,6 +51,9 @@ heatingcurve = auto
 hcslope = 0.7
 hcpshift = 1
 hcamp = 1
+
+# temp for manual heating curve 
+hcman = 40,35,30,25,20,20,20
 
 # frequency of heating curve calculation (in minutes)
 heizfreq = 10
@@ -94,6 +102,8 @@ KEY = Home Assistenet HA
 insidesensor = sensor.temperature_in
 outsidesensor = sensor.temperature_out
 humiditysensor = sensor.humidity
+ha_mqtt_discovery = 0
+ha_mqtt_discovery_prefix = homeassistant
 
 [MQTT]
 mqtt = 0
