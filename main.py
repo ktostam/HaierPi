@@ -607,7 +607,11 @@ def curvecalc():
                 heatingcurve=hcman[7]
 
         if use_mqtt == '1':
-            client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
+            try:
+                client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
+            except:
+                logging.error("curvecalc: cannot publish heatcurve")
+
         if mintemp < heatcurve < maxtemp:
             try:
                 if GPIO.input(heatdemandpin) != "1":
