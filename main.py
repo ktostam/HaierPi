@@ -137,9 +137,9 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "pump", "threeway"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/pump/state","/details/threeway/state",]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state",]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -285,16 +285,24 @@ def ReadPump():
                 #     # zapisy end
                 if rs == "030c":
                     R101 = []
+                    D101 = []
                     for ind in range(6):
                         rs = ser.read(2).hex()
                         R101.append(int(rs, 16))
-                    logging.debug(R101)
+                        m, l = divmod(int(rs, 16), 256)
+                        D101.append(m)
+                        D101.append(l)
+                    logging.debug(D101)
                 if rs == "0320":
                     R141 = []
+                    D141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
                         R141.append(int(rs, 16))
-                    logging.debug(R141)
+                        m, l = divmod(int(rs, 16), 256)
+                        D141.append(m)
+                        D141.append(l)
+                    logging.debug(D141)
                 if rs == "0302":
                     R201 = []
                     for ind in range(1):
@@ -303,10 +311,14 @@ def ReadPump():
                     logging.debug(R201)
                 if rs == "032c":
                     R241 = []
+                    D241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         R241.append(int(rs, 16))
-                    logging.debug(R241)
+                        m, l = divmod(int(rs, 16), 256)
+                        D241.append(m)
+                        D241.append(l)
+                    logging.debug(D241)
         except:
             break
 
@@ -687,16 +699,18 @@ def getparams():
             archerror=PyHaier.GetArchError(R241)
             compinfo=PyHaier.GetCompInfo(R241)
             fans=PyHaier.GetFanRpm(R241)
+            pdps=PyHaier.GetPdPs(R241)
             tao=PyHaier.GetTao(R241)
             isr241=0
     while (isr141):
         if (len(R141) == 16):
             #logging.info(R141)
             twitwo = PyHaier.GetTwiTwo(R141)
+            thitho = PyHaier.GetThiTho(R141)
             pump=PyHaier.GetPump(R141)
             threeway=PyHaier.Get3way(R141)
             isr141=0
-    return twitwo, tdts, archerror, compinfo,fans,tao,pump,threeway
+    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -977,11 +991,13 @@ def GetParameters():
     if len(R141) == 16:
         tank = PyHaier.GetDHWCurTemp(R141)
         twitwo = PyHaier.GetTwiTwo(R141)
+        thitho = PyHaier.GetThiTho(R141)
         pump=PyHaier.GetPump(R141)
         threeway=PyHaier.Get3way(R141)
         #status[statusmap.index("tank")] = tank
         ischanged("tank", tank)
         ischanged("twitwo", twitwo)
+        ischanged("thitho", thitho)
         ischanged("pump", pump)
         ischanged("threeway", threeway)
         deltacheck(twitwo)
@@ -994,10 +1010,12 @@ def GetParameters():
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
         fans=PyHaier.GetFanRpm(R241)
+        pdps=PyHaier.GetPdPs(R241)
         tao=PyHaier.GetTao(R241)
         ischanged("tdts", tdts)
         ischanged("archerror", archerror)
         ischanged("compinfo", compinfo)
+        ischanged("pdps", pdps)
         ischanged("fans", fans)
         ischanged("tao", tao)
     if len(R101) == 6:
@@ -1251,8 +1269,8 @@ def getdata_route():
 @app.route('/getparams', methods=['GET'])
 @login_required
 def getparams_route():
-    twitwo, tdts, archerror, compinfo, fans, tao, pump, threeway = getparams()
-    return jsonify(twitwo=twitwo, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, tao=tao, pump=pump, threeway=threeway)
+    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway = getparams()
+    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway)
 
 # Function to run the background function using a scheduler
 def run_background_function():
@@ -1375,8 +1393,12 @@ def configure_ha_mqtt_discovery():
     configure_sensor("Tao",mqtt_topic + "/details/tao/state","HaierPi_Tao","°C", "temperature","measurement", None)
     configure_sensor("Twi",mqtt_topic + "/details/twitwo/state","HaierPi_Twi","°C", "temperature","measurement", "{{ value_json[0] | float}}")
     configure_sensor("Two",mqtt_topic + "/details/twitwo/state","HaierPi_Two","°C", "temperature","measurement", "{{ value_json[1] | float}}")
+    configure_sensor("Thi",mqtt_topic + "/details/thitho/state","HaierPi_Thi","°C", "temperature","measurement", "{{ value_json[0] | float}}")
+    configure_sensor("Tho",mqtt_topic + "/details/thitho/state","HaierPi_Tho","°C", "temperature","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Fan 1",mqtt_topic + "/details/fans/state","HaierPi_Fan1","rpm", None, "measurement", "{{ value_json[0] | float}}")
     configure_sensor("Fan 2",mqtt_topic + "/details/fans/state","HaierPi_Fan2","rpm", None, "measurement", "{{ value_json[1] | float}}")
+    configure_sensor("Pd",mqtt_topic + "/details/pdps/state","HaierPi_Pd","Mpa", "pressure","measurement", "{{ value_json[0] | float}}")
+    configure_sensor("Ps",mqtt_topic + "/details/pdps/state","HaierPi_Ps","MPa", "pressure","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Compressor fact",mqtt_topic + "/details/compinfo/state","HaierPi_Compfact","Hz", "frequency","measurement", "{{ value_json[0] | float}}")
     configure_sensor("Compressor fset",mqtt_topic + "/details/compinfo/state","HaierPi_Compfset","Hz", "frequency","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Compressor current",mqtt_topic + "/details/compinfo/state","HaierPi_Compcurrent","A", "current","measurement", "{{ value_json[2] | float}}")

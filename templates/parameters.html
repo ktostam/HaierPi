@@ -22,6 +22,10 @@ function getdata() {
 	$.get('/getparams', function(data) {
 		$("#twi").text(data.twitwo[0]+"°C")
 		$("#two").text(data.twitwo[1]+"°C")
+                $("#thi").text(data.thitho[0]+"°C")
+                $("#tho").text(data.thitho[1]+"°C")
+                $("#pd").text(data.pdps[0]+"MPa")
+                $("#ps").text(data.pdps[1]+"MPa")
                 $("#deltat").text((data.twitwo[1]-data.twitwo[0]).toFixed(1))
                 $("#fact").text(data.compinfo[0]+"Hz")
                 $("#fset").text(data.compinfo[1]+"Hz")
@@ -151,13 +155,33 @@ setInterval(getdata, 2000);
       <td>Ts</td>
       <td id="ts"></td>
     </tr>
-   <tr>
+    <tr>
       <th scope="row">14</th>
+      <td>Thi</td>
+      <td id="thi"></td>
+    </tr>
+    <tr>
+      <th scope="row">15</th>
+      <td>Tho</td>
+      <td id="tho"></td>
+    </tr>
+    <tr>
+      <th scope="row">14</th>
+      <td>Pd</td>
+      <td id="pd"></td>
+    </tr>
+    <tr>
+      <th scope="row">15</th>
+      <td>Ps</td>
+      <td id="ps"></td>
+    </tr>
+   <tr>
+      <th scope="row">16</th>
       <td>Pump</td>
       <td id="pump"></td>
     </tr>
     <tr>
-      <th scope="row">15</th>
+      <th scope="row">17</th>
       <td>3-way valve</td>
       <td id="threeway"></td>
     </tr>
