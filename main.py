@@ -122,6 +122,22 @@ writed=""
 needrestart=0
 dead=0
 
+datechart=collections.deque(8640*[''], 8640)
+tankchart=collections.deque(8640*[''], 8640)
+twichart=collections.deque(8640*[''], 8640)
+twochart=collections.deque(8640*[''], 8640)
+tdchart=collections.deque(8640*[''], 8640)
+tschart=collections.deque(8640*[''], 8640)
+thichart=collections.deque(8640*[''], 8640)
+thochart=collections.deque(8640*[''], 8640)
+taochart=collections.deque(8640*[''], 8640)
+pdchart=collections.deque(8640*[''], 8640)
+pschart=collections.deque(8640*[''], 8640)
+intempchart=collections.deque(8640*[''], 8640)
+outtempchart=collections.deque(8640*[''], 8640)
+humidchart=collections.deque(8640*[''], 8640)
+hcurvechart=collections.deque(8640*[''], 8640)
+
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
@@ -988,6 +1004,22 @@ def GetParameters():
     global R141
     global R201
     global R241
+    global datechart
+    global tankchart
+    global twichart
+    global twochart
+    global thichart
+    global thochart
+    global taochart
+    global pdchart
+    global pschart
+    global intempchart
+    global outtempchart
+    global humidchart
+    global hcurvechart
+    now=datetime.now().strftime("%d %b %H:%M")
+    datechart.append(str(now))
+
     if len(R141) == 16:
         tank = PyHaier.GetDHWCurTemp(R141)
         twitwo = PyHaier.GetTwiTwo(R141)
@@ -996,8 +1028,13 @@ def GetParameters():
         threeway=PyHaier.Get3way(R141)
         #status[statusmap.index("tank")] = tank
         ischanged("tank", tank)
+        tankchart.append(tank)
         ischanged("twitwo", twitwo)
+        twichart.append(twitwo[0])
+        twochart.append(twitwo[1])
         ischanged("thitho", thitho)
+        thichart.append(thitho[0])
+        thochart.append(thitho[1])
         ischanged("pump", pump)
         ischanged("threeway", threeway)
         deltacheck(twitwo)
@@ -1013,11 +1050,16 @@ def GetParameters():
         pdps=PyHaier.GetPdPs(R241)
         tao=PyHaier.GetTao(R241)
         ischanged("tdts", tdts)
+        tdchart.append(tdts[0])
+        tschart.append(tdts[1])
         ischanged("archerror", archerror)
         ischanged("compinfo", compinfo)
         ischanged("pdps", pdps)
+        pdchart.append(pdps[0])
+        pschart.append(pdps[1])
         ischanged("fans", fans)
         ischanged("tao", tao)
+        taochart.append(tao)
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
         #status[statusmap.index("dhw")] = dhw
@@ -1057,6 +1099,10 @@ def GetParameters():
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
+    intempchart.append(status[statusmap.index("intemp")])
+    outtempchart.append(status[statusmap.index("outtemp")])
+    humidchart.append(status[statusmap.index("humid")])
+    hcurvechart.append(status[statusmap.index("hcurve")])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
     flimiton=GPIO.input(freqlimitpin)
@@ -1114,6 +1160,26 @@ def theme_route():
     theme = request.form['theme']
     settheme(theme)
     return theme
+
+@app.route('/charts', methods=['GET','POST'])
+def charts_route():
+    theme=status[statusmap.index("theme")]
+    chartdate=list(datechart)
+    charttank=list(tankchart)
+    charttwi=list(twichart)
+    charttwo=list(twochart)
+    chartthi=list(thichart)
+    charttho=list(thochart)
+    charttao=list(taochart)
+    charttd=list(tdchart)
+    chartts=list(tschart)
+    chartpd=list(pdchart)
+    chartps=list(pschart)
+    chartintemp=list(intempchart)
+    chartouttemp=list(outtempchart)
+    charthumid=list(humidchart)
+    charthcurve=list(hcurvechart)
+    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve)
 
 @app.route('/settings', methods=['GET','POST'])
 @login_required
