@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, session, jsonify, redirect, M
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
 from w1thermsensor import W1ThermSensor
+import collections
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
