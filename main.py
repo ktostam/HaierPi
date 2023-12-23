@@ -684,9 +684,9 @@ def curvecalc():
 
 
 def updatecheck():
-    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    if localver != gitver:
+    global version
+    gitver=subprocess.run(['python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
+    if version != gitver:
         msg=gettext("Available")
     else:
         msg=gettext("Not Available")

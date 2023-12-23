@@ -1,9 +1,11 @@
 import re
-from git import Repo
+import git
+import sys
 import configparser
 import os
 import subprocess
 import shutil
+import urllib.request, json
 
 def backup():
     try:
@@ -11,8 +13,9 @@ def backup():
     except FileNotFoundError:
         print("/opt/haier.backup not exist")
     
+    print("Creating backup without env.")
     shutil.copytree('/opt/haier', '/opt/haier.backup')
-
+    shutil.rmtree('/opt/haier.backup/env')
 
 def compare_and_update_config_files(file1_path, file2_path):
     config1 = configparser.ConfigParser()
@@ -39,75 +42,58 @@ def compare_and_update_config_files(file1_path, file2_path):
     else:
         print("No updates needed.")
 
-#file1_path = 'config.ini'  # Replace with the path to your first config file
-#file2_path = 'config.ini'  # Replace with the path to your second config file
-status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
-print(status)
-subprocess.check_output("systemctl stop haier", shell=True)
-status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
-print(status)
-
-if status == 'inactive':
-    with open('/opt/haier/config.ini', 'r') as file:
-        filedata = file.read()
-
-    filedata = filedata.replace('DEFAULT', 'MAIN')
-
-    with open('/opt/haier/config.ini', 'w') as file:
-        file.write(filedata)
-
-    config = configparser.ConfigParser()
-    config.read('/opt/haier/config.ini')
-    release = config['MAIN']['release']
-    print(release)
-    a_repo = Repo("/opt/haier/")
-    behind = 0
-
-    # Porcelain v2 is easier to parse, branch shows ahead/behind
-    a_repo.git.fetch()
-    #a_repo.git.checkout()
-
-    this_branch= a_repo.active_branch.name
-    branch = re.search(release, this_branch)
-    if branch:
-        bran = branch.group()
-        print("check for update")
-        repo_status = a_repo.git.status(porcelain="v2", branch=True)
-        ahead_behind_match = re.search(r"#\sbranch\.ab\s\+(\d+)\s-(\d+)", repo_status)
-        # If no remotes exist or the HEAD is detached, there is no ahead/behind info
-        if ahead_behind_match:
-            behind = int(ahead_behind_match.group(2))
+def check_for_update(release):
+    with urllib.request.urlopen("https://haierpi.pl/software/release.json") as url:
+        data = json.load(url)
+        version = data["HaierPi"]["branches"][0][release][0]["latest_version"]
+    return version
     
-        print(behind)
-        if behind >= 1:
-            print("Updating")
-            backup()
-            a_repo.git.stash()
-            a_repo.git.pull()
-            old_file = os.path.abspath("/opt/haier/config.ini")
-            new_file = os.path.abspath("/opt/haier/config.ini.repo")
-            a_repo.git.stash('pop')
-            compare_and_update_config_files(old_file, new_file)
-            subprocess.check_call(['/opt/haier/env/bin/pip', 'install', '--upgrade', '-r', '/opt/haier/requirements.txt'])
 
-        repo_status = a_repo.git.status(porcelain="v2", branch=True)
-        ahead_behind_match = re.search(r"#\sbranch\.ab\s\+(\d+)\s-(\d+)", repo_status)
-        if ahead_behind_match:
-            behind = int(ahead_behind_match.group(2))
-        print(behind)
+config = configparser.ConfigParser()
+config.read('/opt/haier/config.ini')
+release = config['MAIN']['release']
 
-    else:
-        print("you are not in good branch. Swtiching branch")
+if (args_count := len(sys.argv)) > 2:
+    print(f"One argument expected, got {args_count - 1}")
+    raise SystemExit(2)
+elif args_count < 2:
+    print("robie update")
+    raise SystemExit(2)
+
+
+if sys.argv[1] == "check" :
+    print(check_for_update(release))
+    raise SystemExit(0)
+else:
+    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
+    print(status)
+    subprocess.check_output("systemctl stop haier", shell=True)
+    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
+    print(status)
+
+    if status == 'inactive':
+        with open('/opt/haier/config.ini', 'r') as file:
+            filedata = file.read()
+
+        filedata = filedata.replace('DEFAULT', 'MAIN')
+
+        with open('/opt/haier/config.ini', 'w') as file:
+            file.write(filedata)
+
+        config = configparser.ConfigParser()
+        config.read('/opt/haier/config.ini')
+        release = config['MAIN']['release']
+        print(release)
         backup()
-        a_repo.git.stash()
-        a_repo.git.checkout(release)
+        repo = git.Repo.clone_from('git@gitlab.com:ktostam/HaierPi', '/opt/haier', branch=release)
+        shutil.copyfile("/opt/haier.backup/config.ini", "/opt/haier/config.ini")
         old_file = os.path.abspath("/opt/haier/config.ini")
         new_file = os.path.abspath("/opt/haier/config.ini.repo")
-        a_repo.git.stash('pop')
         compare_and_update_config_files(old_file, new_file)
+        subprocess.check_call(['python3', '-m', 'venv', '/opt/haier/env'])
         subprocess.check_call(['/opt/haier/env/bin/pip', 'install', '--upgrade', '-r', '/opt/haier/requirements.txt'])
-        
-    subprocess.check_output("systemctl start haier", shell=True)
-    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
-    if status == 'active':
-        print("HaierPi updated")
+
+        subprocess.check_output("systemctl start haier", shell=True)
+        status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
+        if status == 'active':
+            print("HaierPi updated")
