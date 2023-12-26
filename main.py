@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, session, jsonify, redirect, M
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
 from w1thermsensor import W1ThermSensor
+import collections
 import paho.mqtt.client as mqtt
 from termcolor import colored
 from waitress import serve
@@ -24,7 +25,7 @@ import time
 import sys
 import io
 
-version="1.34"
+version="1.35"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -122,6 +123,23 @@ writed=""
 needrestart=0
 dead=0
 
+datechart=collections.deque(8640*[''], 8640)
+tankchart=collections.deque(8640*[''], 8640)
+twichart=collections.deque(8640*[''], 8640)
+twochart=collections.deque(8640*[''], 8640)
+tdchart=collections.deque(8640*[''], 8640)
+tschart=collections.deque(8640*[''], 8640)
+thichart=collections.deque(8640*[''], 8640)
+thochart=collections.deque(8640*[''], 8640)
+taochart=collections.deque(8640*[''], 8640)
+pdchart=collections.deque(8640*[''], 8640)
+pschart=collections.deque(8640*[''], 8640)
+intempchart=collections.deque(8640*[''], 8640)
+outtempchart=collections.deque(8640*[''], 8640)
+humidchart=collections.deque(8640*[''], 8640)
+hcurvechart=collections.deque(8640*[''], 8640)
+openmeteochart=collections.deque(8640*[''], 8640)
+
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
@@ -137,9 +155,9 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "pump", "threeway"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/pump/state","/details/threeway/state",]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state",]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -285,16 +303,24 @@ def ReadPump():
                 #     # zapisy end
                 if rs == "030c":
                     R101 = []
+                    D101 = []
                     for ind in range(6):
                         rs = ser.read(2).hex()
                         R101.append(int(rs, 16))
-                    logging.debug(R101)
+                        m, l = divmod(int(rs, 16), 256)
+                        D101.append(m)
+                        D101.append(l)
+                    logging.debug(D101)
                 if rs == "0320":
                     R141 = []
+                    D141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
                         R141.append(int(rs, 16))
-                    logging.debug(R141)
+                        m, l = divmod(int(rs, 16), 256)
+                        D141.append(m)
+                        D141.append(l)
+                    logging.debug(D141)
                 if rs == "0302":
                     R201 = []
                     for ind in range(1):
@@ -303,10 +329,14 @@ def ReadPump():
                     logging.debug(R201)
                 if rs == "032c":
                     R241 = []
+                    D241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         R241.append(int(rs, 16))
-                    logging.debug(R241)
+                        m, l = divmod(int(rs, 16), 256)
+                        D241.append(m)
+                        D241.append(l)
+                    logging.debug(D241)
         except:
             break
 
@@ -590,22 +620,22 @@ def curvecalc():
             sslope=float(slope)
             heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == 'manual':
-            if -20 < outsidetemp < -15:
-                heatingcurve=hcman[0]
-            elif -15 < outsidetemp < -10:
-                heatingcurve=hcman[1]
-            elif -10 < outsidetemp < -5:
-                heatingcurve=hcman[2]
-            elif -5 < outsidetemp < 0:
-                heatingcurve=hcman[3]
-            elif 0 < outsidetemp < 5:
-                heatingcurve=hcman[4]
-            elif 5 < outsidetemp < 10:
-                heatingcurve=hcman[5]
-            elif 10 < outsidetemp < 15:
-                heatingcurve=hcman[6]
-            elif outsidetemp > 15:
-                heatingcurve=hcman[7]
+            if -20 <= outsidetemp < -15:
+                heatcurve=hcman[0]
+            elif -15 <= outsidetemp < -10:
+                heatcurve=hcman[1]
+            elif -10 <= outsidetemp < -5:
+                heatcurve=hcman[2]
+            elif -5 <= outsidetemp < 0:
+                heatcurve=hcman[3]
+            elif 0 <= outsidetemp < 5:
+                heatcurve=hcman[4]
+            elif 5 <= outsidetemp < 10:
+                heatcurve=hcman[5]
+            elif 10 <= outsidetemp < 15:
+                heatcurve=hcman[6]
+            elif outsidetemp >= 15:
+                heatcurve=hcman[7]
 
         if use_mqtt == '1':
             try:
@@ -655,10 +685,10 @@ def curvecalc():
 
 
 def updatecheck():
-    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
-    if localver != gitver:
-        msg=gettext("Available")
+    global version
+    gitver=subprocess.run(['python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
+    if version != gitver:
+        msg=gettext("Available, version: "+gitver)
     else:
         msg=gettext("Not Available")
     return jsonify(update=msg)
@@ -687,16 +717,18 @@ def getparams():
             archerror=PyHaier.GetArchError(R241)
             compinfo=PyHaier.GetCompInfo(R241)
             fans=PyHaier.GetFanRpm(R241)
+            pdps=PyHaier.GetPdPs(R241)
             tao=PyHaier.GetTao(R241)
             isr241=0
     while (isr141):
         if (len(R141) == 16):
             #logging.info(R141)
             twitwo = PyHaier.GetTwiTwo(R141)
+            thitho = PyHaier.GetThiTho(R141)
             pump=PyHaier.GetPump(R141)
             threeway=PyHaier.Get3way(R141)
             isr141=0
-    return twitwo, tdts, archerror, compinfo,fans,tao,pump,threeway
+    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -974,14 +1006,37 @@ def GetParameters():
     global R141
     global R201
     global R241
+    global datechart
+    global tankchart
+    global twichart
+    global twochart
+    global thichart
+    global thochart
+    global taochart
+    global pdchart
+    global pschart
+    global intempchart
+    global outtempchart
+    global humidchart
+    global hcurvechart
+    now=datetime.now().strftime("%d %b %H:%M")
+    datechart.append(str(now))
+
     if len(R141) == 16:
         tank = PyHaier.GetDHWCurTemp(R141)
         twitwo = PyHaier.GetTwiTwo(R141)
+        thitho = PyHaier.GetThiTho(R141)
         pump=PyHaier.GetPump(R141)
         threeway=PyHaier.Get3way(R141)
         #status[statusmap.index("tank")] = tank
         ischanged("tank", tank)
+        tankchart.append(tank)
         ischanged("twitwo", twitwo)
+        twichart.append(twitwo[0])
+        twochart.append(twitwo[1])
+        ischanged("thitho", thitho)
+        thichart.append(thitho[0])
+        thochart.append(thitho[1])
         ischanged("pump", pump)
         ischanged("threeway", threeway)
         deltacheck(twitwo)
@@ -994,12 +1049,19 @@ def GetParameters():
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
         fans=PyHaier.GetFanRpm(R241)
+        pdps=PyHaier.GetPdPs(R241)
         tao=PyHaier.GetTao(R241)
         ischanged("tdts", tdts)
+        tdchart.append(tdts[0])
+        tschart.append(tdts[1])
         ischanged("archerror", archerror)
         ischanged("compinfo", compinfo)
+        ischanged("pdps", pdps)
+        pdchart.append(pdps[0])
+        pschart.append(pdps[1])
         ischanged("fans", fans)
         ischanged("tao", tao)
+        taochart.append(tao)
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
         #status[statusmap.index("dhw")] = dhw
@@ -1039,6 +1101,13 @@ def GetParameters():
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
+    intempchart.append(status[statusmap.index("intemp")])
+    outtempchart.append(status[statusmap.index("outtemp")])
+    humidchart.append(status[statusmap.index("humid")])
+    hcurvechart.append(status[statusmap.index("hcurve")])
+    with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude=52.584&longitude=22.7378&current=temperature_2m") as url:
+        omdata = json.load(url)
+    openmeteochart.append(omdata['current']['temperature_2m'])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
     flimiton=GPIO.input(freqlimitpin)
@@ -1096,6 +1165,27 @@ def theme_route():
     theme = request.form['theme']
     settheme(theme)
     return theme
+
+@app.route('/charts', methods=['GET','POST'])
+def charts_route():
+    theme=status[statusmap.index("theme")]
+    chartdate=list(datechart)
+    charttank=list(tankchart)
+    charttwi=list(twichart)
+    charttwo=list(twochart)
+    chartthi=list(thichart)
+    charttho=list(thochart)
+    charttao=list(taochart)
+    charttd=list(tdchart)
+    chartts=list(tschart)
+    chartpd=list(pdchart)
+    chartps=list(pschart)
+    chartintemp=list(intempchart)
+    chartouttemp=list(outtempchart)
+    charthumid=list(humidchart)
+    charthcurve=list(hcurvechart)
+    chartopenmeteo=list(openmeteochart)
+    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve, chartopenmeteo=chartopenmeteo)
 
 @app.route('/settings', methods=['GET','POST'])
 @login_required
@@ -1251,8 +1341,8 @@ def getdata_route():
 @app.route('/getparams', methods=['GET'])
 @login_required
 def getparams_route():
-    twitwo, tdts, archerror, compinfo, fans, tao, pump, threeway = getparams()
-    return jsonify(twitwo=twitwo, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, tao=tao, pump=pump, threeway=threeway)
+    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway = getparams()
+    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway)
 
 # Function to run the background function using a scheduler
 def run_background_function():
@@ -1375,8 +1465,12 @@ def configure_ha_mqtt_discovery():
     configure_sensor("Tao",mqtt_topic + "/details/tao/state","HaierPi_Tao","°C", "temperature","measurement", None)
     configure_sensor("Twi",mqtt_topic + "/details/twitwo/state","HaierPi_Twi","°C", "temperature","measurement", "{{ value_json[0] | float}}")
     configure_sensor("Two",mqtt_topic + "/details/twitwo/state","HaierPi_Two","°C", "temperature","measurement", "{{ value_json[1] | float}}")
+    configure_sensor("Thi",mqtt_topic + "/details/thitho/state","HaierPi_Thi","°C", "temperature","measurement", "{{ value_json[0] | float}}")
+    configure_sensor("Tho",mqtt_topic + "/details/thitho/state","HaierPi_Tho","°C", "temperature","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Fan 1",mqtt_topic + "/details/fans/state","HaierPi_Fan1","rpm", None, "measurement", "{{ value_json[0] | float}}")
     configure_sensor("Fan 2",mqtt_topic + "/details/fans/state","HaierPi_Fan2","rpm", None, "measurement", "{{ value_json[1] | float}}")
+    configure_sensor("Pd",mqtt_topic + "/details/pdps/state","HaierPi_Pd","Mpa", "pressure","measurement", "{{ value_json[0] | float}}")
+    configure_sensor("Ps",mqtt_topic + "/details/pdps/state","HaierPi_Ps","MPa", "pressure","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Compressor fact",mqtt_topic + "/details/compinfo/state","HaierPi_Compfact","Hz", "frequency","measurement", "{{ value_json[0] | float}}")
     configure_sensor("Compressor fset",mqtt_topic + "/details/compinfo/state","HaierPi_Compfset","Hz", "frequency","measurement", "{{ value_json[1] | float}}")
     configure_sensor("Compressor current",mqtt_topic + "/details/compinfo/state","HaierPi_Compcurrent","A", "current","measurement", "{{ value_json[2] | float}}")
