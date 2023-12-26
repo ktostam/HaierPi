@@ -138,6 +138,15 @@ default login and password for web interfaces is: ***admin/admin***
 ### if you want to help create a translation into another language write me an email or on the discord channel
 
 ## Version
+### 1.35
+- Add MQTT Discovery (by Radek)
+- Add more option for heatingcurve
+- Add Anti ON-OFF function
+- Add DHW without limit function
+- Add Parameters page
+- Add Temperature Charts
+- Minor fixes
+
 ### 1.32
 - Add parameters
 - Add scheduler for CH and DHW
