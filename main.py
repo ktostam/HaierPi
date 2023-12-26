@@ -138,6 +138,7 @@ intempchart=collections.deque(8640*[''], 8640)
 outtempchart=collections.deque(8640*[''], 8640)
 humidchart=collections.deque(8640*[''], 8640)
 hcurvechart=collections.deque(8640*[''], 8640)
+openmeteochart=collections.deque(8640*[''], 8640)
 
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
@@ -619,22 +620,22 @@ def curvecalc():
             sslope=float(slope)
             heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == 'manual':
-            if -20 < outsidetemp < -15:
-                heatingcurve=hcman[0]
-            elif -15 < outsidetemp < -10:
-                heatingcurve=hcman[1]
-            elif -10 < outsidetemp < -5:
-                heatingcurve=hcman[2]
-            elif -5 < outsidetemp < 0:
-                heatingcurve=hcman[3]
-            elif 0 < outsidetemp < 5:
-                heatingcurve=hcman[4]
-            elif 5 < outsidetemp < 10:
-                heatingcurve=hcman[5]
-            elif 10 < outsidetemp < 15:
-                heatingcurve=hcman[6]
-            elif outsidetemp > 15:
-                heatingcurve=hcman[7]
+            if -20 <= outsidetemp < -15:
+                heatcurve=hcman[0]
+            elif -15 <= outsidetemp < -10:
+                heatcurve=hcman[1]
+            elif -10 <= outsidetemp < -5:
+                heatcurve=hcman[2]
+            elif -5 <= outsidetemp < 0:
+                heatcurve=hcman[3]
+            elif 0 <= outsidetemp < 5:
+                heatcurve=hcman[4]
+            elif 5 <= outsidetemp < 10:
+                heatcurve=hcman[5]
+            elif 10 <= outsidetemp < 15:
+                heatcurve=hcman[6]
+            elif outsidetemp >= 15:
+                heatcurve=hcman[7]
 
         if use_mqtt == '1':
             try:
@@ -1104,6 +1105,9 @@ def GetParameters():
     outtempchart.append(status[statusmap.index("outtemp")])
     humidchart.append(status[statusmap.index("humid")])
     hcurvechart.append(status[statusmap.index("hcurve")])
+    with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude=52.584&longitude=22.7378&current=temperature_2m") as url:
+        omdata = json.load(url)
+    openmeteochart.append(omdata['current']['temperature_2m'])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
     flimiton=GPIO.input(freqlimitpin)
@@ -1180,7 +1184,8 @@ def charts_route():
     chartouttemp=list(outtempchart)
     charthumid=list(humidchart)
     charthcurve=list(hcurvechart)
-    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve)
+    chartopenmeteo=list(openmeteochart)
+    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve, chartopenmeteo=chartopenmeteo)
 
 @app.route('/settings', methods=['GET','POST'])
 @login_required
