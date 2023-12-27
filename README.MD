@@ -16,12 +16,17 @@ If you have any question you can find me on discord:
 [<img src="https://discordapp.com/api/guilds/1096167750612828210/widget.png?style=banner2" alt="Discord Banner 2"/>
 ](https://discord.gg/dVXmAfWt3P)
 
+## Patrons
+- Radek Michalowski
+
 ## Contributors
 - @kocur on discord channel
 - @Radek on discord channel
 
 ## Donation
-If you like My work and want to support me, you can:
+If you like My work and want to support my work, you can:
+
+[<img width="150px" src="https://d3mi06r82nxl9g.cloudfront.net/files/logotypes/svg/patronite-SVG-02-white.svg">](https://patronite.pl/haierpi)
 
 [<img width="150px" src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png">](https://www.buymeacoffee.com/jacekbrzozZ)
 
@@ -220,6 +225,7 @@ In this release, MQTT support is not finished
  GNU Affero General Public License v3 [©Jacek Brzozowski](https://github.com/ktostam/HaierPi)
 
 In this project I'am using:
+[open-meteo](https://open-meteo.com/) - CC BY 4.0
 
 [jquery-schedule](https://github.com/Yehzuna/jquery-schedule) - MIT License
 

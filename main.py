@@ -68,6 +68,10 @@ def loadconfig():
     insidetemp = config['SETTINGS']['insidetemp']
     global outsidetemp
     outsidetemp = config['SETTINGS']['outsidetemp']
+    global omlat
+    omlat = config['SETTINGS']['omlat']
+    global omlon
+    omlon = config['SETTINGS']['omlon']
     global humidity
     humidity = config['SETTINGS']['humidity']
     global flimit
@@ -138,7 +142,6 @@ intempchart=collections.deque(8640*[''], 8640)
 outtempchart=collections.deque(8640*[''], 8640)
 humidchart=collections.deque(8640*[''], 8640)
 hcurvechart=collections.deque(8640*[''], 8640)
-openmeteochart=collections.deque(8640*[''], 8640)
 
 modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize=8, parity='E', baudrate=9600)
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
@@ -687,7 +690,7 @@ def curvecalc():
 def updatecheck():
     global version
     gitver=subprocess.run(['python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
-    if version != gitver:
+    if version < gitver:
         msg=gettext("Available, version: "+gitver)
     else:
         msg=gettext("Not Available")
@@ -1105,9 +1108,6 @@ def GetParameters():
     outtempchart.append(status[statusmap.index("outtemp")])
     humidchart.append(status[statusmap.index("humid")])
     hcurvechart.append(status[statusmap.index("hcurve")])
-    with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude=52.584&longitude=22.7378&current=temperature_2m") as url:
-        omdata = json.load(url)
-    openmeteochart.append(omdata['current']['temperature_2m'])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
     flimiton=GPIO.input(freqlimitpin)
@@ -1184,8 +1184,7 @@ def charts_route():
     chartouttemp=list(outtempchart)
     charthumid=list(humidchart)
     charthcurve=list(hcurvechart)
-    chartopenmeteo=list(openmeteochart)
-    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve, chartopenmeteo=chartopenmeteo)
+    return render_template('charts.html', theme=theme, chartdate=chartdate, charttank=charttank, charttwi=charttwi, charttwo=charttwo, chartthi=chartthi, charttho=charttho, charttao=charttao, charttd=charttd, chartts=chartts, chartpd=chartpd, chartps=chartps, chartintemp=chartintemp, chartouttemp=chartouttemp, charthumid=charthumid, charthcurve=charthcurve)
 
 @app.route('/settings', methods=['GET','POST'])
 @login_required
@@ -1333,13 +1332,13 @@ def change_pass_route():
     return jsonify(response)
 
 @app.route('/getdata', methods=['GET'])
-@login_required
+@login_required(basic=True)
 def getdata_route():
     output = getdata()
     return output
 
 @app.route('/getparams', methods=['GET'])
-@login_required
+@login_required(basic=True)
 def getparams_route():
     twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway = getparams()
     return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway)

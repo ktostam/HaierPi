@@ -88,12 +88,20 @@ dhwscheduler = 0
 # Domestic Hot Water without limit (when heating DHW turn off frequency limit if turned on)
 dhwwl = 0
 
-# insidetemp,outsidetemp and humidity can be set to:
+# insidetemp and humidity can be set to:
 #  builtin - for using sensor connected to PCB
 #  ha - for read sensor from Home Assistant api
+#  none - disable inside humidity and temperature sensor (you will not be able to use heating curves that depend on the inside temperature)
 insidetemp = ha
-outsidetemp = ha
 humidity = ha
+# outsidetemp can be set to:
+#  builtin - for sensor connected to PCB
+#  ha - for sensor from Home Assistant api
+#  tao - for built-in pump ambient sensor (when the pump is running, it can strongly misrepresent)
+#  openmeteo - use temperature information from open-meteo.com (don't forget to configure the longitude and latitude)
+outsidetemp = ha
+omlat = 52.22977
+omlon = 21.01178
 
 [HOMEASSISTANT]
 HAADDR = 127.0.0.1
