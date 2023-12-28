@@ -625,7 +625,7 @@ def curvecalc():
         elif heatingcurve == 'manual':
             if -20 <= float(outsidetemp) < -15:
                 heatcurve=hcman[0]
-            elif -15 <= float(outsidetemp)) < -10:
+            elif -15 <= float(outsidetemp) < -10:
                 heatcurve=hcman[1]
             elif -10 <= float(outsidetemp) < -5:
                 heatcurve=hcman[2]
@@ -1292,6 +1292,11 @@ def scheduler_route():
     schedule2 = open("schedule_dhw.json", "r")
     theme=status[statusmap.index("theme")]
     return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()), version=version, theme=theme)
+
+@app.route('/about')
+def about():
+    theme=status[statusmap.index("theme")]
+    return  render_template('about.html', version=version, theme=theme)
 
 @app.route('/statechange', methods=['POST'])
 @login_required
