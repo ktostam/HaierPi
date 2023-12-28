@@ -121,6 +121,9 @@
 			<a class="list-group-item list-group-item-action p-3" href="/scheduler">{{ _('Scheduler') }}</a>
 			<a class="list-group-item list-group-item-action p-3" href="/charts">{{ _('Charts') }}</a>
                 </div>
+ <!--               <div class="list-group list-group-flush">
+                        <a class="list-group-item list-group-item-action p-3" href="/about">{{ _('About') }}</a>
+                </div>-->
                 {% if is_logged_in() %}
                 <div class="dropdown p-3">
                     <a href="#" class="d-flex align-items-center position-relative link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -133,6 +136,7 @@
                     <ul class="dropdown-menu text-small shadow p-3" style="">
 			    <li><a class="dropdown-item" onclick="changepass()" href="#">{{ _('Change password') }}</a></li>
 			    <li><a class="dropdown-item" onclick="updatecheck()" href="#">{{ _('Check for update') }}</a></li>
+			    <li><a class="dropdown-item" href="/backup">{{ _('Download backup') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
 			<li><a class="dropdown-item position-relative" onclick="restart()" href="#">{{ _('Restart') }}
                         {% if needrestart == 1 %}

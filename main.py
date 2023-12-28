@@ -1,7 +1,7 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, render_template, request, session, jsonify, redirect, Markup
+from flask import Flask, render_template, request, session, jsonify, redirect, Markup, send_file
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
 from w1thermsensor import W1ThermSensor
@@ -816,13 +816,20 @@ def GetOutsideTemp(param):
         except:
             response = gettext("Error")
         return response
+    elif param == "tao":
+        temperature = status[statusmap.index("tao")]
+        return temperature
     elif param == "openmeteo":
         global omlat
         global omlon
-        with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude="+str(omlat)+"&longitude="+str(omlon)+"&current=temperature_2m") as url:
-            omdata = json.load(url)
-        temperature=omdata['current']['temperature_2m']
-        return temperature
+        try:
+            with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude="+str(omlat)+"&longitude="+str(omlon)+"&current=temperature_2m") as url:
+                omdata = json.load(url)
+            temperature=omdata['current']['temperature_2m']
+            return temperature
+        except:
+            temperature=0
+            return temperature
     else:
         return -1
 
@@ -1173,6 +1180,14 @@ def theme_route():
     theme = request.form['theme']
     settheme(theme)
     return theme
+
+@app.route('/backup')
+def backup_route():
+    try:
+        subprocess.check_output("7zr a backup.7z config.ini schedule_*", shell=True).decode().rstrip('\n')
+        return send_file('/opt/haier/backup.7z', download_name='backup.7z')
+    except Exception as e:
+        return str(e)
 
 @app.route('/charts', methods=['GET','POST'])
 def charts_route():
