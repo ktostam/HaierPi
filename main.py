@@ -1484,7 +1484,6 @@ def threads_check():
         if not bg_thread.is_alive():
             if dead == 0:
                 logging.error("Background thread DEAD")
-
                 dead = 1
         elif not serial_thread.is_alive():
             if dead == 0:
@@ -1503,6 +1502,7 @@ def threads_check():
             for line in iter(proc.stdout.readline, ''):
                 f.write(line)
             f.close()
+            dead = 2
 
         time.sleep(1)
         if event.is_set():
