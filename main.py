@@ -646,7 +646,7 @@ def curvecalc():
             except:
                 logging.error("curvecalc: cannot publish heatcurve")
 
-        if mintemp < heatcurve < maxtemp:
+        if mintemp < float(heatcurve) < maxtemp:
             try:
                 if GPIO.input(heatdemandpin) != "1":
                     logging.info("turn on heat demand")
