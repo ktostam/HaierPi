@@ -690,7 +690,7 @@ def curvecalc():
 def updatecheck():
     global version
     gitver=subprocess.run(['/opt/haier/env/bin/python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
-    if version < gitver:
+    if float(version) < float(gitver):
         msg=gettext("Available, version: "+gitver)
     else:
         msg=gettext("Not Available")

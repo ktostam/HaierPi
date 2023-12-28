@@ -26,9 +26,9 @@
             $.get('/updatecheck', function(data) {
                 var text=data.update;
                 var state="info";
-                if(text == "Available") {
+                if(text.includes('Available,')) {
                     Swal.fire({
-					    title: "{{ _('New update available, Do you want install?') }}",
+					    title: text+"{{ _('. Do you want install?') }}",
                         showCancelButton: true,
 					    confirmButtonText: "{{ _('Install') }}",
                     }).then((result) => {
