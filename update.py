@@ -42,32 +42,10 @@ def compare_and_update_config_files(file1_path, file2_path):
     else:
         print("No updates needed.")
 
-def check_for_update(release):
-    with urllib.request.urlopen("https://haierpi.pl/software/release.json") as url:
-        data = json.load(url)
-        version = data["HaierPi"]["branches"][0][release][0]["latest_version"]
-    return version
-    
-
-config = configparser.ConfigParser()
-config.read('/opt/haier/config.ini')
-release = config['MAIN']['release']
-
-if (args_count := len(sys.argv)) > 2:
-    print(f"One argument expected, got {args_count - 1}")
-    raise SystemExit(2)
-elif args_count < 2:
-    print("robie update")
-    raise SystemExit(2)
-
-
-if sys.argv[1] == "check" :
-    print(check_for_update(release))
-    raise SystemExit(0)
-else:
-    status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
-    print(status)
-    subprocess.check_output("systemctl stop haier", shell=True)
+def update():
+	status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
+	print(status)
+	subprocess.check_output("systemctl stop haier", shell=True)
     status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
     print(status)
 
@@ -85,7 +63,7 @@ else:
         release = config['MAIN']['release']
         print(release)
         backup()
-        repo = git.Repo.clone_from('git@gitlab.com:ktostam/HaierPi', '/opt/haier', branch=release)
+        repo = git.Repo.clone_from('https://github.com/ktostam/HaierPi', '/opt/haier', branch=release)
         shutil.copyfile("/opt/haier.backup/config.ini", "/opt/haier/config.ini")
         old_file = os.path.abspath("/opt/haier/config.ini")
         new_file = os.path.abspath("/opt/haier/config.ini.repo")
@@ -97,3 +75,26 @@ else:
         status = subprocess.check_output("systemctl show -p ActiveState --value haier", shell=True).decode().rstrip('\n')
         if status == 'active':
             print("HaierPi updated")
+
+def check_for_update(release):
+    with urllib.request.urlopen("https://haierpi.pl/software/release.json") as url:
+        data = json.load(url)
+        version = data["HaierPi"]["branches"][0][release][0]["latest_version"]
+    return version
+    
+
+config = configparser.ConfigParser()
+config.read('/opt/haier/config.ini')
+release = config['MAIN']['release']
+
+if (args_count := len(sys.argv)) > 2:
+    print(f"One argument expected, got {args_count - 1}")
+    raise SystemExit(2)
+elif args_count < 2:
+    print("robie update")
+	update()
+
+
+if sys.argv[1] == "check" :
+    print(check_for_update(release))
+    raise SystemExit(0)

@@ -623,21 +623,21 @@ def curvecalc():
             sslope=float(slope)
             heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == 'manual':
-            if -20 <= outsidetemp < -15:
+            if -20 <= float(outsidetemp) < -15:
                 heatcurve=hcman[0]
-            elif -15 <= outsidetemp < -10:
+            elif -15 <= float(outsidetemp)) < -10:
                 heatcurve=hcman[1]
-            elif -10 <= outsidetemp < -5:
+            elif -10 <= float(outsidetemp) < -5:
                 heatcurve=hcman[2]
-            elif -5 <= outsidetemp < 0:
+            elif -5 <= float(outsidetemp) < 0:
                 heatcurve=hcman[3]
-            elif 0 <= outsidetemp < 5:
+            elif 0 <= float(outsidetemp) < 5:
                 heatcurve=hcman[4]
-            elif 5 <= outsidetemp < 10:
+            elif 5 <= float(outsidetemp) < 10:
                 heatcurve=hcman[5]
-            elif 10 <= outsidetemp < 15:
+            elif 10 <= float(outsidetemp) < 15:
                 heatcurve=hcman[6]
-            elif outsidetemp >= 15:
+            elif float(outsidetemp) >= 15:
                 heatcurve=hcman[7]
 
         if use_mqtt == '1':
@@ -689,7 +689,7 @@ def curvecalc():
 
 def updatecheck():
     global version
-    gitver=subprocess.run(['python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
+    gitver=subprocess.run(['/opt/haier/env/bin/python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
     if version < gitver:
         msg=gettext("Available, version: "+gitver)
     else:
