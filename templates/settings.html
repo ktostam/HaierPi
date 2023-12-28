@@ -25,7 +25,21 @@
     	    opacity: 0.4;
 	}
     </style>
-		    <script>
+				    <script>
+			    function outsidetempselect() {
+				var actualoutsidetemp=$("#outsidetemp option:selected").val();
+					switch(actualoutsidetemp) {
+						case "openmeteo":
+							$("#divomlat").removeClass("disableddiv");
+							$("#divomlon").removeClass("disableddiv");
+							$("#divomtown").removeClass("disableddiv");
+							break;
+						default:
+							$("#divomlat").addClass("disableddiv");
+                                                	$("#divomlon").addClass("disableddiv");
+                                                	$("#divomtown").addClass("disableddiv");
+					}
+			}
 			    function hcurve_change(){
 					var actualhcurve=$("#heatingcurve option:selected").val();
 								console.log(actualhcurve);
@@ -63,6 +77,34 @@
 
 					}
 			    }
+			    function city_select() {
+				const latlon=$("#citysearch").val().split(';')
+				console.log(latlon)
+				$("#latitude").val(latlon[0])
+                                $("#longitude").val(latlon[1])
+
+							}
+			    function city_search() {
+				var name = $("#citysearch").val()
+				var curloc = navigator.languages[1];
+				console.log(name)
+				$.get('https://geocoding-api.open-meteo.com/v1/search?name='+name+'&count=10&language='+curloc+'&format=json', function(data) {
+				console.log(data.results)
+				                                        $('#foundcity').empty();
+				for (let i in data.results) {
+					$('#foundcity').append("<option value='"+data.results[i].latitude+";"+data.results[i].longitude+"'>"+data.results[i].name+", "+data.results[i].country+"");
+  					console.log(data.results[i].name);
+					console.log(data.results[i].country);
+				}
+                                //        if ( data.output == 'active' ) {
+                                //$('#startlogbutton').text("Stop logging")
+                                //$('#startlogbutton').attr("onclick", "start_log('stop')")
+                                //                } else {
+                                //$('#startlogbutton').text("Start logging")
+                                //$('#startlogbutton').attr("onclick", "start_log('restart')")                                        }
+							   
+                                                       })
+							}
 			    function manual_hcurve(){
 				$('#hcman').val($('#hcmn20').val() + ',' + $('#hcmn15').val() + ',' + $('#hcmn10').val() + ',' + $('#hcmn5').val() + ',' + $('#hcm0').val() + ',' + $('#hcmp5').val() + ',' + $('#hcmp10').val() + ',' + $('#hcmp15').val())
 							}
@@ -177,16 +219,66 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
 				    <strong class="mb-0">{{ _('Outside temperature sensor') }}</strong>
-				<p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor') }}</p>
+				<p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor, Tao - for built-in pump ambient sensor, Open Meteo - for online weather service ( you need to provide the coordinates of your town )') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <select class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}">
+                                    <select id="outsidetemp" class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}" onchange="outsidetempselect()">
 					    <option value="ha"{% if outsidetemp == 'ha' %} selected {% endif %}>{{ _('HA') }}</option>
 					<option value="builtin"{% if outsidetemp == 'builtin' %} selected {% endif %}>{{ _('Builtin') }}</option>
+                                            <option value="tao"{% if insidetemp == 'tao' %} selected {% endif %}>{{ _('Tao') }}</option>
+                                            <option value="openmeteo"{% if insidetemp == 'openmeteo' %} selected {% endif %}>{{ _('Open Meteo') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomlat" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Coordinates') }}</strong>
+                                    <p class="text-muted mb-0">{{ _('Latitude') }}</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="text" class="form-control" id="latitude" name="SETTINGS$omlat" aria-describedby="omlat" value="{{ omlat }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomlon" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Coordinates') }}</strong>
+                                    <p class="text-muted mb-0">{{ _('Longitude') }}</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="text" class="form-control" id="longitude" name="SETTINGS$omlon" aria-describedby="omlon" value="{{ omlon }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomtown" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Find coordinates by name') }}</a></strong>
+                                    <p class="text-muted mb-0">{{ _('Name the town') }} <a href="https://open-meteo.com/">Weather data by Open-Meteo.com</a></p>
+                            </div>
+                            <div class="col-auto">
+<input class="form-control" list="foundcity" id="citysearch" oninput="city_search()" onchange="city_select()" placeholder="Type to search...">
+<datalist id="foundcity">
+  <option value="...">
+</datalist>
                             </div>
                         </div>
                     </div>

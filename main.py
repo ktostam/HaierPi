@@ -816,6 +816,13 @@ def GetOutsideTemp(param):
         except:
             response = gettext("Error")
         return response
+    elif param == "openmeteo":
+        global omlat
+        global omlon
+        with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude="+str(omlat)+"&longitude="+str(omlon)+"&current=temperature_2m") as url:
+            omdata = json.load(url)
+        temperature=omdata['current']['temperature_2m']
+        return temperature
     else:
         return -1
 
@@ -1158,7 +1165,8 @@ def home():
         return redirect("/settings", code=302)
     else:
         theme=status[statusmap.index("theme")]
-        return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit)
+        global outsidetemp
+        return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit, outsidetemp=outsidetemp)
 
 @app.route('/theme', methods=['POST'])
 def theme_route():
