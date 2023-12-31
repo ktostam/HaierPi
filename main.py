@@ -158,9 +158,9 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state",]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway", "chkwhpd", "dhwkwhpd"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state","/details/dailykwh","/details/chkwhpd/state", "/details/dhwkwhpd"]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'N.A.', '0', '0']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -731,7 +731,9 @@ def getparams():
             pump=PyHaier.GetPump(R141)
             threeway=PyHaier.Get3way(R141)
             isr141=0
-    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway
+    chkwhpd=status[statusmap.index("chkwhpd")]
+    dhwkwhpd=status[statusmap.index("dhwkwhpd")]
+    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway,chkwhpd,dhwkwhpd
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -1065,6 +1067,13 @@ def GetParameters():
         tdts=PyHaier.GetTdTs(R241)
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
+        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*0.0002777778)
+        if str(status[statusmap.index("threeway")]) == "DHW":
+            dhwkwhpd=float(status[statusmap.index("dhwkwhpd")])+kwhnow
+            ischanged("dhwkwhpd", dhwkwhpd)
+        elif str(status[statusmap.index("threeway")]) == "CH":
+            chkwhpd=float(status[statusmap.index("chkwhpd")])+kwhnow
+            ischanged("chkwhpd",chkwhpd)
         fans=PyHaier.GetFanRpm(R241)
         pdps=PyHaier.GetPdPs(R241)
         tao=PyHaier.GetTao(R241)
@@ -1368,8 +1377,8 @@ def getdata_route():
 @app.route('/getparams', methods=['GET'])
 @login_required(basic=True)
 def getparams_route():
-    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway = getparams()
-    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway)
+    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway, chkwhpd, dhwkwhpd = getparams()
+    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway, chkwhpd=chkwhpd, dhwkwhpd=dhwkwhpd)
 
 # Function to run the background function using a scheduler
 def run_background_function():
