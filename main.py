@@ -103,6 +103,8 @@ def loadconfig():
     mqtt_broker_addr=config['MQTT']['address']
     global mqtt_broker_port
     mqtt_broker_port=config['MQTT']['port']
+    global mqtt_ssl
+    mqtt_ssl=config['MQTT']['mqtt_ssl']
     global mqtt_topic
     mqtt_topic=config['MQTT']['main_topic']
     global mqtt_username
@@ -1421,6 +1423,8 @@ def connect_mqtt():
     client.on_message = on_message  # Define callback function for receipt of a message
     client.on_disconnect = on_disconnect
     client.will_set(mqtt_topic + "/connected","offline",qos=1,retain=True)
+    if mqtt_ssl == '1':
+        client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
     client.username_pw_set(mqtt_username, mqtt_password)
     try:
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))

@@ -743,6 +743,21 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		 <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">{{ _('Use MQTT with TLS') }}</strong>
+                            <p class="text-muted mb-0">{{ _('Use secure connection for MQTT') }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                <input type="hidden" id="mqtt_ssl" value="{{ mqtt_ssl }}" name="MQTT$mqtt_ssl">
+                                <input type="checkbox" class="form-check-input" id="mqtt_mqtt_ssl" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="mqtt_mqtt_ssl" {%if mqtt_ssl == '1' %} checked {% endif %}>
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">

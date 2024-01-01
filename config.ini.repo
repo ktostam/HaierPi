@@ -117,6 +117,7 @@ ha_mqtt_discovery_prefix = homeassistant
 mqtt = 0
 address = 127.0.0.1
 port = 1883
+mqtt_ssl = 0
 main_topic = climate/haier
 username = mqtt
 password = password
