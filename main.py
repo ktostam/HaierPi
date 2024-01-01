@@ -685,14 +685,14 @@ def curvecalc():
                         logging.info("turn off freq limit")
                         #gpiocontrol("freqlimit", "0")
                         flimitchange("0")
-        if presetautochange == "auto":
-            mode=status[statusmap.index("mode")]
-            if outsidetemp >= float(presetquiet) and mode != "quiet":
-                response=presetchange("quiet")
-            elif outsidetemp <= float(presetturbo) and mode != "turbo":
-                response=presetchange("turbo")
-            elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
-                response=presetchange("eco")
+                if presetautochange == "auto":
+                    mode=status[statusmap.index("mode")]
+                    if outsidetemp >= float(presetquiet) and mode != "quiet":
+                        response=presetchange("quiet")
+                    elif outsidetemp <= float(presetturbo) and mode != "turbo":
+                        response=presetchange("turbo")
+                    elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
+                        response=presetchange("eco")
     else:
         status[statusmap.index("hcurve")]=gettext("Error")
 
@@ -1143,11 +1143,13 @@ def GetParameters():
     hcurvechart.append(status[statusmap.index("hcurve")])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
+    preset=status[statusmap.index("mode")]
     flimiton=GPIO.input(freqlimitpin)
     if len(compinfo) > 0:
-        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and flimiton == "1":
+        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
             logging.info("DHWWL Function ON")
             gpiocontrol("freqlimit", "0")
+            presetchange("turbo")
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
