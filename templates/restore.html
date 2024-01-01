@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block custom_scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+{% endblock %}
+{% block page_body %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-10 mx-auto">
+<div class="row">
+        <div class="col-lg-6">
+                <h1 class="display-4 float-sm-start">{{ _('Restore config from backup') }}</h1>
+        </div>
+            <div class="col-lg-12">
+                <div class="card">
+                        <div class="card-body">
+                                <div class="mb-1">
+    <form method=post enctype=multipart/form-data>
+<div class="input-group">
+  <input type="file" class="form-control" name="file" aria-label="Upload">
+  <button class="btn btn-outline-primary" type="submit" >Upload</button>
+</div>
+    </form>
+</div>
+                        </div>
+                </div>
+            </div>
+
+        </div>
+
+</div>
+</div>
+</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+{% endblock %}
+

@@ -27,8 +27,9 @@
                 var text=data.update;
                 var state="info";
                 if(text.includes('Available,')) {
+
                     Swal.fire({
-					    title: text+"{{ _('. Do you want install?') }}",
+					title: text+"{{ _('. Do you want install?') }}",
                         showCancelButton: true,
 					    confirmButtonText: "{{ _('Install') }}",
                     }).then((result) => {
@@ -110,6 +111,17 @@
         </script>
     </head>
     <body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+ {{ message }}
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+    {% endfor %}
+  {% endif %}
+{% endwith %}
         <div class="d-flex" id="wrapper">
             <!-- Sidebar-->
             <div class="border-end d-flex flex-column" id="sidebar-wrapper">
@@ -119,11 +131,8 @@
 			<a class="list-group-item list-group-item-action p-3" href="/settings">{{ _('Settings') }}</a>
 			<a class="list-group-item list-group-item-action p-3" href="/parameters">{{ _('Parameters') }}</a>
 			<a class="list-group-item list-group-item-action p-3" href="/scheduler">{{ _('Scheduler') }}</a>
-			<a class="list-group-item list-group-item-action p-3" href="/charts">{{ _('Charts') }}</a>
+                        <a class="list-group-item list-group-item-action p-3" href="/charts">{{ _('Charts') }}</a>
                 </div>
- <!--               <div class="list-group list-group-flush">
-                        <a class="list-group-item list-group-item-action p-3" href="/about">{{ _('About') }}</a>
-                </div>-->
                 {% if is_logged_in() %}
                 <div class="dropdown p-3">
                     <a href="#" class="d-flex align-items-center position-relative link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -136,7 +145,9 @@
                     <ul class="dropdown-menu text-small shadow p-3" style="">
 			    <li><a class="dropdown-item" onclick="changepass()" href="#">{{ _('Change password') }}</a></li>
 			    <li><a class="dropdown-item" onclick="updatecheck()" href="#">{{ _('Check for update') }}</a></li>
-			    <li><a class="dropdown-item" href="/backup">{{ _('Download backup') }}</a></li>
+			   <li><a class="dropdown-item" href="/backup">{{ _('Download Backup') }}</a></li>
+                           <li><a class="dropdown-item" href="/restore">{{ _('Restore from Backup') }}</a></li>
+
                         <li><hr class="dropdown-divider"></li>
 			<li><a class="dropdown-item position-relative" onclick="restart()" href="#">{{ _('Restart') }}
                         {% if needrestart == 1 %}

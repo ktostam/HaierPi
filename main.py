@@ -1,9 +1,10 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, render_template, request, session, jsonify, redirect, Markup, send_file
+from flask import Flask, flash, render_template, request, session, jsonify, redirect, Markup, send_file
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
+from werkzeug.utils import secure_filename
 from w1thermsensor import W1ThermSensor
 import collections
 import paho.mqtt.client as mqtt
@@ -147,8 +148,11 @@ modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 babel = Babel()
+UPLOAD_FOLDER = '/opt/haier'
+ALLOWED_EXTENSIONS = {'hpi'}
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 set_log_level = log_level_info.get(loglevel, logging.ERROR)
 logging.getLogger().setLevel(set_log_level)
 
@@ -169,6 +173,10 @@ twicheck=[0,0]
 
 def get_locale():
     return request.accept_languages.best_match(['en', 'pl'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
@@ -1197,6 +1205,24 @@ def backup_route():
         return send_file('/opt/haier/backup.7z', download_name='backup.7z')
     except Exception as e:
         return str(e)
+
+@app.route('/restore', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('File uploaded, please restart HaierPi service', 'success')
+            subprocess.check_output("7zr e -aoa /opt/haier/"+filename+" /opt/haier config.ini schedule_ch.json schedule_dhw.json", shell=True).decode().rstrip('\n')
+            return redirect('/', code=302)
+    return render_template('restore.html')
 
 @app.route('/charts', methods=['GET','POST'])
 def charts_route():
