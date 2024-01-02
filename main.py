@@ -374,10 +374,14 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         client.publish(mqtt_topic + "/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
     elif msg.topic == mqtt_topic + "/preset_mode/set":
         logging.info("New preset mode")
-        try:
-            presetchange(str(msg.payload.decode('utf-8')))
-        except:
-            logging.error("MQTT: cannot set new preset: "+msg+" "+state)
+        payload=str(msg.payload.decode('utf-8')).lower()
+        if payload == 'quiet' or payload == 'eco' or payload == 'turbo':
+            try:
+                presetchange(payload)
+            except:
+                logging.error("MQTT: cannot set new preset: "+payload)
+        else:
+                logging.error("MQTT: cannot set new preset: "+payload)
     elif msg.topic == mqtt_topic + "/flimit/set":
         logging.info("Frequency limit")
         try:
