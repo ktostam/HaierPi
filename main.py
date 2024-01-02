@@ -1546,8 +1546,8 @@ def configure_ha_mqtt_discovery():
     configure_sensor("Compressor temperature",mqtt_topic + "/details/compinfo/state","HaierPi_Comptemperature","°C", "temperature","measurement", "{{ value_json[4] | float}}")
     configure_sensor("Td",mqtt_topic + "/details/tdts/state","HaierPi_Td","°C", "temperature","measurement","{{ value_json[0] | float}}")
     configure_sensor("Ts",mqtt_topic + "/details/tdts/state","HaierPi_Ts","°C", "temperature","measurement","{{ value_json[1] | float}}")
-    configure_sensor("Daily CH energy usage", mqtt_topic +"/details/chkwhpd", "HaierPi_CH_daily_kWh", "kWh", "energy". "measurement", None}
-    configure_sensor("Daily DHW energy usage", mqtt_topic +"/details/dhwkwhpd", "HaierPi_DHW_daily_kWh", "kWh", "energy". "measurement", None}
+    configure_sensor("Daily CH energy usage", mqtt_topic +"/details/chkwhpd", "HaierPi_CH_daily_kWh", "kWh", "energy", "measurement", None)
+    configure_sensor("Daily DHW energy usage", mqtt_topic +"/details/dhwkwhpd", "HaierPi_DHW_daily_kWh", "kWh", "energy", "measurement", None)
 
 
 def threads_check():
