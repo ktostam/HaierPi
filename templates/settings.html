@@ -20,8 +20,94 @@
             background-color: transparent;
             transition: background-color 5s ease-in-out;
         }
+	.disableddiv {
+    	    pointer-events: none;
+    	    opacity: 0.4;
+	}
     </style>
-		    <script>
+				    <script>
+			    function outsidetempselect() {
+				var actualoutsidetemp=$("#outsidetemp option:selected").val();
+					switch(actualoutsidetemp) {
+						case "openmeteo":
+							$("#divomlat").removeClass("disableddiv");
+							$("#divomlon").removeClass("disableddiv");
+							$("#divomtown").removeClass("disableddiv");
+							break;
+						default:
+							$("#divomlat").addClass("disableddiv");
+                                                	$("#divomlon").addClass("disableddiv");
+                                                	$("#divomtown").addClass("disableddiv");
+					}
+			}
+			    function hcurve_change(){
+					var actualhcurve=$("#heatingcurve option:selected").val();
+								console.log(actualhcurve);
+					switch(actualhcurve) {
+						case "auto":
+                                                        $("#divhcmanual").addClass("disableddiv");
+                                                        $("#divslope").removeClass("disableddiv");
+                                                        $("#divpshift").removeClass("disableddiv");
+                                                        $("#divhcamp").removeClass("disableddiv");
+							break;
+						case "static":
+                                                        $("#divhcmanual").addClass("disableddiv");
+                                                        $("#divslope").removeClass("disableddiv");
+                                                        $("#divpshift").addClass("disableddiv");
+                                                        $("#divhcamp").addClass("disableddiv");
+							break;
+						case "manual":
+                                                        $("#divhcmanual").removeClass("disableddiv");
+                                                        $("#divslope").addClass("disableddiv");
+                                                        $("#divpshift").addClass("disableddiv");
+                                                        $("#divhcamp").addClass("disableddiv");
+							break;
+						case "directly":
+                                                        $("#divhcmanual").addClass("disableddiv");
+                                                        $("#divslope").addClass("disableddiv");
+                                                        $("#divpshift").addClass("disableddiv");
+                                                        $("#divhcamp").addClass("disableddiv");
+							break;
+						default:
+                                                        $("#divhcmanual").removeClass("disableddiv");
+                                                        $("#divslope").removeClass("disableddiv");
+                                                        $("#divpshift").removeClass("disableddiv");
+                                                        $("#divhcamp").removeClass("disableddiv");
+
+
+					}
+			    }
+			    function city_select() {
+				const latlon=$("#citysearch").val().split(';')
+				console.log(latlon)
+				$("#latitude").val(latlon[0])
+                                $("#longitude").val(latlon[1])
+
+							}
+			    function city_search() {
+				var name = $("#citysearch").val()
+				var curloc = navigator.languages[1];
+				console.log(name)
+				$.get('https://geocoding-api.open-meteo.com/v1/search?name='+name+'&count=10&language='+curloc+'&format=json', function(data) {
+				console.log(data.results)
+				                                        $('#foundcity').empty();
+				for (let i in data.results) {
+					$('#foundcity').append("<option value='"+data.results[i].latitude+";"+data.results[i].longitude+"'>"+data.results[i].name+", "+data.results[i].country+"");
+  					console.log(data.results[i].name);
+					console.log(data.results[i].country);
+				}
+                                //        if ( data.output == 'active' ) {
+                                //$('#startlogbutton').text("Stop logging")
+                                //$('#startlogbutton').attr("onclick", "start_log('stop')")
+                                //                } else {
+                                //$('#startlogbutton').text("Start logging")
+                                //$('#startlogbutton').attr("onclick", "start_log('restart')")                                        }
+							   
+                                                       })
+							}
+			    function manual_hcurve(){
+				$('#hcman').val($('#hcmn20').val() + ',' + $('#hcmn15').val() + ',' + $('#hcmn10').val() + ',' + $('#hcmn5').val() + ',' + $('#hcm0').val() + ',' + $('#hcmp5').val() + ',' + $('#hcmp10').val() + ',' + $('#hcmp15').val())
+							}
 			    function download_log(){
 				const blob= new Blob([$('#journal')[0].innerText],{type: 'text/plain'});
 				const fileUrl = URL.createObjectURL(blob);
@@ -133,16 +219,66 @@ window.onload = onloadsave;
                         <div class="row align-items-center">
                             <div class="col">
 				    <strong class="mb-0">{{ _('Outside temperature sensor') }}</strong>
-				<p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor') }}</p>
+				<p class="text-muted mb-0">{{ _('What temperature sensor you using (ha - for home assistant entity, builtin - for physically connect DS18b20 sensor, Tao - for built-in pump ambient sensor, Open Meteo - for online weather service ( you need to provide the coordinates of your town )') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <select class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}">
+                                    <select id="outsidetemp" class="form-select" aria-label="outsidetemp" name="SETTINGS$outsidetemp" value="{{ outsidetemp }}" onchange="outsidetempselect()">
 					    <option value="ha"{% if outsidetemp == 'ha' %} selected {% endif %}>{{ _('HA') }}</option>
 					<option value="builtin"{% if outsidetemp == 'builtin' %} selected {% endif %}>{{ _('Builtin') }}</option>
+                                            <option value="tao"{% if insidetemp == 'tao' %} selected {% endif %}>{{ _('Tao') }}</option>
+                                            <option value="openmeteo"{% if insidetemp == 'openmeteo' %} selected {% endif %}>{{ _('Open Meteo') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomlat" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Coordinates') }}</strong>
+                                    <p class="text-muted mb-0">{{ _('Latitude') }}</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="text" class="form-control" id="latitude" name="SETTINGS$omlat" aria-describedby="omlat" value="{{ omlat }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomlon" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Coordinates') }}</strong>
+                                    <p class="text-muted mb-0">{{ _('Longitude') }}</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="custom-control custom-switch">
+					<input type="text" class="form-control" id="longitude" name="SETTINGS$omlon" aria-describedby="omlon" value="{{ omlon }}">
+                                    <span class="custom-control-label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divomtown" class="list-group-item {% if insidetemp != "openmeteo" %}
+                                                        disableddiv
+                                                      {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Find coordinates by name') }}</a></strong>
+                                    <p class="text-muted mb-0">{{ _('Name the town') }} <a href="https://open-meteo.com/">Weather data by Open-Meteo.com</a></p>
+                            </div>
+                            <div class="col-auto">
+<input class="form-control" list="foundcity" id="citysearch" oninput="city_search()" onchange="city_select()" placeholder="Type to search...">
+<datalist id="foundcity">
+  <option value="...">
+</datalist>
                             </div>
                         </div>
                     </div>
@@ -237,6 +373,7 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		    <input type="hidden" name="MAIN$firstrun" value="0">
 		    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
@@ -328,12 +465,11 @@ window.onload = onloadsave;
                             </div>
                             <div class="col-auto">
 				    <div class="custom-control custom-switch">
-                                    <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" value="{{ heatingcurve }}">
+                                    <select class="form-select" aria-label="heatingcurve" name="SETTINGS$heatingcurve" id="heatingcurve" onchange="hcurve_change()" value="{{ heatingcurve }}">
 					    <option value="auto" {% if heatingcurve == 'auto' %} selected {% endif %}>{{ _('Auto') }}</option>
+					    <option value="static" {% if heatingcurve == 'static' %} selected {% endif %}>{{ _('Static') }}</option>
 					    <option value="manual" {% if heatingcurve == 'manual' %} selected {% endif %}>{{ _('Manual') }}</option>
-					    <option value="1"{% if heatingcurve == '1' %} selected {% endif %}>{{ _('1') }}</option>
-					    <option value="2" {% if heatingcurve == '2' %} selected {% endif %}>{{ _('2') }}</option>
-					    <option value="3" {% if heatingcurve == '3' %} selected {% endif %}>{{ _('3') }}</option>
+					    <option value="directly" {% if heatingcurve == 'directly' %} selected {% endif %}>{{ _('Directly') }}</option>
                                     </select>
                                     <span class="custom-control-label"></span>
                                 </div>
@@ -343,7 +479,7 @@ window.onload = onloadsave;
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
-				    <strong class="mb-0">{{ _('Heating curve calculation frequency') }}</strong>
+				    <strong class="mb-0">{{ _('Heating curve calculation frequency (requires a service restart)') }}</strong>
 				    <p class="text-muted mb-0">{{ _('Frequency in minutes how often heating curve should be recalculate') }}</p>
                             </div>
                             <div class="col-auto">
@@ -354,21 +490,26 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
-                    <div class="list-group-item">
+                    <div id="divslope" class="list-group-item {% if heatingcurve == "auto" or
+			    			      heatingcurve == "static" %}
+							NONE
+						      {% else %}
+						      disableddiv
+						      {% endif %}">
                         <div class="row align-items-center">
                             <div class="col">
 				    <strong class="mb-0">{{ _('Heating curve slope') }}</strong>
-				    <p class="text-muted mb-0">{{ _('heating curve slope') }}</p>
+				    <p class="text-muted mb-0">{{ _('heating curve slope for Auto and Static modes') }}</p>
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="number" class="form-control" id="slope" name="SETTINGS$hcslope" aria-describedby="slope" step="0.1" onchange="recalc()" value="{{ slope }}">
+                                    <input type="number" class="form-control" id="slope" name="SETTINGS$hcslope" aria-describedby="slope" step="0.01" onchange="recalc()" value="{{ slope }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="list-group-item">
+		    <div id="divpshift" class="list-group-item {% if heatingcurve != 'auto' %} disableddiv {% endif %}">
                         <div class="row align-items-center">
                             <div class="col">
 				    <strong class="mb-0">{{ _('Heating curve parallel shift') }}</strong>
@@ -376,13 +517,13 @@ window.onload = onloadsave;
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="number" class="form-control" id="pshift" name="SETTINGS$hcpshift" aria-describedby="pshift" onchange="recalc()" value="{{ pshift }}">
+                                    <input type="number" class="form-control" id="pshift" name="SETTINGS$hcpshift" aria-describedby="pshift" step="0.1" onchange="recalc()" value="{{ pshift }}">
                                     <span class="custom-control-label"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="list-group-item">
+                    <div id="divhcamp" class="list-group-item {% if heatingcurve != 'auto' %} disableddiv {% endif %}">
                         <div class="row align-items-center">
                             <div class="col">
 				    <strong class="mb-0">{{ _('Heating curve amplification') }}</strong>
@@ -390,9 +531,45 @@ window.onload = onloadsave;
                             </div>
                             <div class="col-auto">
                                 <div class="custom-control custom-switch">
-                                    <input type="number" class="form-control" id="hcamp" name="SETTINGS$hcamp" aria-describedby="hcamp" onchange="recalc()" value="{{ hcamp }}">
+                                    <input type="number" class="form-control" id="hcamp" name="SETTINGS$hcamp" aria-describedby="hcamp" step="0.1" onchange="recalc()" value="{{ hcamp }}">
                                     <span class="custom-control-label"></span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divhcmanual" class="list-group-item {% if heatingcurve != 'manual' %} disableddiv {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                    <strong class="mb-0">{{ _('Water temperatures for manual heating curve') }}</strong>
+                                    <p class="text-muted mb-0">{{ _('Water temperature for specific outside temp.') }}</p>
+				    <p class="mb-0"><table class="table">
+  <thead>
+    <tr>
+      <th scope="col">-20</th>
+      <th scope="col">-15</th>
+      <th scope="col">-10</th>
+      <th scope="col">-5</th>
+      <th scope="col">0</th>
+      <th scope="col">5</th>
+      <th scope="col">10</th>
+      <th scope="col">15</th>
+
+    </tr>
+  </thead>
+  <tbody class="table-group-divider">
+    <tr>
+      <td><input type="number" class="form-control" id="hcmn20" aria-describedby="hcmn20" step="0.5" onchange="manual_hcurve()" value="{{ hcman[0] }}"></td>
+      <td><input type="number" class="form-control" id="hcmn15" aria-describedby="hcm15" step="0.5" onchange="manual_hcurve()" value="{{ hcman[1] }}"></td>
+      <td><input type="number" class="form-control" id="hcmn10" aria-describedby="hcmn10" step="0.5" onchange="manual_hcurve()" value="{{ hcman[2] }}"></td>
+      <td><input type="number" class="form-control" id="hcmn5" aria-describedby="hcmn5" step="0.5" onchange="manual_hcurve()" value="{{ hcman[3] }}"></td>
+      <td><input type="number" class="form-control" id="hcm0"  aria-describedby="hcm0" step="0.5" onchange="manual_hcurve()" value="{{ hcman[4] }}"></td>
+      <td><input type="number" class="form-control" id="hcmp5" aria-describedby="hcmp5" step="0.5" onchange="manual_hcurve()" value="{{ hcman[5] }}"></td>
+      <td><input type="number" class="form-control" id="hcmp10" aria-describedby="hcmp10" step="0.5" onchange="manual_hcurve()" value="{{ hcman[6] }}"></td>
+      <td><input type="number" class="form-control" id="hcmp15" aria-describedby="hcmp15" step="0.5" onchange="manual_hcurve()" value="{{ hcman[7] }}"></td>
+    </tr>
+    <input type="hidden" class="form-control" value="{{ hcman[0] }},{{ hcman[1] }},{{ hcman[2] }},{{ hcman[3] }},{{ hcman[4] }},{{ hcman[5] }},{{ hcman[6] }},{{ hcman[7] }}" id="hcman" name="SETTINGS$hcman" aria-describedby="hcman">
+  </tbody>
+</table></p>
                             </div>
                         </div>
                     </div>
@@ -413,6 +590,7 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		    <input type="hidden" name="MAIN$firstrun" value="0">
 		    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
@@ -460,6 +638,21 @@ window.onload = onloadsave;
                         </div>
                     </div>
                 </div>
+		<div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">{{ _('Use MQTT discovery') }}</strong>
+                            <p class="text-muted mb-0">{{ _('Automatic device discovery in Home Assistant') }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                <input type="hidden" id="ha_mqtt_discovery_hidden" value="{{ ha_mqtt_discovery }}" name="HOMEASSISTANT$ha_mqtt_discovery">
+                                <input type="checkbox" class="form-check-input" id="ha_mqtt_discovery" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="ha_mqtt_discovery" {%if ha_mqtt_discovery == '1' %} checked {% endif %}>
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="list-group-item">
                     <div class="row align-items-center">
                         <div class="col">
@@ -501,6 +694,7 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		    <input type="hidden" name="MAIN$firstrun" value="0">
 		</div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
             </div>
               </div>
@@ -549,6 +743,21 @@ window.onload = onloadsave;
                             </div>
                         </div>
                     </div>
+		 <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <strong class="mb-0">{{ _('Use MQTT with TLS') }}</strong>
+                            <p class="text-muted mb-0">{{ _('Use secure connection for MQTT') }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="custom-control custom-switch">
+                                <input type="hidden" id="mqtt_ssl" value="{{ mqtt_ssl }}" name="MQTT$mqtt_ssl">
+                                <input type="checkbox" class="form-check-input" id="mqtt_mqtt_ssl" value="1" onclick="this.previousSibling.previousSibling.value=1-this.previousSibling.previousSibling.value" aria-describedby="mqtt_mqtt_ssl" {%if mqtt_ssl == '1' %} checked {% endif %}>
+                                <span class="custom-control-label"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     <div class="list-group-item">
                         <div class="row align-items-center">
                             <div class="col">
@@ -590,6 +799,7 @@ window.onload = onloadsave;
                                     </div>
                                 </div>
                             </div>
+			    <input type="hidden" name="MAIN$firstrun" value="0">
 		    </div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
@@ -691,6 +901,7 @@ window.onload = onloadsave;
                                     </div>
                                 </div>
                             </div>
+			    <input type="hidden" name="MAIN$firstrun" value="0">
 		    </div><button type="submit" class="btn btn-primary">{{ _('Save') }}</button></form>
                     </div>
                 </div>
@@ -748,7 +959,7 @@ for (const element of labels) {
 		const slope= {{ slope }}
 		const ps= {{ pshift }}
 		const amp= {{ hcamp }}
-        const heatcurve = Math.round(((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))*2)/2
+        const heatcurve = Math.round((((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp)+ps))*2)/2
 		        console.log(element);
         console.log(t1);
         console.log(t2);
@@ -760,20 +971,10 @@ for (const element of labels) {
 		}
 var data1 = [];
 for (const element of labels) {
-	calc=(settemp+(0.5*20)*Math.pow(((settemp-element)/20), 0.7));
+	const slope={{ slope }}
+	calc=(settemp+(slope*20)*Math.pow(((settemp-element)/20), 0.7));
 	data1.push(calc);
 }
-var data2 = [];
-for (const element of labels) {
-        calc=(settemp+(0.7*20)*Math.pow(((settemp-element)/20), 0.7));
-        data2.push(calc);
-}
-var data3 = [];
-for (const element of labels) {
-        calc=(settemp+(0.9*20)*Math.pow(((settemp-element)/20), 0.7));
-        data3.push(calc);
-}
-
 
 var chartData = {
   labels: labels,
@@ -786,28 +987,12 @@ var chartData = {
     pointBackgroundColor: colors[0]
   },
    {
-     label: "1",
+     label: "static",
      data: data1,
      backgroundColor: 'transparent',
      borderColor: colors[1],
      borderWidth: 4,
      pointBackgroundColor: colors[1]
-   },
-   {
-     label: "2",
-     data: data2,
-     backgroundColor: 'transparent',
-     borderColor: colors[2],
-     borderWidth: 4,
-     pointBackgroundColor: colors[2]
-   },
-   {
-     label: "3",
-     data: data3,
-     backgroundColor: 'transparent',
-     borderColor: colors[3],
-     borderWidth: 4,
-     pointBackgroundColor: colors[3]
    }
 
   ]
@@ -841,22 +1026,31 @@ for (const element of labels) {
         const t1=(outsidetemp/(320-(outsidetemp*4)))
         const t2=Math.pow(settemp,t1)
 
-        const slope=document.getElementById('slope').value;
-        const ps=document.getElementById('pshift').value;
-        const amp=document.getElementById('hcamp').value;
+        const slope=parseFloat(document.getElementById('slope').value);
+        const ps=parseFloat(document.getElementById('pshift').value);
+        const amp=parseFloat(document.getElementById('hcamp').value);
 	console.log(element);
 	console.log(t1);
         console.log(t2);
+	console.log(outsidetemp)
         console.log(slope);
         console.log(ps);
         console.log(amp);
 	const heat2 = ((0.55*slope*t2)*(((-element+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))
-	console.log(heat2)
-        const heatcurve = (Math.round(((0.55*slope*t2)*((((-element+20)*2)+settemp)+ps)+((settemp-insidetemp)*amp))*2)/2)/10
+	//console.log(heat2)
+        // const heatcurve = (Math.round((((0.55*slope*t2)*((((-element+20)*2)+settemp)+ps)+((settemp-insidetemp)*amp)+ps))*2)/2)
+	const heatcurve = (((0.55*slope*t2)*((((-element+20)*2)+settemp)+ps)+((settemp-insidetemp)*amp)+ps))
                 data.push(heatcurve);
 	console.log(heatcurve);
                 }
+var data1 = [];
+for (const element of labels) {
+        const slope=parseFloat(document.getElementById('slope').value);
+        calc=(settemp+(slope*20)*Math.pow(((settemp-element)/20), 0.7));
+        data1.push(calc);
+}
 myChart.data.datasets[0].data = data;
+myChart.data.datasets[1].data = data1;
 myChart.update();
 console.log("update");
 	}

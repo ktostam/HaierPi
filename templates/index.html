@@ -71,6 +71,13 @@
                 temp = data.setpoint
                 $("#intemp").text(data.intemp)
                 $("#outtemp").text(data.outtemp)
+		if(data.heatingcurve == "directly" ) {
+					minch=25
+					maxch=55
+				} else {
+					minch=12
+					maxch=30
+				}
 		$("#ltemp").text(data.ltemp)
 				    $("#preset").text(data.presetch)
 				    $("#flimit").text(data.flimit)
@@ -256,8 +263,8 @@
 
         function tempchange(which, directly) {
         if (which ==  "heat") {
-            minimum=12
-            maximum=30
+            minimum=minch
+            maximum=maxch
             stepp=0.5
             inputval=temp
         }
@@ -323,7 +330,7 @@
                                 <div class="card-body">
 					<h2 class="card-title"><i class="icoheat"></i>{{ _('Heating - setpoint: ') }}<b id="setpoint">N.A.</b>&#8451;</h2>
 					<p class="card-text">{{ _('Inside temp: ') }}<b id="intemp">N.A.</b>&#8451;</p>
-					<p class="card-text" >{{ _('Outside temp: ') }}<b id="outtemp">N.A.</b>&#8451;</p>
+					<p class="card-text" >{{ _('Outside temp: ') }}<b id="outtemp">N.A.</b>&#8451;{% if outsidetemp == 'openmeteo' %} <a href="https://open-meteo.com/">Weather data by Open-Meteo.com</a>{% endif %}</p>
 					<p class="card-text" >{{ _('Heating-curve: ') }}<b id="hcurve">N.A.</b>&#8451;</p>
                                 </div>
 				<div class="card-footer"><a class="btn btn-primary btn-lm float-sm-start" id="heat" onclick="tempchange('heat', '0')" href="#!">{{ _('Change') }}</a>

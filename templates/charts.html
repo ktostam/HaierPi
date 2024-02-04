@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block custom_scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+{% endblock %}
+{% block page_body %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-10 mx-auto">
+
+<div class="row">
+	<div class="col-lg-6">
+		<h1 class="display-4 float-sm-start">{{ _('Temperature charts') }}</h1>
+	</div>
+            <div class="col-lg-12">
+            	<div class="card">
+                	<div class="card-body">
+                    	<canvas id="chLine"></canvas>
+                	</div>
+            	</div>
+            </div>
+
+        </div>
+<div class="row">
+       <div class="col-lg-8">
+	       <h1 class="display-4 float-sm-start">{{ _('Presures charts') }}</h1>
+        </div>
+	<div class="col-lg-12">
+		<div id="schedule4" class="jqs-demo mb-3 jqs jqs-mode-edit">
+	</div>
+</div>
+</div>
+</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+			<script>
+/* chart.js chart examples */
+
+// chart colo
+var colors = ['#007bff','#E8A67D','#D55D13','#c3e6cb','#dc3545','#6c757d'];
+
+/* large line chart */
+var chLine = document.getElementById("chLine");
+var chartData = {
+					labels: {{ chartdate | safe }},
+  datasets: [{
+    label: 'tank',
+					  data: {{ charttank | safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[0],
+    borderWidth: 1,
+    pointBackgroundColor: colors[0]
+  },
+  {
+    label: 'twi',
+    data: {{ charttwi |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[1],
+    borderWidth: 1,
+    pointBackgroundColor: colors[1]
+  },
+  {
+    label: 'two',
+    data: {{ charttwo |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'thi',
+    data: {{ chartthi |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'tho',
+    data: {{ charttho |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'td',
+    data: {{ charttd |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'ts',
+    data: {{ chartts |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'tao',
+    data: {{ charttao |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'intemp',
+    data: {{ chartintemp |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'outtemp',
+    data: {{ chartouttemp |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  },
+  {
+    label: 'hcurve',
+    data: {{ charthcurve |safe }},
+    pointRadius: 0,
+    backgroundColor: 'transparent',
+    borderColor: colors[2],
+    borderWidth: 1,
+    pointBackgroundColor: colors[2]
+  }
+  ]
+};
+if (chLine) {
+  new Chart(chLine, {
+  type: 'line',
+  data: chartData,
+  options: {
+   showLine: true,
+//    scales: {
+//      xAxes: [{
+//        ticks: {
+//          beginAtZero: false
+//        }
+//      }]
+//    },
+    scales: {
+      x: {
+        min: chartData.datasets[0].data.length > 100 ? chartData.datasets[0].data.length - 100 : 0,
+        max: chartData.datasets[0].data.length
+      },
+     y: {
+	min: 0,
+	max: 100
+     },
+    },
+    plugins: {
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: 'xy'
+        },
+	limits: {
+		y: { min: 0, max: 100 }
+	},
+        zoom: {
+	  wheel: {
+		enabled: true
+		},
+	  pinch: {
+		enabled: true
+		},
+          enabled: true,
+          mode: 'xy'
+        }
+      }
+    },
+    interaction: {
+            intersect: false,
+            mode: 'index',
+    },
+    spanGaps: true,
+    legend: {
+      display: false
+    },
+    responsive: true
+  }
+  });
+}
+			</script>
+{% endblock %}
+
