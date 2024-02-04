@@ -43,6 +43,11 @@ PCB layout is designed for both RaspberryPi zeroW and NanoPi neo 1.4.
 
 ![Front](https://github.com/ktostam/HaierPi/blob/master/images/haierpi-back.png?raw=true)
 
+### PCB 1.1
+The revised version of the PCB (1.1) no longer has mislabeling. In addition, one of the leds and the button is now also connected to the RPi.
+
+In the future, HaierPi will support only NanoPi
+
 ### Component List
 
 | Symbol        | Value            | Footprint        |
@@ -96,46 +101,8 @@ script needs a relay to control the data flow in order to function properly, so 
 At the moment there are no plans to add support for other SBCs, but maybe in future I will add support for relays controlled by Home Assistant, 
 so script may running on any platform, and only need a RS485 connection.
 
-## INSTALL
-
-#### Download
-
-```shell
-$ git clone https://github.com/ktostam/HaierPi.git
-```
-
-#### Edit config file
-
-Edit the config.ini file with your favorite editor:
-```shell
-$ vim config.ini
-```
-
-#### use install script
-run install script with root privileges
-
-installation script by default installs in `/opt/haier`
-```shell
-$ sudo bash install.sh
-```
-installation script creates systemd services and asks if you want the service to start at system startup.
-
-if you want manualy start/stop service:
-
-for stop service:
-```shell
-$ sudo systemctl stop haier.service
-```
-for start service:
-```shell
-$ sudo systemctl start haier.service
-```
-### After install
-By default sript listen on all interfaces on port 4000, you can change it in **config.ini** 
-
-default login and password for web interfaces is: ***admin/admin***
-### Screenshot
-![Screenshot](https://github.com/ktostam/HaierPi/blob/master/images/screenshot.gif?raw=true)
+## Wiki
+Now the documentation is on the wiki [wiki](https://wiki.haos.it)
 
 ## Translation
 - en
@@ -143,6 +110,11 @@ default login and password for web interfaces is: ***admin/admin***
 ### if you want to help create a translation into another language write me an email or on the discord channel
 
 ## Version
+### 1.37
+- Add charts with some parameters
+- DHW without limit function run in turbo mode
+- Add estimated daily energy consumption, separate for central heating and domestic hot water
+
 ### 1.35
 - Add MQTT Discovery (by Radek)
 - Add more option for heatingcurve
