@@ -102,7 +102,7 @@ At the moment there are no plans to add support for other SBCs, but maybe in fut
 so script may running on any platform, and only need a RS485 connection.
 
 ## Wiki
-Now the documentation is on the wiki [wiki](https://wiki.haos.it)
+Now the documentation is on the wiki (only in polish for now)  [wiki](https://wiki.haos.it)
 
 ## Translation
 - en

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-12-26 21:21+0100\n"
+"POT-Creation-Date: 2024-02-04 23:15+0100\n"
 "PO-Revision-Date: 2023-11-05 20:51+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -19,156 +19,84 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: main.py:447
-msgid "ERROR: Cannot set new CH temp"
-msgstr "BŁĄÐ: Nie można ustawić nowej temperatury CO"
-
-#: main.py:454
-msgid "Domestic Hot Water "
-msgstr "Ciepła Woda Użytkowa"
-
-#: main.py:456
-msgid "Error: Cannot set new DHW temp"
-msgstr "BŁĄD: nie można ustawić nowej temperatury CWU"
-
-#: main.py:457
-msgid "ERROR: Cannot set new temp"
-msgstr "BŁĄD: nie można ustawić nowej temperatury"
-
-#: main.py:464
-msgid " temperature changed!"
-msgstr " temperatura zmieniona!"
-
-#: main.py:469 main.py:585
-msgid "Modbus communication error."
-msgstr "Błąd komunikacji Modbus"
-
-#: main.py:473 main.py:589
-msgid "Modbus connection timeout."
-msgstr "Przekroczono limit czasu dla połączenia Modbus"
-
-#: main.py:487
-msgid "Central Heating temperature changed!"
-msgstr "Zmieniono temperaturę dla Centralnego Ogrzewania"
-
-#: main.py:497
-msgid "Domestic Hot Water: "
-msgstr "Ciepła Woda Użytkowa: "
-
-#: main.py:580
-msgid "State changed!"
-msgstr "Stan zmieniony!"
-
-#: main.py:684 main.py:783 main.py:814 main.py:850
-msgid "Error"
-msgstr "Błąd"
-
-#: main.py:691
-msgid "Available, version: "
-msgstr "Dostępna, wersja"
-
-#: main.py:693
-msgid "Not Available"
-msgstr "Brak Aktualizacji"
-
-#: main.py:781 main.py:812 main.py:848
-msgid "Entity state not found"
-msgstr "Nie znaleziono stanu encji"
-
-#: main.py:917
-msgid "Central Heating chedule saved"
-msgstr "Zapisano harmonogram dla Centralnego Ogrzewania"
-
-#: main.py:921
-msgid "ERROR: Central Heating not saved"
-msgstr "BŁĄD: Nie zapisano Centralnego Ogrzewania"
-
-#: main.py:929
-msgid "Domestic Hot Water chedule saved"
-msgstr "Zapisano harmonogram dla Ciepłej Wody Użytkowej"
-
-#: main.py:933
-msgid "ERROR: Domestic Hot Water not saved"
-msgstr "BŁĄD: Nie zapisano CWU"
-
-#: main.py:1132
-msgid "username and password are required."
-msgstr "Nazwa użytkownika i hasło są wymagane."
-
-#: main.py:1147
-msgid "Password changed"
-msgstr "Hasło zmienione"
-
-#: templates/base.html:31
-msgid "New update available, Do you want install?"
+#: templates/base.html:32
+msgid ". Do you want install?"
 msgstr "Dostępna jest aktualizacja, czy chcesz ją zainstalować?"
 
-#: templates/base.html:33
+#: templates/base.html:34
 msgid "Install"
 msgstr "Instaluj"
 
-#: templates/base.html:39
+#: templates/base.html:40
 msgid "Installing update, please wait..."
 msgstr "Instalowanie aktualizacji, proszę czekać..."
 
-#: templates/base.html:82
+#: templates/base.html:83
 msgid "Restart HaierPi service"
 msgstr "Restart usługi HaierPi"
 
-#: templates/base.html:84
+#: templates/base.html:85
 msgid "Yes"
 msgstr "Tak"
 
-#: templates/base.html:90
+#: templates/base.html:91
 msgid "Restarting service, please wait..."
 msgstr "Restartowanie usługi, proszę czekać..."
 
-#: templates/base.html:118
+#: templates/base.html:130
 msgid "Dashboard"
 msgstr "Pulpit"
 
-#: templates/base.html:119 templates/index.html:394 templates/index.html:429
-#: templates/settings.html:125
+#: templates/base.html:131 templates/index.html:394 templates/index.html:429
+#: templates/settings.html:167
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: templates/base.html:120
+#: templates/base.html:132
 msgid "Parameters"
 msgstr "Parametry"
 
-#: templates/base.html:121
+#: templates/base.html:133
 msgid "Scheduler"
 msgstr "Harmonogram"
 
-#: templates/base.html:122
+#: templates/base.html:134
 msgid "Charts"
 msgstr "Wykresy"
 
-#: templates/base.html:134
+#: templates/base.html:146
 msgid "Change password"
 msgstr "Zmień hasło"
 
-#: templates/base.html:135
+#: templates/base.html:147
 msgid "Check for update"
 msgstr "Sprawdź aktualizacje"
 
-#: templates/base.html:137
+#: templates/base.html:148
+msgid "Download Backup"
+msgstr "Ściągnij backup"
+
+#: templates/base.html:149
+msgid "Restore from Backup"
+msgstr "Przywróć backup"
+
+#: templates/base.html:152
 msgid "Restart"
 msgstr "Restart"
 
-#: templates/base.html:143
+#: templates/base.html:158
 msgid "Log out"
 msgstr "Wyloguj"
 
-#: templates/base.html:165
+#: templates/base.html:180
 msgid "Toggle theme"
 msgstr "Zmień skórkę"
 
-#: templates/base.html:171
+#: templates/base.html:186
 msgid "Light"
 msgstr "Jasna"
 
-#: templates/base.html:178
+#: templates/base.html:193
 msgid "Dark"
 msgstr "Ciemna"
 
@@ -250,7 +178,7 @@ msgstr "Ograniczenie częstotliwości: - "
 
 #: templates/index.html:389
 msgid "Frequency limit temp: "
-msgstr "Temperatura ograniczenia częstotliwości"
+msgstr "Temperatura ograniczenia częstotliwości: "
 
 #: templates/index.html:390
 msgid "Relay status: "
@@ -268,7 +196,7 @@ msgstr "Proszę się zalogować"
 msgid "Name"
 msgstr "Nazwa użytkownika"
 
-#: templates/login.html:14 templates/settings.html:682
+#: templates/login.html:14 templates/settings.html:792
 msgid "Password"
 msgstr "Hasło"
 
@@ -276,14 +204,18 @@ msgstr "Hasło"
 msgid "Log in"
 msgstr "Zaloguj"
 
+#: templates/restore.html:13
+msgid "Restore config from backup"
+msgstr "Przywróć plik konfiguracyjny z backupu"
+
 #: templates/scheduler.html:12
 msgid "Central Heating scheduler"
 msgstr "Harmonogram dla CO"
 
 #: templates/scheduler.html:15 templates/scheduler.html:27
-#: templates/settings.html:284 templates/settings.html:500
-#: templates/settings.html:603 templates/settings.html:692
-#: templates/settings.html:793
+#: templates/settings.html:377 templates/settings.html:594
+#: templates/settings.html:698 templates/settings.html:803
+#: templates/settings.html:905
 msgid "Save"
 msgstr "Zapisz"
 
@@ -291,43 +223,43 @@ msgstr "Zapisz"
 msgid "Domestic Hot Water scheduler"
 msgstr "Harmonogram dla CWU"
 
-#: templates/settings.html:100
+#: templates/settings.html:142
 msgid "Changes saved"
 msgstr "Zapisano zmiany"
 
-#: templates/settings.html:130
+#: templates/settings.html:172
 msgid "General"
 msgstr "Ogólne"
 
-#: templates/settings.html:133
+#: templates/settings.html:175
 msgid "Heating/Cooling"
 msgstr "Grzanie/Chłodzenie"
 
-#: templates/settings.html:136
+#: templates/settings.html:178
 msgid "Home Assistant"
 msgstr "Home Assistant"
 
-#: templates/settings.html:139
+#: templates/settings.html:181
 msgid "MQTT"
 msgstr "MQTT"
 
-#: templates/settings.html:142
+#: templates/settings.html:184
 msgid "System"
 msgstr "System"
 
-#: templates/settings.html:145
+#: templates/settings.html:187
 msgid "Tuya"
 msgstr "Tuya"
 
-#: templates/settings.html:148
+#: templates/settings.html:190
 msgid "Logs"
 msgstr "Logi"
 
-#: templates/settings.html:162
+#: templates/settings.html:204
 msgid "Inside temperture sensor"
 msgstr "Sensor czujnika temperatury wewnętrznej"
 
-#: templates/settings.html:163
+#: templates/settings.html:205
 msgid ""
 "What temperature sensor you using (ha - for home assistant entity, "
 "builtin - for physically connect DHT22 sensor"
@@ -335,33 +267,63 @@ msgstr ""
 "Jakiego sensora temperatury używasz (ha - dla encji z Home Assistant, "
 "wbudowany - dla fizycznie podłączonego sensora DHT22"
 
-#: templates/settings.html:168 templates/settings.html:185
-#: templates/settings.html:202
+#: templates/settings.html:210 templates/settings.html:227
+#: templates/settings.html:294
 msgid "HA"
 msgstr "HA"
 
-#: templates/settings.html:169 templates/settings.html:186
-#: templates/settings.html:203
+#: templates/settings.html:211 templates/settings.html:228
+#: templates/settings.html:295
 msgid "Builtin"
 msgstr "Wbudowany"
 
-#: templates/settings.html:179
+#: templates/settings.html:221
 msgid "Outside temperature sensor"
 msgstr "Sensor temperatury zewnętrznej "
 
-#: templates/settings.html:180
+#: templates/settings.html:222
 msgid ""
 "What temperature sensor you using (ha - for home assistant entity, "
-"builtin - for physically connect DS18b20 sensor"
+"builtin - for physically connect DS18b20 sensor, Tao - for built-in pump "
+"ambient sensor, Open Meteo - for online weather service ( you need to "
+"provide the coordinates of your town )"
 msgstr ""
 "Jakiego sensora temperatury używasz (ha - dla encji z Home Assistant, "
-"wbudowany - dla fizycznie podłączonego sensora DS18b20"
+"wbudowany - dla fizycznie podłączonego sensora DS18b20, Tao - dla czujnika wbudowanego w jednostkę zewnętrzną, Open Meteo - dla pogody z serwisu openmeteo (nalezy podać współrzędne Twojego miasta)"
 
-#: templates/settings.html:196
+#: templates/settings.html:229
+msgid "Tao"
+msgstr "Tao"
+
+#: templates/settings.html:230
+msgid "Open Meteo"
+msgstr "Open Meteo"
+
+#: templates/settings.html:242 templates/settings.html:258
+msgid "Coordinates"
+msgstr "Współrzędne"
+
+#: templates/settings.html:243
+msgid "Latitude"
+msgstr "Szerokość geograficzna"
+
+#: templates/settings.html:259
+msgid "Longitude"
+msgstr "Gługość geograficzne"
+
+#: templates/settings.html:274
+msgid "Find coordinates by name"
+msgstr "Znajdź współrzędne po nazwie"
+
+#: templates/settings.html:275
+msgid "Name the town"
+msgstr "Nazwa miasta"
+
+#: templates/settings.html:288
 msgid "Inside humidity sensor"
 msgstr "Sensor czujnika wilgotności"
 
-#: templates/settings.html:197
+#: templates/settings.html:289
 msgid ""
 "What humidity sensor you using (ha - for home assistant entity, builtin -"
 " for physically connect DHT22 sensor"
@@ -369,76 +331,76 @@ msgstr ""
 "Jakiego sensora wilgotności używasz (ha - dla encji z Home Assistant, "
 "wbudowany - dla fizycznie podłączonego sensora DHT22"
 
-#: templates/settings.html:213
+#: templates/settings.html:305
 msgid "AntiON-OFF"
 msgstr "Anty ON-OFF"
 
-#: templates/settings.html:214
+#: templates/settings.html:306
 msgid "A system that try to prevent the heatpump from operating in on-off mode"
 msgstr ""
 "System próbujący zapobiec taktowaniu pompy ciepła poprzez automatyczną "
 "zmianę trybów"
 
-#: templates/settings.html:228
+#: templates/settings.html:320
 msgid "AntiON-OFF Delta"
 msgstr "Delta dla Anty ON-OFF"
 
-#: templates/settings.html:229
+#: templates/settings.html:321
 msgid "Temperature delta when function is activate"
 msgstr "Delta temperatury przy której funkcja zacznie działać"
 
-#: templates/settings.html:242
+#: templates/settings.html:334
 msgid "Domestic Hot Water without limit"
 msgstr "Ciepła Woda Użytkowa bez limitu"
 
-#: templates/settings.html:243
+#: templates/settings.html:335
 msgid "When heating DHW turn off frequency limit relay"
 msgstr ""
 "Kiedy grzana jest CWU, zworka ograniczenia częstotliwości zostanie "
 "wyłączona"
 
-#: templates/settings.html:257
+#: templates/settings.html:349
 msgid "Use Central Heating scheduler"
 msgstr "Używaj harmonogramu dla Centralnego Ogrzewania"
 
-#: templates/settings.html:258
+#: templates/settings.html:350
 msgid "Do you want to use CH scheduler? Default: No"
 msgstr "Czy chcesz używać harmonogramu dla CO? Domyślnie: Nie"
 
-#: templates/settings.html:272
+#: templates/settings.html:364
 msgid "Use Domestic Hot Water scheduler"
 msgstr "Używaj harmonogramu dla Ciepłej Wody Użytkowej"
 
-#: templates/settings.html:273
+#: templates/settings.html:365
 msgid "Do you want to use DHW scheduler? Default: NO"
 msgstr "Czy chcesz używać harmonogramu dla CWU? Domyślnie: Nie"
 
-#: templates/settings.html:292
+#: templates/settings.html:385
 msgid "Frequency limit"
 msgstr "Ograniczenie częstotliwości"
 
-#: templates/settings.html:293 templates/settings.html:325
+#: templates/settings.html:386 templates/settings.html:418
 msgid "automatic of manual frequency limit relay control"
 msgstr ""
 "automatyczne lub ręczne sterowanie przekaźnikiem ograniczenia "
 "częstotliwości"
 
-#: templates/settings.html:298 templates/settings.html:330
-#: templates/settings.html:376
+#: templates/settings.html:391 templates/settings.html:423
+#: templates/settings.html:469
 msgid "Auto"
 msgstr "Auto"
 
-#: templates/settings.html:299 templates/settings.html:331
-#: templates/settings.html:378
+#: templates/settings.html:392 templates/settings.html:424
+#: templates/settings.html:471
 msgid "Manual"
 msgstr "Ręcznie"
 
-#: templates/settings.html:310
+#: templates/settings.html:403
 msgid "Frequency limit temperature"
 msgstr "Temperatura ograniczenia częstotliwości"
 
-#: templates/settings.html:311 templates/settings.html:343
-#: templates/settings.html:357
+#: templates/settings.html:404 templates/settings.html:436
+#: templates/settings.html:450
 msgid ""
 "In auto mode - temperature above which the frequency limitation will be "
 "activated"
@@ -446,105 +408,105 @@ msgstr ""
 "W trybie automatycznym - temperatura powyżej której zworka ograniczenia "
 "częstotliwości zostanie włączona"
 
-#: templates/settings.html:324
+#: templates/settings.html:417
 msgid "Preset change"
 msgstr "Zmiana trybu"
 
-#: templates/settings.html:342
+#: templates/settings.html:435
 msgid "Preset quiet temperature"
 msgstr "Temperatura trybu quiet"
 
-#: templates/settings.html:356
+#: templates/settings.html:449
 msgid "Preset turbo temperature"
 msgstr "Temperatura trybu turbo"
 
-#: templates/settings.html:370
+#: templates/settings.html:463
 msgid "Heating curve type"
 msgstr "Typ krzywej grzewczej"
 
-#: templates/settings.html:371
+#: templates/settings.html:464
 msgid "What type of curve you want to use"
 msgstr "Jaki typ krzywej grzewczej chcesz użyć?"
 
-#: templates/settings.html:377
+#: templates/settings.html:470
 msgid "Static"
 msgstr "Statyczna"
 
-#: templates/settings.html:379
+#: templates/settings.html:472
 msgid "Directly"
 msgstr "Bezpośrednio"
 
-#: templates/settings.html:389
+#: templates/settings.html:482
 msgid "Heating curve calculation frequency (requires a service restart)"
 msgstr "Częstotliwość obliczania krzywej grzewczej (wymaga restartu usługi)"
 
-#: templates/settings.html:390
+#: templates/settings.html:483
 msgid "Frequency in minutes how often heating curve should be recalculate"
 msgstr ""
 "Częstotliwość w minutach, jak często krzywa grzewcza powinna być "
 "przeliczana"
 
-#: templates/settings.html:408
+#: templates/settings.html:501
 msgid "Heating curve slope"
 msgstr "Nachylenie krzywej grzewczej"
 
-#: templates/settings.html:409
+#: templates/settings.html:502
 msgid "heating curve slope for Auto and Static modes"
 msgstr "Nachylenie krzywej grzewczej dla trybu Auto i Static"
 
-#: templates/settings.html:422 templates/settings.html:423
+#: templates/settings.html:515 templates/settings.html:516
 msgid "Heating curve parallel shift"
 msgstr "Przesunięcie równoległe krzywej grzewczej"
 
-#: templates/settings.html:436 templates/settings.html:437
+#: templates/settings.html:529 templates/settings.html:530
 msgid "Heating curve amplification"
 msgstr "Wzmocnienie krzywej grzewczej"
 
-#: templates/settings.html:450
+#: templates/settings.html:543
 msgid "Water temperatures for manual heating curve"
 msgstr "Temperatura wody dla ręcznej krzywej krzewczej"
 
-#: templates/settings.html:451
+#: templates/settings.html:544
 msgid "Water temperature for specific outside temp."
 msgstr "Temperatura wody dla przedziału temperatur zewnętrznych"
 
-#: templates/settings.html:486
+#: templates/settings.html:579
 msgid "Heating curve chart"
 msgstr "Wykres krzywej grzewczej"
 
-#: templates/settings.html:487
+#: templates/settings.html:580
 msgid "Show charts with all cheating curve"
 msgstr "Pokaż wykres ze wszystkimi krzywymi grzewczymi"
 
-#: templates/settings.html:490
+#: templates/settings.html:583
 msgid "Show"
 msgstr "Pokaż"
 
-#: templates/settings.html:493
+#: templates/settings.html:586
 msgid "Inside temp: 21"
 msgstr "Temperatura wew.: 21"
 
-#: templates/settings.html:508
+#: templates/settings.html:602
 msgid "Home Assistant address"
 msgstr "Adres Home Assisntant"
 
-#: templates/settings.html:509
+#: templates/settings.html:603
 msgid "Home assistant IP or domainname address"
 msgstr "Adres serwera Home Assistant"
 
-#: templates/settings.html:522
+#: templates/settings.html:616
 msgid "Home Assistant port"
 msgstr "port Home Assistant"
 
-#: templates/settings.html:523
+#: templates/settings.html:617
 msgid "Home Assistant port (default 8123)"
 msgstr "Port Home Assistant (domyślnie 8123)"
 
-#: templates/settings.html:536
+#: templates/settings.html:630
 msgid "Home Assistant Access Key"
 msgstr "Klucz API Home Assistant"
 
-#: templates/settings.html:537
+#: templates/settings.html:631
 msgid ""
 "Home Assistant Access Token Key. You can generate key in user settings in"
 " HA"
@@ -552,147 +514,155 @@ msgstr ""
 "Klucz dostępowy API do Home Assistant. Możes go wygenerować wustawieniach"
 " użytkownika w HA"
 
-#: templates/settings.html:550
+#: templates/settings.html:644
 msgid "Use MQTT discovery"
 msgstr "Używaj 'MQTT discovery'"
 
-#: templates/settings.html:551
+#: templates/settings.html:645
 msgid "Automatic device discovery in Home Assistant"
 msgstr "Automatycznie wykrywanie w Home Assistant"
 
-#: templates/settings.html:565
+#: templates/settings.html:659
 msgid "Inside temperature entity"
 msgstr "Encja temperatury wewnętrznej"
 
-#: templates/settings.html:566
+#: templates/settings.html:660
 msgid "Entity name of inside temperature sensor (e.g. sensor.inside_temp)"
 msgstr "Nazwa encji z czujnikiem temperatury wewnętrznej (np. sensor.temp_wew)"
 
-#: templates/settings.html:579
+#: templates/settings.html:673
 msgid "Outside temperature entity"
 msgstr "Encja temperatury zewnętrznej"
 
-#: templates/settings.html:580
+#: templates/settings.html:674
 msgid "Entity name of outside temperature sensor (e.g. sensor.outside_temp)"
 msgstr "Nazwa encji z czujnikiem temperatury zewnętrznej (np. sensor.temp_zew)"
 
-#: templates/settings.html:593
+#: templates/settings.html:687
 msgid "Inside humidity entity"
 msgstr "Encja czujnika wilgotności"
 
-#: templates/settings.html:594
+#: templates/settings.html:688
 msgid "Entity name of inside humidity sensor (e.g. sensor.inside_humidity)"
 msgstr "Nazwa encji dla czujnika wilgotności wew. (np. sensor_wilgotnosc)"
 
-#: templates/settings.html:611
+#: templates/settings.html:706
 msgid "Using MQTT"
 msgstr "Używaj MQTT"
 
-#: templates/settings.html:612
+#: templates/settings.html:707
 msgid "Do you want to use mqtt"
 msgstr "Czy chcesz używać MQTT?"
 
-#: templates/settings.html:626
+#: templates/settings.html:721
 msgid "MQTT Address"
 msgstr "Adres MQTT"
 
-#: templates/settings.html:627
+#: templates/settings.html:722
 msgid "MQTT Broker ip or hostname address"
 msgstr "Adres brokera MQTT"
 
-#: templates/settings.html:640
+#: templates/settings.html:735
 msgid "MQTT port"
 msgstr "Port MQTT"
 
-#: templates/settings.html:641
+#: templates/settings.html:736
 msgid "MQTT Broker port (default 1883)"
 msgstr "Port brokera MQTT (domyślnie 1883)"
 
-#: templates/settings.html:654
+#: templates/settings.html:749
+msgid "Use MQTT with TLS"
+msgstr "Użyj MQTT z TLS"
+
+#: templates/settings.html:750
+msgid "Use secure connection for MQTT"
+msgstr "Używaj bezpiecznego połączenia dla MQTT"
+
+#: templates/settings.html:764
 msgid "Main topic"
 msgstr "Głowny topic"
 
-#: templates/settings.html:655
+#: templates/settings.html:765
 msgid "Main topic for publishing messages"
 msgstr "Głowny topic do publikacji wiadomości"
 
-#: templates/settings.html:668
+#: templates/settings.html:778
 msgid "Username"
 msgstr "Nazwa użytkownika"
 
-#: templates/settings.html:669
+#: templates/settings.html:779
 msgid "MQTT Broker account username"
 msgstr "Nazwa użytkownika dla brokera MQTT"
 
-#: templates/settings.html:683
+#: templates/settings.html:793
 msgid "MQTT Broker account password"
 msgstr "Hasło dla brokera MQTT"
 
-#: templates/settings.html:700
+#: templates/settings.html:811
 msgid "Bind address"
 msgstr "Adres aplikacji"
 
-#: templates/settings.html:701
+#: templates/settings.html:812
 msgid "On which address the script should run (default 0.0.0.0)"
 msgstr "Na jakim adresie aplikacja HaierPi powinna słuchać (domyślnie 0.0.0.0)"
 
-#: templates/settings.html:714
+#: templates/settings.html:825
 msgid "Bind port"
 msgstr "Port Aplikacji"
 
-#: templates/settings.html:715
+#: templates/settings.html:826
 msgid "On which port the script should run (default 4000)"
 msgstr "Na jakim porcie powinna być wystawiona aplikacja HaierPi (domyślnie 4000)"
 
-#: templates/settings.html:727
+#: templates/settings.html:838
 msgid "Serial port"
 msgstr "Port szeregowy"
 
-#: templates/settings.html:728
+#: templates/settings.html:839
 msgid "On which port you connect modbus converter"
 msgstr "Na którym porcie podłączony jest konwerter modbus"
 
-#: templates/settings.html:741
+#: templates/settings.html:852
 msgid "Modbus GPIO"
 msgstr "Pin GPIO Modbus"
 
-#: templates/settings.html:742
+#: templates/settings.html:853
 msgid "What GPIO pin use for modbus relay"
 msgstr "Na którym pinie GPIO podłączony jest przekaźnik dla modbus"
 
-#: templates/settings.html:755
+#: templates/settings.html:866
 msgid "Frequency limit GPIO"
 msgstr "Pin GPIO ograniczenia częstotliwości"
 
-#: templates/settings.html:756
+#: templates/settings.html:867
 msgid "What GPIO pin you use for frequency limit relay"
 msgstr ""
 "Na którym pinie GPIO podłączony jest przekaźnik ograniczenia "
 "częstotliwości"
 
-#: templates/settings.html:769
+#: templates/settings.html:880
 msgid "Heat demand GPIO"
 msgstr "Pin GPIO zapogrzebowania na grzanie"
 
-#: templates/settings.html:770
+#: templates/settings.html:881
 msgid "What GPIO pin you use for heat demand relay"
 msgstr "Na którym pinie GPIO podłączony jest przekaźnik zapotrzebowania na grzanie"
 
-#: templates/settings.html:783
+#: templates/settings.html:894
 msgid "Cool demand GPIO"
 msgstr "Ping GPIO zapotrzebowania na chłodzenie"
 
-#: templates/settings.html:784
+#: templates/settings.html:895
 msgid "What GPIO pin you use for cool demand relay"
 msgstr ""
 "Na którym pinie GPIO podłączony jest przekaźnik zapotrzebowania na "
 "chłodzenie"
 
-#: templates/settings.html:817
+#: templates/settings.html:929
 msgid "Start logging"
 msgstr "Start logowania"
 
-#: templates/settings.html:817
+#: templates/settings.html:929
 msgid "Save to file"
 msgstr "Zapisz do pliku"
 
@@ -890,4 +860,64 @@ msgstr "Zapisz do pliku"
 
 #~ msgid "heating curve slope"
 #~ msgstr "Nachylenie krzywej grzewczej"
+
+#~ msgid "ERROR: Cannot set new CH temp"
+#~ msgstr "BŁĄÐ: Nie można ustawić nowej temperatury CO"
+
+#~ msgid "Domestic Hot Water "
+#~ msgstr "Ciepła Woda Użytkowa"
+
+#~ msgid "Error: Cannot set new DHW temp"
+#~ msgstr "BŁĄD: nie można ustawić nowej temperatury CWU"
+
+#~ msgid "ERROR: Cannot set new temp"
+#~ msgstr "BŁĄD: nie można ustawić nowej temperatury"
+
+#~ msgid " temperature changed!"
+#~ msgstr " temperatura zmieniona!"
+
+#~ msgid "Modbus communication error."
+#~ msgstr "Błąd komunikacji Modbus"
+
+#~ msgid "Modbus connection timeout."
+#~ msgstr "Przekroczono limit czasu dla połączenia Modbus"
+
+#~ msgid "Central Heating temperature changed!"
+#~ msgstr "Zmieniono temperaturę dla Centralnego Ogrzewania"
+
+#~ msgid "Domestic Hot Water: "
+#~ msgstr "Ciepła Woda Użytkowa: "
+
+#~ msgid "State changed!"
+#~ msgstr "Stan zmieniony!"
+
+#~ msgid "Error"
+#~ msgstr "Błąd"
+
+#~ msgid "Available, version: "
+#~ msgstr "Dostępna, wersja"
+
+#~ msgid "Not Available"
+#~ msgstr "Brak Aktualizacji"
+
+#~ msgid "Entity state not found"
+#~ msgstr "Nie znaleziono stanu encji"
+
+#~ msgid "Central Heating chedule saved"
+#~ msgstr "Zapisano harmonogram dla Centralnego Ogrzewania"
+
+#~ msgid "ERROR: Central Heating not saved"
+#~ msgstr "BŁĄD: Nie zapisano Centralnego Ogrzewania"
+
+#~ msgid "Domestic Hot Water chedule saved"
+#~ msgstr "Zapisano harmonogram dla Ciepłej Wody Użytkowej"
+
+#~ msgid "ERROR: Domestic Hot Water not saved"
+#~ msgstr "BŁĄD: Nie zapisano CWU"
+
+#~ msgid "username and password are required."
+#~ msgstr "Nazwa użytkownika i hasło są wymagane."
+
+#~ msgid "Password changed"
+#~ msgstr "Hasło zmienione"
 
