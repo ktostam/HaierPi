@@ -26,7 +26,7 @@ import time
 import sys
 import io
 
-version="1.36"
+version="1.37"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -165,8 +165,8 @@ GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
 statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway", "chkwhpd", "dhwkwhpd"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state","/details/dailykwh","/details/chkwhpd/state", "/details/dhwkwhpd"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'N.A.', '0', '0']
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state","/details/chkwhpd/state", "/details/dhwkwhpd"]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', '0', '0']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
