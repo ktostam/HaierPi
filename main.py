@@ -1,9 +1,10 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, render_template, request, session, jsonify, redirect, Markup
+from flask import Flask, flash, render_template, request, session, jsonify, redirect, Markup, send_file
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
+from werkzeug.utils import secure_filename
 from w1thermsensor import W1ThermSensor
 import collections
 import paho.mqtt.client as mqtt
@@ -25,7 +26,7 @@ import time
 import sys
 import io
 
-version="1.35"
+version="1.37"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -102,6 +103,8 @@ def loadconfig():
     mqtt_broker_addr=config['MQTT']['address']
     global mqtt_broker_port
     mqtt_broker_port=config['MQTT']['port']
+    global mqtt_ssl
+    mqtt_ssl=config['MQTT']['mqtt_ssl']
     global mqtt_topic
     mqtt_topic=config['MQTT']['main_topic']
     global mqtt_username
@@ -147,8 +150,11 @@ modbus =  ModbusSerialClient(method = "rtu", port=modbusdev,stopbits=1, bytesize
 ser = serial.Serial(port=modbusdev, baudrate = 9600, parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=1)
 app = Flask(__name__)
 babel = Babel()
+UPLOAD_FOLDER = '/opt/haier'
+ALLOWED_EXTENSIONS = {'hpi'}
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 set_log_level = log_level_info.get(loglevel, logging.ERROR)
 logging.getLogger().setLevel(set_log_level)
 
@@ -158,9 +164,9 @@ GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state",]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.']
+statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway", "chkwhpd", "dhwkwhpd"]
+mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state","/details/chkwhpd/state", "/details/dhwkwhpd"]
+status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', '0', '0']
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -169,6 +175,10 @@ twicheck=[0,0]
 
 def get_locale():
     return request.accept_languages.best_match(['en', 'pl'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def handler(signum, frame):
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
@@ -364,10 +374,14 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
         client.publish(mqtt_topic + "/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
     elif msg.topic == mqtt_topic + "/preset_mode/set":
         logging.info("New preset mode")
-        try:
-            presetchange(str(msg.payload.decode('utf-8')))
-        except:
-            logging.error("MQTT: cannot set new preset: "+msg+" "+state)
+        payload=str(msg.payload.decode('utf-8')).lower()
+        if payload == 'quiet' or payload == 'eco' or payload == 'turbo':
+            try:
+                presetchange(payload)
+            except:
+                logging.error("MQTT: cannot set new preset: "+payload)
+        else:
+                logging.error("MQTT: cannot set new preset: "+payload)
     elif msg.topic == mqtt_topic + "/flimit/set":
         logging.info("Frequency limit")
         try:
@@ -623,21 +637,21 @@ def curvecalc():
             sslope=float(slope)
             heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == 'manual':
-            if -20 <= outsidetemp < -15:
+            if -20 <= float(outsidetemp) < -15:
                 heatcurve=hcman[0]
-            elif -15 <= outsidetemp < -10:
+            elif -15 <= float(outsidetemp) < -10:
                 heatcurve=hcman[1]
-            elif -10 <= outsidetemp < -5:
+            elif -10 <= float(outsidetemp) < -5:
                 heatcurve=hcman[2]
-            elif -5 <= outsidetemp < 0:
+            elif -5 <= float(outsidetemp) < 0:
                 heatcurve=hcman[3]
-            elif 0 <= outsidetemp < 5:
+            elif 0 <= float(outsidetemp) < 5:
                 heatcurve=hcman[4]
-            elif 5 <= outsidetemp < 10:
+            elif 5 <= float(outsidetemp) < 10:
                 heatcurve=hcman[5]
-            elif 10 <= outsidetemp < 15:
+            elif 10 <= float(outsidetemp) < 15:
                 heatcurve=hcman[6]
-            elif outsidetemp >= 15:
+            elif float(outsidetemp) >= 15:
                 heatcurve=hcman[7]
 
         if use_mqtt == '1':
@@ -646,7 +660,7 @@ def curvecalc():
             except:
                 logging.error("curvecalc: cannot publish heatcurve")
 
-        if mintemp < heatcurve < maxtemp:
+        if mintemp < float(heatcurve) < maxtemp:
             try:
                 if GPIO.input(heatdemandpin) != "1":
                     logging.info("turn on heat demand")
@@ -675,22 +689,22 @@ def curvecalc():
                         logging.info("turn off freq limit")
                         #gpiocontrol("freqlimit", "0")
                         flimitchange("0")
-        if presetautochange == "auto":
-            mode=status[statusmap.index("mode")]
-            if outsidetemp >= float(presetquiet) and mode != "quiet":
-                response=presetchange("quiet")
-            elif outsidetemp <= float(presetturbo) and mode != "turbo":
-                response=presetchange("turbo")
-            elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
-                response=presetchange("eco")
+                if presetautochange == "auto":
+                    mode=status[statusmap.index("mode")]
+                    if outsidetemp >= float(presetquiet) and mode != "quiet":
+                        response=presetchange("quiet")
+                    elif outsidetemp <= float(presetturbo) and mode != "turbo":
+                        response=presetchange("turbo")
+                    elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
+                        response=presetchange("eco")
     else:
         status[statusmap.index("hcurve")]=gettext("Error")
 
 
 def updatecheck():
     global version
-    gitver=subprocess.run(['python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
-    if version < gitver:
+    gitver=subprocess.run(['/opt/haier/env/bin/python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
+    if float(version) < float(gitver):
         msg=gettext("Available, version: "+gitver)
     else:
         msg=gettext("Not Available")
@@ -731,7 +745,9 @@ def getparams():
             pump=PyHaier.GetPump(R141)
             threeway=PyHaier.Get3way(R141)
             isr141=0
-    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway
+    chkwhpd=status[statusmap.index("chkwhpd")]
+    dhwkwhpd=status[statusmap.index("dhwkwhpd")]
+    return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway,chkwhpd,dhwkwhpd
 
 def getdata():
     intemp=status[statusmap.index("intemp")]
@@ -816,6 +832,20 @@ def GetOutsideTemp(param):
         except:
             response = gettext("Error")
         return response
+    elif param == "tao":
+        temperature = status[statusmap.index("tao")]
+        return temperature
+    elif param == "openmeteo":
+        global omlat
+        global omlon
+        try:
+            with urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?latitude="+str(omlat)+"&longitude="+str(omlon)+"&current=temperature_2m") as url:
+                omdata = json.load(url)
+            temperature=omdata['current']['temperature_2m']
+            return temperature
+        except:
+            temperature=0
+            return temperature
     else:
         return -1
 
@@ -1051,6 +1081,13 @@ def GetParameters():
         tdts=PyHaier.GetTdTs(R241)
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
+        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*0.0002777778)
+        if str(status[statusmap.index("threeway")]) == "DHW":
+            dhwkwhpd=float(status[statusmap.index("dhwkwhpd")])+kwhnow
+            ischanged("dhwkwhpd", dhwkwhpd)
+        elif str(status[statusmap.index("threeway")]) == "CH":
+            chkwhpd=float(status[statusmap.index("chkwhpd")])+kwhnow
+            ischanged("chkwhpd",chkwhpd)
         fans=PyHaier.GetFanRpm(R241)
         pdps=PyHaier.GetPdPs(R241)
         tao=PyHaier.GetTao(R241)
@@ -1110,11 +1147,13 @@ def GetParameters():
     hcurvechart.append(status[statusmap.index("hcurve")])
     threeway=status[statusmap.index("threeway")]
     compinfo=status[statusmap.index("compinfo")]
+    preset=status[statusmap.index("mode")]
     flimiton=GPIO.input(freqlimitpin)
     if len(compinfo) > 0:
-        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and flimiton == "1":
+        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
             logging.info("DHWWL Function ON")
             gpiocontrol("freqlimit", "0")
+            presetchange("turbo")
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
@@ -1158,13 +1197,40 @@ def home():
         return redirect("/settings", code=302)
     else:
         theme=status[statusmap.index("theme")]
-        return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit)
+        global outsidetemp
+        return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit, outsidetemp=outsidetemp)
 
 @app.route('/theme', methods=['POST'])
 def theme_route():
     theme = request.form['theme']
     settheme(theme)
     return theme
+
+@app.route('/backup')
+def backup_route():
+    try:
+        subprocess.check_output("7zr a backup.7z config.ini schedule_*", shell=True).decode().rstrip('\n')
+        return send_file('/opt/haier/backup.7z', download_name='backup.7z')
+    except Exception as e:
+        return str(e)
+
+@app.route('/restore', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('File uploaded, please restart HaierPi service', 'success')
+            subprocess.check_output("7zr e -aoa /opt/haier/"+filename+" /opt/haier config.ini schedule_ch.json schedule_dhw.json", shell=True).decode().rstrip('\n')
+            return redirect('/', code=302)
+    return render_template('restore.html')
 
 @app.route('/charts', methods=['GET','POST'])
 def charts_route():
@@ -1270,6 +1336,11 @@ def scheduler_route():
     theme=status[statusmap.index("theme")]
     return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()), version=version, theme=theme)
 
+@app.route('/about')
+def about():
+    theme=status[statusmap.index("theme")]
+    return  render_template('about.html', version=version, theme=theme)
+
 @app.route('/statechange', methods=['POST'])
 @login_required
 def change_state_route():
@@ -1340,8 +1411,8 @@ def getdata_route():
 @app.route('/getparams', methods=['GET'])
 @login_required(basic=True)
 def getparams_route():
-    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway = getparams()
-    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway)
+    twitwo, thitho, tdts, archerror, compinfo, fans, pdps, tao, pump, threeway, chkwhpd, dhwkwhpd = getparams()
+    return jsonify(twitwo=twitwo, thitho=thitho, tdts=tdts, archerror=archerror,compinfo=compinfo, fans=fans, pdps=pdps, tao=tao, pump=pump, threeway=threeway, chkwhpd=chkwhpd, dhwkwhpd=dhwkwhpd)
 
 # Function to run the background function using a scheduler
 def run_background_function():
@@ -1358,6 +1429,8 @@ def connect_mqtt():
     client.on_message = on_message  # Define callback function for receipt of a message
     client.on_disconnect = on_disconnect
     client.will_set(mqtt_topic + "/connected","offline",qos=1,retain=True)
+    if mqtt_ssl == '1':
+        client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
     client.username_pw_set(mqtt_username, mqtt_password)
     try:
         client.connect(mqtt_broker_addr, int(mqtt_broker_port))
@@ -1477,6 +1550,9 @@ def configure_ha_mqtt_discovery():
     configure_sensor("Compressor temperature",mqtt_topic + "/details/compinfo/state","HaierPi_Comptemperature","°C", "temperature","measurement", "{{ value_json[4] | float}}")
     configure_sensor("Td",mqtt_topic + "/details/tdts/state","HaierPi_Td","°C", "temperature","measurement","{{ value_json[0] | float}}")
     configure_sensor("Ts",mqtt_topic + "/details/tdts/state","HaierPi_Ts","°C", "temperature","measurement","{{ value_json[1] | float}}")
+    configure_sensor("Daily CH energy usage", mqtt_topic +"/details/chkwhpd", "HaierPi_CH_daily_kWh", "kWh", "energy", "measurement", None)
+    configure_sensor("Daily DHW energy usage", mqtt_topic +"/details/dhwkwhpd", "HaierPi_DHW_daily_kWh", "kWh", "energy", "measurement", None)
+
 
 def threads_check():
     global dead
@@ -1484,7 +1560,6 @@ def threads_check():
         if not bg_thread.is_alive():
             if dead == 0:
                 logging.error("Background thread DEAD")
-
                 dead = 1
         elif not serial_thread.is_alive():
             if dead == 0:
@@ -1503,6 +1578,7 @@ def threads_check():
             for line in iter(proc.stdout.readline, ''):
                 f.write(line)
             f.close()
+            dead = 2
 
         time.sleep(1)
         if event.is_set():

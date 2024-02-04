@@ -38,6 +38,10 @@ function getdata() {
 		$("#td").text(data.tdts[0]+"°C")
 		$("#ts").text(data.tdts[1]+"°C")
 		$("#pump").text(data.pump)
+		$("#chkwhpd").text(data.chkwhpd+"kWh")
+		$("#dhwkwhpd").text(data.dhwkwhpd+"kWh")
+			let dailykwh=parseFloat(data.chkwhpd)+parseFloat(data.dhwkwhpd)
+		$("#dailykwh").text(dailykwh+"kWh")
 		$("#threeway").text(data.threeway)
 			if ( data.fans[0] != "0" || data.fans[1] != "0") {
 					$("#g1").addClass("fanspin")
@@ -185,6 +189,23 @@ setInterval(getdata, 2000);
       <td>3-way valve</td>
       <td id="threeway"></td>
     </tr>
+    <tr>
+      <th scope="row">18</th>
+      <td>Daily CH kWh</td>
+      <td id="chkwhpd"></td>
+    </tr>
+    <tr>
+      <th scope="row">19</th>
+      <td>Daily DHW kWh</td>
+      <td id="dhwkwhpd"></td>
+    </tr>
+    <tr>
+      <th scope="row">20</th>
+      <td>Total daily kWh</td>
+      <td id="dailykwh"></td>
+    </tr>
+
+
 
 
   </tbody>
