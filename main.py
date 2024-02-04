@@ -637,7 +637,7 @@ def curvecalc():
             sslope=float(slope)
             heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
         elif heatingcurve == 'manual':
-            if -20 <= float(outsidetemp) < -15:
+            if float(outsidetemp) < -15:
                 heatcurve=hcman[0]
             elif -15 <= float(outsidetemp) < -10:
                 heatcurve=hcman[1]
