@@ -26,7 +26,7 @@ import time
 import sys
 import io
 
-version="1.37"
+version="1.37b"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -1150,10 +1150,13 @@ def GetParameters():
     preset=status[statusmap.index("mode")]
     flimiton=GPIO.input(freqlimitpin)
     if len(compinfo) > 0:
-        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
-            logging.info("DHWWL Function ON")
-            gpiocontrol("freqlimit", "0")
-            presetchange("turbo")
+        try:
+            if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
+                logging.info("DHWWL Function ON")
+                gpiocontrol("freqlimit", "0")
+                presetchange("turbo")
+        except:
+            pass
 
     #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
     #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
