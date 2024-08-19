@@ -319,7 +319,7 @@ def ReadPump():
                     D101 = []
                     for ind in range(6):
                         rs = ser.read(2).hex()
-						if rs:
+                        if rs:
 	                        R101.append(int(rs, 16))
 	                        m, l = divmod(int(rs, 16), 256)
 	                        D101.append(m)
@@ -330,7 +330,7 @@ def ReadPump():
                     D141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
-						if rs:
+                        if rs:
 	                        R141.append(int(rs, 16))
 	                        m, l = divmod(int(rs, 16), 256)
 	                        D141.append(m)
@@ -340,7 +340,7 @@ def ReadPump():
                     R201 = []
                     for ind in range(1):
                         rs = ser.read(2).hex()
-						if rs:
+                        if rs:
 	                        R201.append(int(rs, 16))
                     logging.debug(R201)
                 if rs == "032c":
@@ -348,7 +348,7 @@ def ReadPump():
                     D241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
-						if rs:
+                        if rs:
 	                        R241.append(int(rs, 16))
 	                        m, l = divmod(int(rs, 16), 256)
 	                        D241.append(m)
@@ -591,7 +591,7 @@ def statechange(mode,value,mqtt):
     logging.info(writed)
     logging.info(R101)
     logging.info(newstate)
-	if len(R101) > 1:
+    if len(R101) > 1:
 	    if int(R101[0])%2 == 0:
 	        newframe=PyHaier.SetState(R101, "on")
 	        time.sleep(2)
