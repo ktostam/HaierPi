@@ -592,26 +592,26 @@ def statechange(mode,value,mqtt):
     logging.info(R101)
     logging.info(newstate)
     if len(R101) > 1:
-	    if int(R101[0])%2 == 0:
-	        newframe=PyHaier.SetState(R101, "on")
-	        time.sleep(2)
-	    newframe=PyHaier.SetState(R101,newstate)
-	    for i in range(50):
-	        logging.info(writed)
-	        if writed=="1":
-	            msg=gettext("State changed!")
-	            state="success"
-	            writed="0"
-	            break
-	        elif writed=="2":
-	            msg=gettext("Modbus communication error.")
-	            state="error"
-	            writed="0"
-	        else:
-	            msg=gettext("Modbus connection timeout.")
-	            state="error"
-	            writed="0"
-	        time.sleep(0.2)
+        if int(R101[0])%2 == 0:
+            newframe=PyHaier.SetState(R101, "on")
+            time.sleep(2)
+        newframe=PyHaier.SetState(R101,newstate)
+        for i in range(50):
+            logging.info(writed)
+            if writed=="1":
+                msg=gettext("State changed!")
+                state="success"
+                writed="0"
+                break
+            elif writed=="2":
+                msg=gettext("Modbus communication error.")
+                state="error"
+                writed="0"
+            else:
+                msg=gettext("Modbus connection timeout.")
+                state="error"
+                writed="0"
+            time.sleep(0.2)
     if mqtt == "1":
         return "OK"
     else:
