@@ -26,7 +26,7 @@ import time
 import sys
 import io
 
-version="1.37b"
+version="1.38"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -319,36 +319,40 @@ def ReadPump():
                     D101 = []
                     for ind in range(6):
                         rs = ser.read(2).hex()
-                        R101.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D101.append(m)
-                        D101.append(l)
+                        if rs:
+                            R101.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D101.append(m)
+                            D101.append(l)
                     logging.debug(D101)
                 if rs == "0320":
                     R141 = []
                     D141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
-                        R141.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D141.append(m)
-                        D141.append(l)
+                        if rs:
+                            R141.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D141.append(m)
+                            D141.append(l)
                     logging.debug(D141)
                 if rs == "0302":
                     R201 = []
                     for ind in range(1):
                         rs = ser.read(2).hex()
-                        R201.append(int(rs, 16))
+                        if rs:
+                            R201.append(int(rs, 16))
                     logging.debug(R201)
                 if rs == "032c":
                     R241 = []
                     D241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
-                        R241.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D241.append(m)
-                        D241.append(l)
+                        if rs:
+                            R241.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D241.append(m)
+                            D241.append(l)
                     logging.debug(D241)
         except:
             break
@@ -587,26 +591,27 @@ def statechange(mode,value,mqtt):
     logging.info(writed)
     logging.info(R101)
     logging.info(newstate)
-    if int(R101[0])%2 == 0:
-        newframe=PyHaier.SetState(R101, "on")
-        time.sleep(2)
-    newframe=PyHaier.SetState(R101,newstate)
-    for i in range(50):
-        logging.info(writed)
-        if writed=="1":
-            msg=gettext("State changed!")
-            state="success"
-            writed="0"
-            break
-        elif writed=="2":
-            msg=gettext("Modbus communication error.")
-            state="error"
-            writed="0"
-        else:
-            msg=gettext("Modbus connection timeout.")
-            state="error"
-            writed="0"
-        time.sleep(0.2)
+    if len(R101) > 1:
+        if int(R101[0])%2 == 0:
+            newframe=PyHaier.SetState(R101, "on")
+            time.sleep(2)
+        newframe=PyHaier.SetState(R101,newstate)
+        for i in range(50):
+            logging.info(writed)
+            if writed=="1":
+                msg=gettext("State changed!")
+                state="success"
+                writed="0"
+                break
+            elif writed=="2":
+                msg=gettext("Modbus communication error.")
+                state="error"
+                writed="0"
+            else:
+                msg=gettext("Modbus connection timeout.")
+                state="error"
+                writed="0"
+            time.sleep(0.2)
     if mqtt == "1":
         return "OK"
     else:
