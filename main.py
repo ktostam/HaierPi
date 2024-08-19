@@ -320,10 +320,10 @@ def ReadPump():
                     for ind in range(6):
                         rs = ser.read(2).hex()
                         if rs:
-                        R101.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D101.append(m)
-                        D101.append(l)
+                            R101.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D101.append(m)
+                            D101.append(l)
                     logging.debug(D101)
                 if rs == "0320":
                     R141 = []
@@ -331,17 +331,17 @@ def ReadPump():
                     for ind in range(16):
                         rs = ser.read(2).hex()
                         if rs:
-                        R141.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D141.append(m)
-                        D141.append(l)
+                            R141.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D141.append(m)
+                            D141.append(l)
                     logging.debug(D141)
                 if rs == "0302":
                     R201 = []
                     for ind in range(1):
                         rs = ser.read(2).hex()
                         if rs:
-                        R201.append(int(rs, 16))
+                            R201.append(int(rs, 16))
                     logging.debug(R201)
                 if rs == "032c":
                     R241 = []
@@ -349,10 +349,10 @@ def ReadPump():
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         if rs:
-                        R241.append(int(rs, 16))
-                        m, l = divmod(int(rs, 16), 256)
-                        D241.append(m)
-                        D241.append(l)
+                            R241.append(int(rs, 16))
+                            m, l = divmod(int(rs, 16), 256)
+                            D241.append(m)
+                            D241.append(l)
                     logging.debug(D241)
         except:
             break
