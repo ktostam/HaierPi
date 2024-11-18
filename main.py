@@ -1,11 +1,11 @@
 from flask_simplelogin import SimpleLogin,is_logged_in,login_required, get_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from schedule import every, run_pending, get_jobs, clear, cancel_job
-from flask import Flask, flash, render_template, request, session, jsonify, redirect, Markup, send_file
+from flask import Flask, flash, render_template, request, session, jsonify, redirect, Markup, send_file, url_for
 from flask_babel import Babel, gettext
 from pymodbus.client.sync import ModbusSerialClient
-from werkzeug.utils import secure_filename
 from w1thermsensor import W1ThermSensor
+from werkzeug.utils import secure_filename
 import collections
 import paho.mqtt.client as mqtt
 from termcolor import colored
@@ -17,16 +17,21 @@ import subprocess
 import threading
 import requests
 import logging
+import traceback
+import jinja2
 import PyHaier
+import urllib.request
 import socket
 import serial
 import signal
+import base64
 import json
 import time
 import sys
 import io
+import os
 
-version="1.38"
+version="1.39"
 ip_address=subprocess.run(['hostname', '-I'], check=True, capture_output=True, text=True).stdout.strip()
 welcome="\n┌────────────────────────────────────────┐\n│              "+colored("!!!Warning!!!", "red", attrs=['bold','blink'])+colored("             │\n│      This script is experimental       │\n│                                        │\n│ Products are provided strictly \"as-is\" │\n│ without any other warranty or guaranty │\n│              of any kind.              │\n└────────────────────────────────────────┘\n","yellow", attrs=['bold'])
 config = configparser.ConfigParser()
@@ -95,16 +100,24 @@ def loadconfig():
     dhwscheduler = config['SETTINGS']['dhwscheduler']
     global dhwwl
     dhwwl = config['SETTINGS']['dhwwl']
+    global kwhnowcorr 
+    kwhnowcorr = config['SETTINGS']['kwhnowcorr']
+    global lohysteresis
+    lohysteresis = config['SETTINGS']['lohysteresis']
+    global hihysteresis
+    hihysteresis = config['SETTINGS']['hihysteresis']
     global hcman
     hcman = config['SETTINGS']['hcman'].split(',')
+    global use_hpiapp
+    use_hpiapp = config['HPIAPP']['hpiapp']
+    global hpi_token
+    hpi_token = config['HPIAPP']['token']
     global use_mqtt
     use_mqtt = config['MQTT']['mqtt']
     global mqtt_broker_addr
     mqtt_broker_addr=config['MQTT']['address']
     global mqtt_broker_port
     mqtt_broker_port=config['MQTT']['port']
-    global mqtt_ssl
-    mqtt_ssl=config['MQTT']['mqtt_ssl']
     global mqtt_topic
     mqtt_topic=config['MQTT']['main_topic']
     global mqtt_username
@@ -124,12 +137,16 @@ def loadconfig():
     global ha_mqtt_discovery_prefix
     ha_mqtt_discovery_prefix = config['HOMEASSISTANT']['ha_mqtt_discovery_prefix']
 
+
 loadconfig()
-newframe=""
+newframe=[]
 writed=""
 needrestart=0
 dead=0
-
+jwt_payload=hpi_token.split('.')[1]
+hpitokenjson=json.loads(base64.urlsafe_b64decode(jwt_payload + '=' * (4 - len(jwt_payload) % 4)).decode())
+hpi_username=hpitokenjson['username']
+hpi_topic="data/"+hpi_username
 datechart=collections.deque(8640*[''], 8640)
 tankchart=collections.deque(8640*[''], 8640)
 twichart=collections.deque(8640*[''], 8640)
@@ -155,18 +172,18 @@ ALLOWED_EXTENSIONS = {'hpi'}
 app.config['SECRET_KEY'] = '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 set_log_level = log_level_info.get(loglevel, logging.ERROR)
 logging.getLogger().setLevel(set_log_level)
 
-#GPIO.setmode(GPIO.BCM) - no need anymore, script use own function independed from RPI.GPIO or NPi.GPIO
 GPIO.setup(modbuspin, GPIO.OUT) #modbus
 GPIO.setup(freqlimitpin, GPIO.OUT) #freq limit
 GPIO.setup(heatdemandpin, GPIO.OUT) # heat demand
 GPIO.setup(cooldemandpin, GPIO.OUT) # cool demand
 
-statusmap=["intemp","outtemp","settemp","hcurve","dhw","tank","mode","humid","pch","pdhw","pcool", "theme", "tdts", "archerror", "compinfo", "fans", "tao", "twitwo", "thitho", "pump", "pdps", "threeway", "chkwhpd", "dhwkwhpd"]
-mqtttop=["/intemp/state","/outtemp/state","/temperature/state","/heatcurve","/dhw/temperature/state","/dhw/curtemperature/state","/preset_mode/state","/humidity/state","/mode/state","/dhw/mode/state","/mode/state", "0", "/details/tdts/state","/details/archerror/state","/details/compinfo/state","/details/fans/state","/details/tao/state","/details/twitwo/state","/details/thitho/state","/details/pump/state","/details/pdps/state","/details/threeway/state","/details/chkwhpd/state", "/details/dhwkwhpd"]
-status=['N.A.','N.A.',settemp,'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', 'light', 'N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.','N.A.', '0', '0']
+statusdict={'intemp':{'mqtt':'/intemp/state','value':'N.A.'},'outtemp':{'mqtt':'/outtemp/state','value':'N.A.'},'settemp':{'mqtt':'/temperature/state','value':settemp},'hcurve':{'mqtt':'/heatcurve','value':'N.A.'},'dhw':{'mqtt':'/dhw/temperature/state','value':'N.A.'},'tank':{'mqtt':'/dhw/curtemperature/state','value':'N.A.'},'mode':{'mqtt':'/preset_mode/state','value':'N.A.'},'humid':{'mqtt':'/humidity/state','value':'N.A.'},'pch':{'mqtt':'/mode/state','value':'N.A.'},'pdhw':{'mqtt':'/dhw/mode/state','value':'N.A.'},'pcool':{'mqtt':'/mode/state','value':'N.A.'},'theme':{'mqtt':'0','value':'light'},'tdts':{'mqtt':'/details/tdts/state','value':'N.A.'},'archerror':{'mqtt':'/details/archerror/state','value':'N.A.'},'compinfo':{'mqtt':'/details/compinfo/state','value':'N.A.'},'fans':{'mqtt':'/details/fans/state','value':'N.A.'},'tao':{'mqtt':'/details/tao/state','value':'N.A.'},'twitwo':{'mqtt':'/details/twitwo/state','value':'N.A.'},'thitho':{'mqtt':'/details/thitho/state','value':'N.A.'},'pump':{'mqtt':'/details/pump/state','value':'N.A.'},'pdps':{'mqtt':'/details/pdps/state','value':'N.A.'},'threeway':{'mqtt':'/details/threeway/state','value':'N.A.'},'chkwhpd':{'mqtt':'/details/chkwhpd/state','value':'0'},'dhwkwhpd':{'mqtt':'/details/dhwkwhpd','value':'0'}}
 R101=[0,0,0,0,0,0]
 R141=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 R201=[0]
@@ -174,27 +191,33 @@ R241=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 twicheck=[0,0]
 
 def get_locale():
-    return request.accept_languages.best_match(['en', 'pl'])
+     return request.accept_languages.best_match(['en', 'pl'])
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def handler(signum, frame):
+    logging.info(str(signum)+" "+str(signal.Signals(signum).name))
     print(colored("\rCtrl-C - Closing... please wait, this can take a while.", 'red', attrs=["bold"]))
     GPIO.cleanup(modbuspin)
     GPIO.cleanup(freqlimitpin)
     GPIO.cleanup(heatdemandpin)
     GPIO.cleanup(cooldemandpin)
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
-    ser.close()
     if use_mqtt == '1':
-        client.publish(mqtt_topic + "/connected","offline", qos=1, retain=True)
+        topic=str(client._client_id.decode())
+        client.publish(topic + "/connected","offline", qos=1, retain=True)
         client.disconnect()
+    if use_hpiapp == '1':
+        topic=str(hpiapp._client_id.decode())
+        hpiapp.publish(topic + "/connected","offline",qos=1, retain=True)
+        hpiapp.disconnect()
     event.set()
     clear()
-    exit(1)
+    sys.exit()
+
+def b2s(value):
+    return (value and 'success') or 'error'
 
 def is_raspberrypi():
     try:
@@ -242,48 +265,62 @@ def gpiocontrol(control, value):
         if value == "0":
             GPIO.output(freqlimitpin, GPIO.LOW)
 
-def WritePump():
-    global newframe
-    global writed
-    comm=1
-    if newframe:
-        logging.info(newframe)
-        newframelen=len(newframe)
-        while (comm):
-            rs = ser.read(1).hex()
-            if rs == "032c":
-                for ind in range(22):
-                    ser.read(2).hex()
-            comm=0
-            gpiocontrol("modbus", "1")
+def queue_pub(dtopic, value):
+    global services
+    ctopic=['pdhw', 'pch']
+    for clnt in services:
+        try:
+            if dtopic in ctopic:
+                value=value.replace('on','heat')
+            if dtopic == 'pcool':
+                value=value.replace('on','cool')
+            topic=str(clnt._client_id.decode()+statusdict[dtopic]['mqtt'])
+            clnt.publish(topic, str(value), qos=1, retain=True)
+        except:
+            logging.error("MQTT: cannot publish "+dtopic)
 
-        if newframelen == 6:
-            logging.info("101")
+
+def WritePump(newframe): #rewrited
+    def WriteRegisters(count):
+        global writed
+        if count == 6:
+            register = 101
+        elif count == 1:
+            register = 201
+        time.sleep(1)
+        modbus.connect()
+        for x in range(5):
             time.sleep(1)
-            modbus.connect()
-            modbusresult=modbus.write_registers(101, newframe, unit=17)
-            modbus.close()
-            gpiocontrol("modbus","0")
-            logging.info(modbusresult)
-            writed="1"
-            # if hasattr(modbusresult, 'fcode'):
-            #     if modbusresult.fcode < 0x80:
-            #         print(modbusresult.fcode)
-            #         writed="1"
-            #     else:
-            #         writed="2"
-        elif newframelen == 16:
-            logging.info("141")
-        elif newframelen == 1:
-            logging.info("201")
-            time.sleep(1)
-            modbus.connect()
-            modbusresult=modbus.write_registers(201, newframe, unit=17)
-            modbus.close()
-            gpiocontrol("modbus","0")
-            logging.info(modbusresult)
-            writed="1"
-        newframe=""
+            logging.info("MODBUS: write register "+str(register)+", attempt: "+str(x)+" of 5")
+            try:
+                result=modbus.write_registers(register, newframe[1], unit=17)
+                logging.info(result)
+                time.sleep(0.1)
+                result=modbus.read_holding_registers(register, count, unit=17)
+                logging.info(newframe[0])
+                logging.info(result.registers)
+                if result.registers != newframe[0]:
+                    logging.info("MODBUS: Registers saved correctly")
+                    writed="1"
+                    break
+            except:
+                logging.info("MODBUS: Writing error, make another try...")
+        modbus.close()
+        gpiocontrol("modbus","0")
+        return True
+    logging.info("Writing Modbus Frame: "+str(newframe[1]))
+    while True:
+        rs = ser.read(1).hex()
+        if rs == "032c":
+            for ind in range(22):
+                ser.read(2).hex()
+        gpiocontrol("modbus", "1")
+        break;
+    if len(newframe[1]) in [1,6]:
+        WriteRegisters(len(newframe[1]))
+    else:
+        logging.info("MODBUS: New frame has wrong length, exit")
+        return False
 
 def ReadPump():
     global R101
@@ -291,76 +328,80 @@ def ReadPump():
     global R201
     global R241
     global newframe
+    T101=[]
+    T141=[]
+    T201=[]
+    T241=[]
     time.sleep(0.2)
     while (1):
         if (ser.isOpen() == False):
             logging.warning(colored("Closed serial connection.", 'red', attrs=["bold"]))
             break
         if event.is_set():
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
+            ser.close()
             break
         if newframe:
-            WritePump()
+            WritePump(newframe)
+            newframe=[]
         try:
             rs = ser.read(1).hex()
             if rs == "11":
                 rs = ser.read(2).hex()
-                # # zapisy
-                # if rs == "1000":
-                #     rs = ser.read(8).hex()
-                #     bits = str(rs)[-2:]
-                #     rsa = ser.read(int(bits, 16)).hex()
-                #     head = "111000"
-                #     toprinttmp = head + rs + rsa
-                #     toprint = " ".join(toprinttmp[i:i + 2] for i in range(0, len(toprinttmp), 2))
-                #     print(toprint)
-                #     # zapisy end
                 if rs == "030c":
-                    R101 = []
+                    T101 = []
                     D101 = []
                     for ind in range(6):
                         rs = ser.read(2).hex()
                         if rs:
-                            R101.append(int(rs, 16))
+                            T101.append(int(rs, 16))
                             m, l = divmod(int(rs, 16), 256)
                             D101.append(m)
                             D101.append(l)
+                    R101=T101
                     logging.debug(D101)
                 if rs == "0320":
-                    R141 = []
+                    T141 = []
                     D141 = []
                     for ind in range(16):
                         rs = ser.read(2).hex()
                         if rs:
-                            R141.append(int(rs, 16))
+                            T141.append(int(rs, 16))
                             m, l = divmod(int(rs, 16), 256)
                             D141.append(m)
                             D141.append(l)
+                    R141=T141
                     logging.debug(D141)
                 if rs == "0302":
-                    R201 = []
+                    T201 = []
                     for ind in range(1):
                         rs = ser.read(2).hex()
                         if rs:
-                            R201.append(int(rs, 16))
+                            T201.append(int(rs, 16))
                     logging.debug(R201)
+                    R201=T201
                 if rs == "032c":
-                    R241 = []
+                    T241 = []
                     D241 = []
                     for ind in range(22):
                         rs = ser.read(2).hex()
                         if rs:
-                            R241.append(int(rs, 16))
+                            T241.append(int(rs, 16))
                             m, l = divmod(int(rs, 16), 256)
                             D241.append(m)
                             D241.append(l)
+                    R241=T241
                     logging.debug(D241)
         except:
+            logging.info(traceback.print_exc())
             break
 
 def on_connect(client, userdata, flags, rc):
-    logging.info(colored("MQTT - Connected", "green", attrs=['bold']))
-    client.subscribe(mqtt_topic + '/#')
-    client.publish(mqtt_topic + "/connected","online", qos=1, retain=True)
+    topic=str(client._client_id.decode())
+    logging.info(colored("MQTT - Connected - "+topic, "green", attrs=['bold']))
+    client.subscribe(topic + '/#')
+    client.publish(topic + "/connected","online", qos=1, retain=True)
     if ha_mqtt_discovery == "1":
         client.subscribe(ha_mqtt_discovery_prefix+"/status")
         client.subscribe("hass/status")
@@ -371,58 +412,55 @@ def on_disconnect(client, userdata, rc):  # The callback for when
     logging.warning(colored("Disconnected from MQTT with code: {0}".format(str(rc)), 'red', attrs=['bold']))
 
 def on_message(client, userdata, msg):  # The callback for when a PUBLISH 
-    #message is received from the server. 
-    #print("Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
-    if msg.topic == mqtt_topic + "/power/set":
+    topic=str(client._client_id.decode())
+    if msg.topic == topic + "/power/set":
         logging.info("New power state from mqtt:")
-        client.publish(mqtt_topic + "/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
-    elif msg.topic == mqtt_topic + "/preset_mode/set":
+        client.publish(topic + "/power/state",msg.payload.decode('utf-8'), qos=1, retain=True)
+    elif msg.topic == topic + "/preset_mode/set":
         logging.info("New preset mode")
         payload=str(msg.payload.decode('utf-8')).lower()
-        if payload == 'quiet' or payload == 'eco' or payload == 'turbo':
-            try:
-                presetchange(payload)
-            except:
-                logging.error("MQTT: cannot set new preset: "+payload)
-        else:
-                logging.error("MQTT: cannot set new preset: "+payload)
-    elif msg.topic == mqtt_topic + "/flimit/set":
+        presets=['quiet', 'eco', 'turbo']
+        if payload in presets:
+            new_presetchange(payload)
+
+    elif msg.topic == topic + "/flimit/set":
         logging.info("Frequency limit")
         try:
             flimitchange(str(msg.payload.decode('utf-8')))
         except:
             logging.error("MQTT: cannot set flimit relay")
-    elif msg.topic == mqtt_topic + "/mode/set":
+    elif msg.topic == topic + "/mode/set":
         logging.info("New mode")
         newmode=msg.payload.decode('utf-8')
         if newmode == "heat":
             try:
                 statechange("pch", "on", "1")
-                client.publish(mqtt_topic + "/mode/state",newmode, qos=1, retain=True)
+                client.publish(topic + "/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
         elif newmode == "cool":
             try:
                 statechange("pcool", "on", "1")
-                client.publish(mqtt_topic + "/mode/state",newmode, qos=1, retain=True)
+                client.publish(topic + "/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
         elif newmode == "off":
             try:
                 statechange("pump", "off", "1")
-                client.publish(mqtt_topic + "/mode/state",newmode, qos=1, retain=True)
+                client.publish(topic + "/mode/state",newmode, qos=1, retain=True)
             except:
                 logging.error("MQTT: cannot set mode")
         else:
             logging.error("MQTT: mode unsupported")
 
-    elif msg.topic == mqtt_topic + "/temperature/set":
+    elif msg.topic == topic + "/temperature/set":
         try:
-            tempchange("heat",format(float(msg.payload)),"2")
-            client.publish(mqtt_topic + "/temperature/state",str(float(msg.payload)), qos=1, retain=True)
+            mesg,response = new_tempchange("heat",format(float(msg.payload.decode())),"0")
+            if response:
+                client.publish(topic + "/temperature/state",str(float(msg.payload.decode())), qos=1, retain=True)
         except:
-            logging.error("MQTT: New temp error: payload - "+format(float(msg.payload)))
-    elif msg.topic == mqtt_topic + "/dhw/mode/set":
+            logging.error("MQTT: New temp error: payload - "+str(float(msg.payload.decode())))
+    elif msg.topic == topic + "/dhw/mode/set":
         logging.info("New mode")
         payload=msg.payload.decode('utf-8')
         if payload == "heat":
@@ -431,15 +469,16 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
             newmode=payload
         try:
             statechange("pdhw", str(newmode), "1")
-            client.publish(mqtt_topic + "/dhw/mode/state", str(payload), qos=1, retain=True)
+            client.publish(topic + "/dhw/mode/state", str(payload), qos=1, retain=True)
         except:
             logging.error("MQTT: cannot change DHW mode - payload:"+str(newmode))
-    elif msg.topic == mqtt_topic + "/dhw/temperature/set":
+    elif msg.topic == topic + "/dhw/temperature/set":
         logging.info("New temperature")
         newtemp=int(float(msg.payload.decode('utf-8')))
         try:
-            tempchange("dhw", str(newtemp), "2")
-            client.publish(mqtt_topic + "/dhw/temperature/state", str(newtemp), qos=1, retain=True)
+            msg,response = new_tempchange("dhw", str(newtemp), "1")
+            if response:
+                client.publish(topic + "/dhw/temperature/state", str(newtemp), qos=1, retain=True)
         except:
             logging.error("MQTT: cannot change DHW temperature - payload:"+str(newtemp))
     elif msg.topic == ha_mqtt_discovery_prefix + "/status" or msg.topic == "hass/status":
@@ -449,101 +488,62 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH
                 logging.info("Home Assistant online")
                 configure_ha_mqtt_discovery()
     
-def tempchange(which, value, curve):
-    global R101
+##### NOWE
+def set_newframe(register, frame):
     global newframe
     global writed
+    newframe = [register, frame]
+    for i in range(50):
+        if writed=="1":
+            writed="0"
+            return True
+        time.sleep(0.2)
+    return False
+
+def saveconfig(block, name, value):
+    statusdict[name]['value'] = value
+    config[block][name] = str(value)
+    try:
+        with open('config.ini', 'w') as configfile:
+            config.write(configfile)
+        return True
+    except:
+        return False
+
+def new_tempchange(which, value, curve):
+    global R101
     if curve == "1":
         if which == "heat":
             logging.info("Central heating: "+str(value))
-            for a in range(3):
-                if len(R101) == 6:
-                    chframe = PyHaier.SetCHTemp(R101, float(value))
-                    continue
-            if chframe.__class__ == list:
-                newframe=chframe
-                return "OK"
-            else:
-                logging.error("ERROR: Cannot set new CH temp")
-                msg=gettext("ERROR: Cannot set new CH temp")
-                return msg
+            chframe = PyHaier.SetCHTemp(R101, float(value))
+            response=set_newframe(R101,chframe)
+            return 'Central Heating', response
         elif which == "dhw":
             logging.info("Domestic Hot Water: "+value)
             dhwframe = PyHaier.SetDHWTemp(R101, int(value))
-            if dhwframe.__class__ == list:
-                newframe=dhwframe
-                msgt=gettext("Domestic Hot Water ")
-            else:
-                logging.error(gettext("Error: Cannot set new DHW temp"))
-                msg=gettext("ERROR: Cannot set new temp")
-                state="error"
-                return jsonify(msg=msg, state=state)
-
-        for i in range(50):
-            logging.info(writed)
-            if writed=="1":
-                msg=msgt+gettext(" temperature changed!")
-                state="success"
-                writed="0"
-                break
-            elif writed=="2":
-                msg=gettext("Modbus communication error.")
-                state="error"
-                writed="0"
-            else:
-                msg=gettext("Modbus connection timeout.")
-                state="error"
-                writed="0"
-            time.sleep(0.2)
+            response=set_newframe(R101,dhwframe)
+            queue_pub('dhw', value)
+            return 'Domestic Hot Water', response
     elif curve == "0":
         if which == "heat":
-            status[statusmap.index("settemp")] = float(value)
-            config['SETTINGS']['settemp'] = str(value)    # update
-            with open('config.ini', 'w') as configfile:    # save
-                config.write(configfile)
-            if use_mqtt == "1":
-                client.publish(mqtt_topic + "/temperature/state",str(value), qos=1, retain=True)
-                if ha_mqtt_discovery=="1":
-                    Settemp_number.set_value(float(value))
-            msg = gettext("Central Heating temperature changed!")
-            state = "success"
-    elif curve == "2":
-        if which == "heat":
-            status[statusmap.index("settemp")] = float(value)
-            config['SETTINGS']['settemp'] = str(value)
-            with open('config.ini', 'w') as configfile:
-                config.write(configfile)
-            return "OK"
-        elif which == "dhw":
-            logging.info(gettext("Domestic Hot Water: ")+value)
-            dhwframe = PyHaier.SetDHWTemp(R101, int(value))
-            if dhwframe.__class__ == list:
-                newframe=dhwframe
-                return "OK"
-            else:
-                logging.error("Error: Cannot set new DHW temp")
-                return "ERROR"
+            response = saveconfig('SETTINGS', 'settemp', float(value))
+            queue_pub("settemp", value)
+            if ha_mqtt_discovery=="1":
+                Settemp_number.set_value(float(value))
+            return 'Central Heating', response
 
-    return jsonify(msg=msg, state=state)
+def new_presetchange(mode):
+    global R201
+    logging.info("PRESET MODE: changed to: "+str(mode))
+    response=set_newframe(R201,PyHaier.SetMode(mode))
+    queue_pub('mode', mode)
+    return 'Preset Mode', response
 
-def presetchange(mode):
-    with app.app_context():
-        global newframe
-        try:
-            newframe=PyHaier.SetMode(mode)
-            if use_mqtt == "1":
-                client.publish(mqtt_topic + "/preset_mode/state", str(mode), qos=1, retain=False)
-            #msg=gettext("New preset mode: ")+str(mode)
-            msg="New preset mode: "+str(mode)
-            state="success"
-            return jsonify(msg=msg, state=state)
-        except:
-            if use_mqtt == "1":
-                client.publish(mqtt_topic + "/preset_mode/state", "none", qos=1, retain=False)
-            #msg=gettext("Preset mode not changed")
-            msg="Preset mode not changed"
-            state="error"
-            return jsonify(msg=msg, state=state)
+def new_flimitchange(mode):
+    try:
+        gpicontrol("freqlimit", mode)
+    except:
+        return False
 
 def flimitchange(mode):
     try:
@@ -551,6 +551,9 @@ def flimitchange(mode):
         msg="Frequency limit relay: "+str(mode)
         state="success"
         logging.info("Frequency limit relay changed to: "+ str(mode))
+        if use_hpiapp == "1":
+            topic=str(hpiapp._client_id.decode())
+            hpiapp.publish(topic + "/flimit/state", str(mode), qos=1, retain=True)
         if use_mqtt == "1":
             client.publish(mqtt_topic + "/flimit/state", str(mode), qos=1, retain=False)
         return msg,state
@@ -558,6 +561,9 @@ def flimitchange(mode):
         msg="Frequency limit not changed"
         state="error"
         logging.error("Cannot change frequency limit relay")
+        if use_hpiapp == "1":
+            topic=str(hpiapp._client_id.decode())
+            hpiapp.publish(topic + "/flimit/state", "error", qos=1, retain=True)
         if use_mqtt == "1":
             client.publish(mqtt_topic + "/flimit/state", "error", qos=1, retain=False)
         return msg, state
@@ -565,9 +571,9 @@ def flimitchange(mode):
 
 def statechange(mode,value,mqtt):
     global R101
-    pcool=status[statusmap.index("pcool")]
-    pch=status[statusmap.index("pch")]
-    pdhw=status[statusmap.index("pdhw")]
+    pcool=statusdict['pcool']['value']
+    pch=statusdict['pch']['value']
+    pdhw=statusdict['pdhw']['value']
     newstate=""
     if mode == "pch":
         if value == "on":
@@ -593,9 +599,9 @@ def statechange(mode,value,mqtt):
     logging.info(newstate)
     if len(R101) > 1:
         if int(R101[0])%2 == 0:
-            newframe=PyHaier.SetState(R101, "on")
+            newframe=[R101, PyHaier.SetState(R101, "on")]
             time.sleep(2)
-        newframe=PyHaier.SetState(R101,newstate)
+        newframe=[R101, PyHaier.SetState(R101,newstate)]
         for i in range(50):
             logging.info(writed)
             if writed=="1":
@@ -624,93 +630,94 @@ def curvecalc():
     else:
         mintemp=float(25)
         maxtemp=float(55)
-    if isfloat(status[statusmap.index("intemp")]) and isfloat(status[statusmap.index("outtemp")]):
-        insidetemp=float(status[statusmap.index("intemp")])
-        outsidetemp=float(status[statusmap.index("outtemp")])
-        settemp=float(status[statusmap.index("settemp")])
-        global heatingcurve
-        if heatingcurve == 'directly':
-            heatcurve=settemp
-        elif heatingcurve == 'auto':
-            t1=(outsidetemp/(320-(outsidetemp*4)))
-            t2=pow(settemp,t1)
-            sslope=float(slope)
-            ps=float(pshift)
-            amp=float(hcamp)
-            heatcurve = round((((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))+ps)*2)/2
-        elif heatingcurve == 'static':
-            sslope=float(slope)
-            heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
-        elif heatingcurve == 'manual':
-            if float(outsidetemp) < -15:
-                heatcurve=hcman[0]
-            elif -15 <= float(outsidetemp) < -10:
-                heatcurve=hcman[1]
-            elif -10 <= float(outsidetemp) < -5:
-                heatcurve=hcman[2]
-            elif -5 <= float(outsidetemp) < 0:
-                heatcurve=hcman[3]
-            elif 0 <= float(outsidetemp) < 5:
-                heatcurve=hcman[4]
-            elif 5 <= float(outsidetemp) < 10:
-                heatcurve=hcman[5]
-            elif 10 <= float(outsidetemp) < 15:
-                heatcurve=hcman[6]
-            elif float(outsidetemp) >= 15:
-                heatcurve=hcman[7]
+    if isfloat(statusdict['intemp']['value']):
+        insidetemp=float(statusdict['intemp']['value'])
+    if isfloat(statusdict['outtemp']['value']):
+        outsidetemp=float(statusdict['outtemp']['value'])
+    if isfloat(statusdict['settemp']['value']):
+        settemp=float(statusdict['settemp']['value'])
+    global heatingcurve
+    if heatingcurve == 'directly':
+        heatcurve=settemp
+    elif heatingcurve == 'auto':
+        t1=(outsidetemp/(320-(outsidetemp*4)))
+        t2=pow(settemp,t1)
+        sslope=float(slope)
+        ps=float(pshift)
+        amp=float(hcamp)
+        heatcurve = round((((0.55*sslope*t2)*(((-outsidetemp+20)*2)+settemp+ps)+((settemp-insidetemp)*amp))+ps)*2)/2
+    elif heatingcurve == 'static':
+        sslope=float(slope)
+        heatcurve = round((settemp+(sslope*20)*pow(((settemp-outsidetemp)/20), 0.7))*2)/2
+    elif heatingcurve == 'manual':
+        if float(outsidetemp) < -15:
+            heatcurve=float(hcman[0])
+        elif -15 <= outsidetemp < -10:
+            heatcurve=float(hcman[1])
+        elif -10 <= outsidetemp < -5:
+            heatcurve=float(hcman[2])
+        elif -5 <= outsidetemp < 0:
+            heatcurve=float(hcman[3])
+        elif 0 <= outsidetemp < 5:
+            heatcurve=float(hcman[4])
+        elif 5 <= outsidetemp < 10:
+            heatcurve=float(hcman[5])
+        elif 10 <= outsidetemp < 15:
+            heatcurve=float(hcman[6])
+        elif outsidetemp >= 15:
+            heatcurve=float(hcman[7])
 
-        if use_mqtt == '1':
-            try:
-                client.publish(mqtt_topic + "/heatcurve", str(heatcurve))
-            except:
-                logging.error("curvecalc: cannot publish heatcurve")
-
-        if mintemp < float(heatcurve) < maxtemp:
+    queue_pub('hcurve', heatcurve)
+    #thermostat mode
+    if mintemp <= heatcurve <= maxtemp:
+        if insidetemp < settemp-lohysteresis:
             try:
                 if GPIO.input(heatdemandpin) != "1":
                     logging.info("turn on heat demand")
                     gpiocontrol("heatdemand", "1")
-                if str(status[statusmap.index("hcurve")]) != str(heatcurve):
-                    tempchange("heat", heatcurve, "1")
+                if str(statusdict['hcurve']['value']) != str(heatcurve):
+                    new_tempchange("heat", heatcurve, "1")
             except:
                 logging.error("Set chtemp ERROR")
-        else:
+        elif insidetemp > settemp+hihysteresis:
             if GPIO.input(heatdemandpin) != "0":
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
-        status[statusmap.index("hcurve")]=heatcurve
-        threeway=status[statusmap.index("threeway")]
-        compinfo=status[statusmap.index("compinfo")]
-        if len(compinfo) > 0:
-            if dhwwl=="1" and compinfo[0] != 0 and threeway == "DHW":
-                logging.info("dont change flimit in DHW mode")
-            else:
-                if flimit == "auto":
-                    if outsidetemp >= float(flimittemp):
-                        logging.info("turn on freq limit")
-                        #gpiocontrol("freqlimit", "1")
-                        flimitchange("1")
-                    elif outsidetemp <= float(flimittemp)+0.5:
-                        logging.info("turn off freq limit")
-                        #gpiocontrol("freqlimit", "0")
-                        flimitchange("0")
-                if presetautochange == "auto":
-                    mode=status[statusmap.index("mode")]
-                    if outsidetemp >= float(presetquiet) and mode != "quiet":
-                        response=presetchange("quiet")
-                    elif outsidetemp <= float(presetturbo) and mode != "turbo":
-                        response=presetchange("turbo")
-                    elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
-                        response=presetchange("eco")
+        else:
+            logging.info("Thermostat Mode: Don't do anything, the temperature is within the limits of the hysteresis")
     else:
-        status[statusmap.index("hcurve")]=gettext("Error")
+        if GPIO.input(heatdemandpin) != "0":
+            logging.info("turn off heat demand")
+            gpiocontrol("heatdemand", "0")
+    statusdict['hcurve']['value']=heatcurve
+    threeway=statusdict['threeway']['value']
+    compinfo=statusdict['compinfo']['value']
+    if len(compinfo) > 0:
+        if dhwwl=="1" and compinfo[0] != 0 and threeway == "DHW":
+            logging.info("dont change flimit in DHW mode")
+        else:
+            if flimit == "auto":
+                if outsidetemp >= float(flimittemp):
+                    logging.info("turn on freq limit")
+                    flimitchange("1")
+                elif outsidetemp <= float(flimittemp)+0.5:
+                    logging.info("turn off freq limit")
+                    flimitchange("0")
+            if presetautochange == "auto":
+                mode=statusdict['mode']['value']
+                if outsidetemp >= float(presetquiet) and mode != "quiet":
+                    new_presetchange("quiet")
+                elif outsidetemp <= float(presetturbo) and mode != "turbo":
+                    new_presetchange("turbo")
+                elif outsidetemp > float(presetturbo) and outsidetemp < float(presetquiet) and mode != "eco":
+                    new_presetchange("eco")
 
 
 def updatecheck():
-    global version
-    gitver=subprocess.run(['/opt/haier/env/bin/python', 'update.py', 'check'], stdout=subprocess.PIPE).stdout.decode('utf-8').rstrip('\n')
-    if float(version) < float(gitver):
-        msg=gettext("Available, version: "+gitver)
+    gitver=subprocess.run(['git', 'ls-remote', 'origin', '-h', 'refs/heads/'+release ], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    localver=subprocess.run(['cat', '.git/refs/heads/'+release], stdout=subprocess.PIPE).stdout.decode('utf-8')[0:40]
+    if localver != gitver:
+        msg=gettext("Available")
     else:
         msg=gettext("Not Available")
     return jsonify(update=msg)
@@ -734,7 +741,6 @@ def getparams():
     isr141=1
     while (isr241):
         if (len(R241) == 22):
-            #logging.info(R241)
             tdts=PyHaier.GetTdTs(R241)
             archerror=PyHaier.GetArchError(R241)
             compinfo=PyHaier.GetCompInfo(R241)
@@ -744,28 +750,27 @@ def getparams():
             isr241=0
     while (isr141):
         if (len(R141) == 16):
-            #logging.info(R141)
             twitwo = PyHaier.GetTwiTwo(R141)
             thitho = PyHaier.GetThiTho(R141)
             pump=PyHaier.GetPump(R141)
             threeway=PyHaier.Get3way(R141)
             isr141=0
-    chkwhpd=status[statusmap.index("chkwhpd")]
-    dhwkwhpd=status[statusmap.index("dhwkwhpd")]
+    chkwhpd=statusdict['chkwhpd']['value']
+    dhwkwhpd=statusdict['dhwkwhpd']['value']
     return twitwo, thitho, tdts, archerror, compinfo,fans, pdps, tao,pump,threeway,chkwhpd,dhwkwhpd
 
 def getdata():
-    intemp=status[statusmap.index("intemp")]
-    outtemp=status[statusmap.index("outtemp")]
-    stemp=status[statusmap.index("settemp")]
-    hcurve=status[statusmap.index("hcurve")]
-    dhw=status[statusmap.index("dhw")]
-    tank=status[statusmap.index("tank")]
-    mode=status[statusmap.index("mode")]
-    humid=status[statusmap.index("humid")]
-    pch=status[statusmap.index("pch")]
-    pdhw=status[statusmap.index("pdhw")]
-    pcool=status[statusmap.index("pcool")]
+    intemp=statusdict['intemp']['value']
+    outtemp=statusdict['outtemp']['value']
+    stemp=statusdict['settemp']['value']
+    hcurve=statusdict['hcurve']['value']
+    dhw=statusdict['dhw']['value']
+    tank=statusdict['tank']['value']
+    mode=statusdict['mode']['value']
+    humid=statusdict['humid']['value']
+    pch=statusdict['pch']['value']
+    pdhw=statusdict['pdhw']['value']
+    pcool=statusdict['pcool']['value']
     presetch = presetautochange 
     heatdemand=GPIO.input(heatdemandpin)
     cooldemand=GPIO.input(cooldemandpin)
@@ -773,6 +778,46 @@ def getdata():
     ltemp = flimittemp
     heatingcurve = config['SETTINGS']['heatingcurve']
     return jsonify(intemp=intemp, outtemp=outtemp, setpoint=stemp, hcurve=hcurve,dhw=dhw,tank=tank, mode=mode,humid=humid,pch=pch,pdhw=pdhw,pcool=pcool,flimit=flimit,heatdemand=heatdemand,cooldemand=cooldemand,flimiton=flimiton, ltemp=ltemp, presetch=presetch, presetquiet=presetquiet, presetturbo=presetturbo, heatingcurve=heatingcurve)
+
+def get_json_data():
+    intemp=statusdict['intemp']['value']
+    outtemp=statusdict['outtemp']['value']
+    stemp=statusdict['settemp']['value']
+    hcurve=statusdict['hcurve']['value']
+    dhw=statusdict['dhw']['value']
+    tank=statusdict['tank']['value']
+    mode=statusdict['mode']['value']
+    humid=statusdict['humid']['value']
+    pch=statusdict['pch']['value']
+    pdhw=statusdict['pdhw']['value']
+    pcool=statusdict['pcool']['value']
+    presetch = presetautochange
+    heatdemand=GPIO.input(heatdemandpin)
+    cooldemand=GPIO.input(cooldemandpin)
+    flimiton=GPIO.input(freqlimitpin)
+    ltemp = flimittemp
+    heatingcurve = config['SETTINGS']['heatingcurve']
+    isr241=1
+    isr141=1
+    while (isr241):
+        if (len(R241) == 22):
+            tdts=PyHaier.GetTdTs(R241)
+            archerror=PyHaier.GetArchError(R241)
+            compinfo=PyHaier.GetCompInfo(R241)
+            fans=PyHaier.GetFanRpm(R241)
+            pdps=PyHaier.GetPdPs(R241)
+            tao=PyHaier.GetTao(R241)
+            isr241=0
+    while (isr141):
+        if (len(R141) == 16):
+            twitwo = PyHaier.GetTwiTwo(R141)
+            thitho = PyHaier.GetThiTho(R141)
+            pump=PyHaier.GetPump(R141)
+            threeway=PyHaier.Get3way(R141)
+            isr141=0
+    chkwhpd=statusdict['chkwhpd']['value']
+    dhwkwhpd=statusdict['dhwkwhpd']['value']
+    return jsonify(locals())
 
 def GetInsideTemp(param):
     if param == "builtin":
@@ -891,28 +936,15 @@ def GetHumidity(param):
         return -1
 
 def settheme(theme):
-    status[statusmap.index("theme")]=theme
+    statusdict['theme']['value']=theme
     return theme
 
 # Function campare new value with old, as "old" you need to provide name of status. for example 'pch'
 def ischanged(old, new):
-    if status[statusmap.index(old)] != new:
+    if statusdict[old]['value'] != new:
         logging.info("ischanged: status "+str(old)+" has changed. Set new value - "+str(new))
-        status[statusmap.index(old)] = new
-        if use_mqtt == "1":
-            if old == "pdhw" or old == "pch":
-                if new == "on":
-                    client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "heat")
-            elif old =="pcool":
-                if new == "on":
-                    client.publish(mqtt_topic + mqtttop[statusmap.index(old)], "cool")
-            else:
-                client.publish(mqtt_topic + mqtttop[statusmap.index(old)], str(new))
-
-            # if ha_mqtt_discovery == "1":
-            #     if old == "twitwo":
-            #         Twi_sensor.set_state(new[0])
-            #         Two_sensor.set_state(new[1])
+        statusdict[old]['value']=new
+        queue_pub(old, new)
 
 def deltacheck(temps):
     if antionoff == '1':
@@ -927,18 +959,18 @@ def deltacheck(temps):
                 logging.info("Delta: "+str(delta))
                 if delta>=float(antionoffdelta):
                     logging.info("AntiON-OFF: "+str(delta)+", more then: "+antionoffdelta+". Changing mode to lower if possible")
-                    mode=status[statusmap.index("mode")]
+                    mode=statusdict['mode']['value']
                     flimiton=GPIO.input(freqlimitpin)
                     logging.info("AntiON-OFF: current mode - "+str(mode))
                     if mode == "turbo":
                         logging.info("AntiON-OFF: changing mode to: ECO")
-                        response=presetchange("eco")
+                        new_presetchange("eco")
                     elif mode == "eco":
                         logging.info("AntiON-OFF: changing mode to: quiet")
-                        response=presetchange("quiet")
+                        new_presetchange("quiet")
                     elif mode == "quiet":
                         logging.info("AntiON-OFF: mode in lowest setting, turn on frequency limit relay")
-                        gpiocontrol("freqlimit", "1")
+                        flimitchange("1")
                     elif mode == "quiet" and flimiton == "1":
                         logging.info("AntiON-OFF: mode in lowest setting, frequency limit is already ON. I can't do anything else :(")
                 else:
@@ -978,7 +1010,7 @@ def scheduler():
         data = json.load(f)
         now=datetime.now().strftime("%H:%M")
         weekday=datetime.weekday(datetime.now())
-        pch=status[statusmap.index("pch")]
+        pch=statusdict['pch']['value']
         schedulestart=[]
         for x in range(len(data[weekday]['periods'])):
             y=x-1
@@ -1010,7 +1042,7 @@ def scheduler():
         data = json.load(f)
         now=datetime.now().strftime("%H:%M")
         weekday=datetime.weekday(datetime.now())
-        pdhw=status[statusmap.index("pdhw")]
+        pdhw=statusdict['pdhw']['value']
         schedulestart=[]
         for x in range(len(data[weekday]['periods'])):
             y=x-1
@@ -1066,7 +1098,6 @@ def GetParameters():
         thitho = PyHaier.GetThiTho(R141)
         pump=PyHaier.GetPump(R141)
         threeway=PyHaier.Get3way(R141)
-        #status[statusmap.index("tank")] = tank
         ischanged("tank", tank)
         tankchart.append(tank)
         ischanged("twitwo", twitwo)
@@ -1080,18 +1111,18 @@ def GetParameters():
         deltacheck(twitwo)
     if len(R201) == 1:
         mode=PyHaier.GetMode(R201)
-        #status[statusmap.index("mode")] = mode
         ischanged("mode", mode)
     if len(R241) == 22:
         tdts=PyHaier.GetTdTs(R241)
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
-        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*0.0002777778)
-        if str(status[statusmap.index("threeway")]) == "DHW":
-            dhwkwhpd=float(status[statusmap.index("dhwkwhpd")])+kwhnow
+        #0.0002777778
+        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*kwhnowcorr)
+        if str(statusdict['threeway']['value']) == 'DHW':
+            dhwkwhpd=float(statusdict['dhwkwhpd']['value'])+kwhnow
             ischanged("dhwkwhpd", dhwkwhpd)
-        elif str(status[statusmap.index("threeway")]) == "CH":
-            chkwhpd=float(status[statusmap.index("chkwhpd")])+kwhnow
+        elif str(statusdict['threeway']['value']) == "CH":
+            chkwhpd=float(statusdict['chkwhpd']['value'])+kwhnow
             ischanged("chkwhpd",chkwhpd)
         fans=PyHaier.GetFanRpm(R241)
         pdps=PyHaier.GetPdPs(R241)
@@ -1109,69 +1140,44 @@ def GetParameters():
         taochart.append(tao)
     if len(R101) == 6:
         dhw=PyHaier.GetDHWTemp(R101)
-        #status[statusmap.index("dhw")] = dhw
         ischanged("dhw", dhw)
         powerstate=PyHaier.GetState(R101)
         if 'Heat' in powerstate:
-            #status[statusmap.index("pch")] = "on"
             ischanged("pch", "on")
-            #if use_mqtt == "1":
-            #    client.publish(mqtt_topic + "/mode/state", "heat")
         else:
             ischanged("pch", "off")
-            #status[statusmap.index("pch")] = "off"
         if 'Cool' in powerstate:
             ischanged("pcool", "on")
-            #status[statusmap.index("pcool")] = "on"
-            #if use_mqtt == "1":
-            #    client.publish(mqtt_topic + "/mode/state", "cool")
         else:
-            #status[statusmap.index("pcool")] = "off"
             ischanged("pcool", "off")
         if not any(substring in powerstate for substring in ["Cool", "Heat"]):
             if use_mqtt == "1":
                 client.publish(mqtt_topic + "/mode/state", "off")
+            if use_hpiapp == "1":
+                topic=str(hpiapp._client_id.decode())
+                hpiapp.publish(topic + "/mode/state", "off", qos=1, retain=True)
 
         if 'Tank' in powerstate:
-            #status[statusmap.index("pdhw")] = "on"
             ischanged("pdhw", "on")
-            #if use_mqtt == "1":
-            #    client.publish(mqtt_topic + "/dhw/mode/state", "heat")
         else:
-            #status[statusmap.index("pdhw")] = "off"
             ischanged("pdhw", "off")
-            #if use_mqtt == "1":
-            #    client.publish(mqtt_topic + "/dhw/mode/state", "off")
     ischanged("intemp", GetInsideTemp(insidetemp))
     ischanged("outtemp", GetOutsideTemp(outsidetemp))
     ischanged("humid", GetHumidity(humidity))
     scheduler()
-    intempchart.append(status[statusmap.index("intemp")])
-    outtempchart.append(status[statusmap.index("outtemp")])
-    humidchart.append(status[statusmap.index("humid")])
-    hcurvechart.append(status[statusmap.index("hcurve")])
-    threeway=status[statusmap.index("threeway")]
-    compinfo=status[statusmap.index("compinfo")]
-    preset=status[statusmap.index("mode")]
+    intempchart.append(statusdict['intemp']['value'])
+    outtempchart.append(statusdict['outtemp']['value'])
+    humidchart.append(statusdict['humid']['value'])
+    hcurvechart.append(statusdict['hcurve']['value'])
+    threeway=statusdict['threeway']['value']
+    compinfo=statusdict['compinfo']['value']
+    preset=statusdict['mode']['value']
     flimiton=GPIO.input(freqlimitpin)
     if len(compinfo) > 0:
-        try:
-            if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
-                logging.info("DHWWL Function ON")
-                gpiocontrol("freqlimit", "0")
-                presetchange("turbo")
-        except:
-            pass
-
-    #status[statusmap.index("intemp")] = GetInsideTemp(insidetemp)
-    #status[statusmap.index("outtemp")] = GetOutsideTemp(outsidetemp)
-    #status[statusmap.index("humid")] = GetHumidity(humidity)
-    #if use_mqtt == '1':
-        #client.publish(mqtt_topic,str(status))
-        #client.publish(mqtt_topic + "/dhw/curtemperature/state", str(status[statusmap.index("tank")]))
-        #client.publish(mqtt_topic + "/dhw/temperature/state", str(status[statusmap.index("dhw")]))
-        #client.publish(mqtt_topic + "/preset_mode/state", str(status[statusmap.index("mode")]))
-        #client.publish(mqtt_topic + "/temperature/state", str(status[statusmap.index("settemp")]))
+        if dhwwl == "1" and compinfo[0] > 0 and threeway == "DHW" and (flimiton == "1" or preset != "turbo"):
+            logging.info("DHWWL Function ON")
+            flimitchange("0")
+            new_presetchange("turbo")
 
 def create_user(**data):
     """Creates user with encrypted password"""
@@ -1204,7 +1210,7 @@ def home():
     if firstrun == "1":
         return redirect("/settings", code=302)
     else:
-        theme=status[statusmap.index("theme")]
+        theme=statusdict['theme']['value']
         global outsidetemp
         return render_template('index.html', theme=theme, version=version, needrestart=needrestart, flimit=flimit, outsidetemp=outsidetemp)
 
@@ -1214,11 +1220,15 @@ def theme_route():
     settheme(theme)
     return theme
 
+@app.route('/get_json_data')
+def get_json_route():
+    return get_json_data()
+
 @app.route('/backup')
 def backup_route():
     try:
         subprocess.check_output("7zr a backup.7z config.ini schedule_*", shell=True).decode().rstrip('\n')
-        return send_file('/opt/haier/backup.7z', download_name='backup.7z')
+        return send_file('/opt/haier/backup.7z', download_name='backup.hpi')
     except Exception as e:
         return str(e)
 
@@ -1238,11 +1248,12 @@ def upload_file():
             flash('File uploaded, please restart HaierPi service', 'success')
             subprocess.check_output("7zr e -aoa /opt/haier/"+filename+" /opt/haier config.ini schedule_ch.json schedule_dhw.json", shell=True).decode().rstrip('\n')
             return redirect('/', code=302)
-    return render_template('restore.html')
+    return render_template('upload.html')
 
 @app.route('/charts', methods=['GET','POST'])
 def charts_route():
-    theme=status[statusmap.index("theme")]
+    theme=statusdict['theme']['value']
+#    theme=status[statusmap.index("theme")]
     chartdate=list(datechart)
     charttank=list(tankchart)
     charttwi=list(twichart)
@@ -1276,10 +1287,10 @@ def settings():
                 config.write(configfile)
         loadconfig()
     logserver=socket.gethostbyname(socket.gethostname())
-    theme = status[statusmap.index("theme")]
+    theme=statusdict['theme']['value']
     timeout = config['MAIN']['heizfreq']
-    intemp=status[statusmap.index("intemp")]
-    outtemp=status[statusmap.index("outtemp")]
+    intemp = statusdict['intemp']['value']
+    outtemp = statusdict['outtemp']['value']
     heatingcurve = config['SETTINGS']['heatingcurve']
     slope = config['SETTINGS']['hcslope']
     pshift = config['SETTINGS']['hcpshift']
@@ -1291,6 +1302,8 @@ def settings():
     settemp = config['SETTINGS']['settemp']
     insidetemp = config['SETTINGS']['insidetemp']
     outsidetemp = config['SETTINGS']['outsidetemp']
+    omlat = config['SETTINGS']['omlat']
+    omlon = config['SETTINGS']['omlon']
     humidity = config['SETTINGS']['humidity']
     flimit = config['SETTINGS']['flimit']
     flimittemp = config['SETTINGS']['flimittemp']
@@ -1320,12 +1333,13 @@ def settings():
     outsidesensor=config['HOMEASSISTANT']['outsidesensor']
     humiditysensor=config['HOMEASSISTANT']['humiditysensor']
     ha_mqtt_discovery=config['HOMEASSISTANT']['ha_mqtt_discovery']
+    log_level=config['MAIN']['log_level']
     return render_template('settings.html', **locals(), version=version, needrestart=needrestart)
 
 @app.route('/parameters', methods=['GET','POST'])
 @login_required
 def parameters():
-    theme=status[statusmap.index("theme")]
+    theme=statusdict['theme']['value']
     return  render_template('parameters.html', version=version, theme=theme)
 
 @app.route('/scheduler', methods=['GET','POST'])
@@ -1341,13 +1355,22 @@ def scheduler_route():
 
     schedule1 = open("schedule_ch.json", "r")
     schedule2 = open("schedule_dhw.json", "r")
-    theme=status[statusmap.index("theme")]
+    theme=statusdict['theme']['value']
     return  render_template('scheduler.html', ch=Markup(schedule1.read()), dhw=Markup(schedule2.read()), version=version, theme=theme)
 
-@app.route('/about')
-def about():
-    theme=status[statusmap.index("theme")]
-    return  render_template('about.html', version=version, theme=theme)
+@app.route('/change', methods=['POST'])
+@login_required
+def change():
+    content_type = request.headers.get('Content-Type')
+    logging.info(content_type)
+    if content_type == 'application/json':
+        if json.loads(request.data)['name'] in ['hctemperature', 'dhwtemperature']:
+            logging.info(json.loads(request.data)['name'])
+            return jsonify(response='OK')
+        else:
+            return jsonify(response='unknown command')
+    else:
+        return jsonify(response='ERROR, Expected JSON data.')
 
 @app.route('/statechange', methods=['POST'])
 @login_required
@@ -1360,8 +1383,9 @@ def change_state_route():
 @login_required
 def change_mode_route():
     newvalue = request.form['newmode']
-    response = presetchange(newvalue)
-    return response
+    msg, response = new_presetchange(newvalue)
+    code=b2s(response)
+    return jsonify(msg=msg, state=code)
 
 @app.route('/flrchange', methods=['POST'])
 @login_required
@@ -1376,8 +1400,10 @@ def change_temp_route():
     which = request.form['which']
     value = request.form['value']
     directly = request.form['directly']
-    response = tempchange(which, value, directly)
-    return response
+    msg, response = new_tempchange(which,value,directly)
+    code=b2s(response)
+    return jsonify(msg=msg, state=code)
+
 @app.route('/updatecheck')
 def updatecheck_route():
     response = updatecheck()
@@ -1436,7 +1462,7 @@ def connect_mqtt():
     client.on_connect = on_connect  # Define callback function for successful connection
     client.on_message = on_message  # Define callback function for receipt of a message
     client.on_disconnect = on_disconnect
-    client.will_set(mqtt_topic + "/connected","offline",qos=1,retain=True)
+    client.will_set(mqtt_topic + "/connected","offline",qos=1,retain=False)
     if mqtt_ssl == '1':
         client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
     client.username_pw_set(mqtt_username, mqtt_password)
@@ -1445,6 +1471,25 @@ def connect_mqtt():
     except:
         logging.error(colored("MQTT connection error.","red", attrs=['bold']))
     client.loop_forever()  # Start networking daemon
+
+def connect_haierpiapp():
+    global hpi_token
+    global hpi_username
+    global hpi_topic
+    username=hpi_username
+    password=hpi_token
+    topic=hpi_topic
+    hpiapp.on_connect = on_connect
+    hpiapp.on_message = on_message
+    hpiapp.on_disconnect = on_disconnect
+    hpiapp.will_set(topic + "/connected","offline", qos=1,retain=True)
+    hpiapp.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
+    hpiapp.username_pw_set(username, password)
+    try:
+        hpiapp.connect('haierpi.pl', 8883)
+    except:
+        logging.error("HAIERPI APP: Connection error")
+    hpiapp.loop_forever()
 
 def configure_ha_mqtt_discovery():
 
@@ -1561,13 +1606,13 @@ def configure_ha_mqtt_discovery():
     configure_sensor("Daily CH energy usage", mqtt_topic +"/details/chkwhpd", "HaierPi_CH_daily_kWh", "kWh", "energy", "measurement", None)
     configure_sensor("Daily DHW energy usage", mqtt_topic +"/details/dhwkwhpd", "HaierPi_DHW_daily_kWh", "kWh", "energy", "measurement", None)
 
-
 def threads_check():
     global dead
     while True:
         if not bg_thread.is_alive():
             if dead == 0:
                 logging.error("Background thread DEAD")
+
                 dead = 1
         elif not serial_thread.is_alive():
             if dead == 0:
@@ -1577,6 +1622,11 @@ def threads_check():
             if not mqtt_bg.is_alive():
                 if dead == 0:
                     logging.error("MQTT thread DEAD")
+                    dead = 1
+        elif use_hpiapp == "1":
+            if not hpiapp_bg.is_alive():
+                if dead == 0:
+                    logging.error("HPIAPP thread DEAD")
                     dead = 1
         if dead == 1:
             now = datetime.now()
@@ -1594,9 +1644,11 @@ def threads_check():
 
 # Start the Flask app in a separate thread
 babel.init_app(app, locale_selector=get_locale)
+#babel.init_app(app)
 
 if __name__ == '__main__':
     loadconfig()
+    app.jinja_env.globals['get_locale'] = 'pl'
     logging.warning(colored(welcome,"yellow", attrs=['bold']))
     logging.warning(colored(f"Service running: http://{ip_address}:{bindport} ", "green"))
     logging.warning(f"MQTT: {'enabled' if use_mqtt == '1' else 'disabled'}")
@@ -1604,10 +1656,18 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handler)
     bg_thread = threading.Thread(target=run_background_function)
     bg_thread.start()
+    services=[]
     if use_mqtt == '1':
-        client = mqtt.Client()  # Create instance of client
+        client = mqtt.Client(mqtt_topic)  # Create instance of client
         mqtt_bg = threading.Thread(target=connect_mqtt)
         mqtt_bg.start()
+        services.append(client)
+    if use_hpiapp == '1':
+        hpiapp = mqtt.Client(hpi_topic)
+        hpiapp_bg = threading.Thread(target=connect_haierpiapp)
+        hpiapp_bg.start()
+        services.append(hpiapp)
+
     serial_thread = threading.Thread(target=ReadPump)
     serial_thread.start()
     threadcheck = threading.Thread(target=threads_check)
@@ -1615,3 +1675,4 @@ if __name__ == '__main__':
     event = threading.Event()
     serve(app, host=bindaddr, port=bindport)
         #app.run(debug=False, host=bindaddr, port=bindport)#, ssl_context='adhoc')
+
