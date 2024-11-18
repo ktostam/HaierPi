@@ -143,10 +143,11 @@ newframe=[]
 writed=""
 needrestart=0
 dead=0
-jwt_payload=hpi_token.split('.')[1]
-hpitokenjson=json.loads(base64.urlsafe_b64decode(jwt_payload + '=' * (4 - len(jwt_payload) % 4)).decode())
-hpi_username=hpitokenjson['username']
-hpi_topic="data/"+hpi_username
+if use_hpiapp == '1':
+    jwt_payload=hpi_token.split('.')[1]
+    hpitokenjson=json.loads(base64.urlsafe_b64decode(jwt_payload + '=' * (4 - len(jwt_payload) % 4)).decode())
+    hpi_username=hpitokenjson['username']
+    hpi_topic="data/"+hpi_username
 datechart=collections.deque(8640*[''], 8640)
 tankchart=collections.deque(8640*[''], 8640)
 twichart=collections.deque(8640*[''], 8640)
@@ -1117,7 +1118,7 @@ def GetParameters():
         archerror=PyHaier.GetArchError(R241)
         compinfo=PyHaier.GetCompInfo(R241)
         #0.0002777778
-        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*kwhnowcorr)
+        kwhnow=float(float(compinfo[2])*float(compinfo[3])/1000*float(kwhnowcorr))
         if str(statusdict['threeway']['value']) == 'DHW':
             dhwkwhpd=float(statusdict['dhwkwhpd']['value'])+kwhnow
             ischanged("dhwkwhpd", dhwkwhpd)
