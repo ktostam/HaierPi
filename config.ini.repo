@@ -122,6 +122,11 @@ main_topic = climate/haier
 username = mqtt
 password = password
 
+[HPIAPP]
+#If you want to use remote connection for your haierpi set hpiapp to 1 and paste here the token received by email upon registration
+hpiapp = 0
+token = token for hpiapp
+
 [GPIO]
 #17 for raspberrypi, 0 for nanopi neo
 modbus=17
