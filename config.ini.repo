@@ -55,7 +55,7 @@ hcamp = 1
 # correnction for kwhnow
 kwhnowcorr = 1
 
-lowhysteresis = 0.2
+lohysteresis = 0.2
 hihysteresis = 0.2
 
 # temp for manual heating curve 
