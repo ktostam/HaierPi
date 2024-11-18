@@ -52,6 +52,12 @@ hcslope = 0.7
 hcpshift = 1
 hcamp = 1
 
+# correnction for kwhnow
+kwhnowcorr = 1
+
+lowhysteresis = 0.2
+hihysteresis = 0.2
+
 # temp for manual heating curve 
 hcman = 40,35,30,25,20,20,20
 
