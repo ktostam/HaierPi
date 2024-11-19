@@ -671,7 +671,7 @@ def curvecalc():
     queue_pub('hcurve', heatcurve)
     #thermostat mode
     if mintemp <= heatcurve <= maxtemp:
-        if insidetemp < settemp-lohysteresis:
+        if insidetemp < settemp-float(lohysteresis):
             try:
                 if GPIO.input(heatdemandpin) != "1":
                     logging.info("turn on heat demand")
@@ -680,7 +680,7 @@ def curvecalc():
                     new_tempchange("heat", heatcurve, "1")
             except:
                 logging.error("Set chtemp ERROR")
-        elif insidetemp > settemp+hihysteresis:
+        elif insidetemp > settemp+float(hihysteresis):
             if GPIO.input(heatdemandpin) != "0":
                 logging.info("turn off heat demand")
                 gpiocontrol("heatdemand", "0")
