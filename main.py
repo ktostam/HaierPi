@@ -118,6 +118,8 @@ def loadconfig():
     mqtt_broker_addr=config['MQTT']['address']
     global mqtt_broker_port
     mqtt_broker_port=config['MQTT']['port']
+    global mqtt_ssl
+    mqtt_ssl=config['MQTT']['mqtt_ssl']
     global mqtt_topic
     mqtt_topic=config['MQTT']['main_topic']
     global mqtt_username
