@@ -406,9 +406,10 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(topic + '/#')
     client.publish(topic + "/connected","online", qos=1, retain=True)
     if ha_mqtt_discovery == "1":
-        client.subscribe(ha_mqtt_discovery_prefix+"/status")
-        client.subscribe("hass/status")
-        configure_ha_mqtt_discovery()
+        if client._host != "haierpi.pl":
+            client.subscribe(ha_mqtt_discovery_prefix+"/status")
+            client.subscribe("hass/status")
+            configure_ha_mqtt_discovery()
 
 
 def on_disconnect(client, userdata, rc):  # The callback for when
