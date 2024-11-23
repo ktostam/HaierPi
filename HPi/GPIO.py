@@ -19,17 +19,23 @@ def setup(pin, action):
         file2.close()
 
 def output(pin, value):
-    pinfile="/sys/class/gpio/gpio"+str(pin)+"/value"
-    file1 = open(pinfile, 'w')
-    file1.write(str(value))
-    file1.close()
+    try:
+        pinfile="/sys/class/gpio/gpio"+str(pin)+"/value"
+        file1 = open(pinfile, 'w')
+        file1.write(str(value))
+        file1.close()
+    except:
+        return False
 
 def input(pin):
-    pinfile="/sys/class/gpio/gpio"+str(pin)+"/value"
-    file1 = open(pinfile, 'r')
-    result = file1.read(1)
-    file1.close()
-    return result
+    try:
+        pinfile="/sys/class/gpio/gpio"+str(pin)+"/value"
+        file1 = open(pinfile, 'r')
+        result = file1.read(1)
+        file1.close()
+        return result
+    except:
+        return False
 
 
 def cleanup(pin):
