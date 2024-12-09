@@ -1,7 +1,7 @@
 name: Build and Push Docker Image
 
 on:
-  worflow-dispatch:
+  workflow-dispatch:
 
 jobs:
   build-and-push:
