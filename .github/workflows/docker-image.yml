@@ -36,4 +36,4 @@ jobs:
         context: .
         platforms: linux/arm64
         push: true
-        tags: ktostam/haierpi:latest
+        tags: ktostam/haierpi-stable:latest
