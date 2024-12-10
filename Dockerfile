@@ -1,4 +1,4 @@
-FROM arm64/v8/python:3.9-slim
+FROM arm64/python:3.9-slim
 WORKDIR /app
 COPY . /app
 RUN pip install -- no-cache-dir -r requirements.txt
